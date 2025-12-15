@@ -15,6 +15,7 @@ import threading
 
 # --- Environment ---
 """ from dotenv import load_dotenv
+
 load_dotenv() """
 
 # Create a Flask application
@@ -159,7 +160,7 @@ def session_is_valid(session):
 # --- Views ---
 
 
-@application.route("/")
+@application.route("/", methods=["GET"])
 def serve_html():
     """Serves the login and upload pages to the frontend."""
 
@@ -301,7 +302,7 @@ def getCVList():
     return jsonify({"success": False, "data": result})
 
 
-@application.route("/api/upload", methods=["POST"])
+@application.route("/api/cv", methods=["POST"])
 def upload_file():
     """
     Handles file upload, processing, and returns a link to the new file.
@@ -429,15 +430,19 @@ def upload_file():
             conn.close()
 
             # --- End of PDF processing logic ---
-
-        except FileNotFoundError:
-            # The command (e.g., 'pdftk' or 'cp') wasn't found on the server
-            print("Error: A command-line tool was not found.")
-            return (
-                jsonify({"success": False, "error": "Server configuration error."}),
-                500,
-            )
         except Exception as e:
+            # Check for gemini overload issues
+            if "The model is overloaded" in str(e):
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": "Gemini model is overloaded. Please try again.",
+                        }
+                    ),
+                    500,
+                )
+
             # Catch other potential errors
             print(f"An unexpected error occurred: {e}")
             return (
@@ -453,6 +458,62 @@ def upload_file():
 
         # 9. Send the success response
         return jsonify({"success": True, "url": new_url})
+
+
+@application.route("/api/cv", methods=["DELETE"])
+def delete_file():
+    """
+    Handles file deletion.
+    """
+
+    # Ensure user is logged in
+    valid_session = session_is_valid(session)
+    if not valid_session:
+        return jsonify({"success": False, "error": "Access forbidden."}), 403
+
+    cv_id_list = json.loads(request.values["cvListJson"])
+
+    try:
+        # Delete from S3 and local
+        for id in cv_id_list:
+            # S3
+            s3.delete_object(
+                Bucket=os.environ.get("S3_BUCKET_NAME"), Key=f"cv_html/{id}.html"
+            )
+
+            # Local
+            if os.path.exists(f"processed_files/{id}.html"):
+                os.remove(f"processed_files/{id}.html")
+
+        # Connect to the RDS database
+        conn = psycopg2.connect(
+            host=os.environ.get("RDS_HOSTNAME"),
+            database=os.environ.get("RDS_DB_NAME"),
+            user=os.environ.get("RDS_USERNAME"),
+            password=os.environ.get("RDS_PASSWORD"),
+            port=os.environ.get("RDS_PORT"),
+        )
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Delete the rows with the provided IDs
+        query = "DELETE FROM cv WHERE id IN %s"
+        cur.execute(query, (tuple(cv_id_list),))
+        conn.commit()
+
+        # Close connection
+        cur.close()
+        conn.close()
+
+        # Send the success response
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return (
+            jsonify(
+                {"success": False, "error": "An unexpected server error occurred."}
+            ),
+            500,
+        )
 
 
 # --- Run the Application ---

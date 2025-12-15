@@ -352,8 +352,8 @@
         formData.append("profileText", profileText.value);
 
         try {
-          // Post the file to the backend's /upload endpoint
-          const response = await fetch("/api/upload", {
+          // Post the file to the backend's /cv endpoint
+          const response = await fetch("/api/cv", {
             method: "POST",
             body: formData,
           });
@@ -363,12 +363,12 @@
           if (response.ok && result.success && result.url) {
             // Success! Display the new URL
             const successHtml = `
-                        <p class="text-green-700 font-medium">File processed successfully!</p>
-                        <p class="text-gray-600 mt-2">Your new link is ready:</p>
-                        <a href="${result.url}" target="_blank" class="block bg-gray-100 text-blue-600 font-mono break-words p-3 rounded-md mt-2 hover:bg-gray-200">
-                            ${result.url}
-                        </a>
-                    `;
+              <p class="text-green-700 font-medium">File processed successfully!</p>
+              <p class="text-gray-600 mt-2">Your new link is ready:</p>
+              <a href="${result.url}" target="_blank" class="block bg-gray-100 text-blue-600 font-mono break-words p-3 rounded-md mt-2 hover:bg-gray-200">
+                ${result.url}
+              </a>
+            `;
             displayMessage(successHtml, "success");
           } else {
             // Handle backend error

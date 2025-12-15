@@ -16,10 +16,23 @@
           0 0 20px 0 rgb(0 0 0 / 0.1);
       }
 
+      .delete-btn.disabled {
+        background-color: #a79a9a;
+        pointer-events: none;
+      }
+
       table {
         font-family: arial, sans-serif;
         border-collapse: collapse;
         width: 100%;
+        display: block;
+        max-height: 500px;
+        overflow-y: auto;
+      }
+      .header-row {
+        position: sticky;
+        top: 0;
+        background-color: #cadaf7;
       }
       td,
       th {
@@ -91,33 +104,86 @@
             </svg>
           </div>
 
-          <table id="cv-table" class="hidden">
-            <tr>
-              <th></th>
-              <th><p>Owner</p></th>
-              <th><p>Date Created</p></th>
-              <th><p>ID</p></th>
-            </tr>
-          </table>
+          <div id="table-container" class="hidden">
+            <button
+              id="delete-btn"
+              type="button"
+              class="delete-btn disabled flex items-center gap-2 bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 transition duration-200 mb-2"
+              onclick="delete_modal.showModal()"
+            >
+              <i data-lucide="trash" class="w-4 h-4"></i>
+              <p id="delete-text">Delete</p>
+            </button>
+
+            <table id="cv-table">
+              <tr class="header-row">
+                <th></th>
+                <th class="w-max"><p>Owner</p></th>
+                <th class="w-1/3"><p>Date Created</p></th>
+                <th class="w-full"><p>ID</p></th>
+              </tr>
+            </table>
+          </div>
         </div>
       </div>
     </div>
+
+    <dialog
+      id="delete_modal"
+      class="modal card max-w-md bg-white rounded-2xl overflow-hidden border border-slate-200 p-6"
+    >
+      <div class="modal-box">
+        <h3 class="text-lg font-bold">Are you sure?</h3>
+        <p class="py-4 mb-2">
+          The selected CVs are <b>permanently</b> deleted and cannot be
+          recovered.
+        </p>
+        <div class="modal-action">
+          <form method="dialog" class="flex gap-2 items-center">
+            <button
+              id="delete-confirm-btn"
+              class="bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 transition duration-200 mb-2"
+            >
+              Delete
+            </button>
+            <button
+              class="py-3 px-4 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-4 focus:bg-gray-300 transition duration-200 mb-2"
+            >
+              Cancel
+            </button>
+          </form>
+        </div>
+      </div>
+    </dialog>
 
     <script>
       // Initialize Icons
       lucide.createIcons();
 
       const loadingSpinner = document.getElementById("loading-spinner");
+      const tableContainer = document.getElementById("table-container");
       const cvTable = document.getElementById("cv-table");
+      const deleteButton = document.getElementById("delete-btn");
+      const deleteText = document.getElementById("delete-text");
 
-      (async () => {
+      const deleteConfirmButton = document.getElementById("delete-confirm-btn");
+
+      let rows = [];
+
+      async function fetchRows() {
         try {
           // Fetch the CV list from the backend
           const response = await fetch("/api/cv", {
             method: "GET",
           });
-          json = await response.json();
+          const json = await response.json();
           rows = json["data"];
+
+          // Clear previous rows from the table when re-fetching
+          // Always keep the top (header) row
+          while (cvTable.rows.length > 1) {
+            cvTable.deleteRow(-1);
+          }
 
           rows.forEach((row, i) => {
             const rowNode = cvTable.insertRow();
@@ -125,14 +191,14 @@
               <tr>
                 <td>
                   <label for="row-${i}" class="flex justify-center">
-                    <input id="row-${i}" type="checkbox" />
+                    <input id="row-${i}" type="checkbox" class="row-selector" />
                   </label>
                 </td>
                 <td><label for="row-${i}">${row["data_owner"]}</label></td>
                 <td><label for="row-${i}">${new Date(row["date_created"]).toLocaleString()}</label></td>
                 <td>
                   <label for="row-${i}">
-                    <a href="/view/${row["id"]}" target="_blank">${row["id"]}</a>
+                    <a id="row-${i}-id" href="/view/${row["id"]}" target="_blank">${row["id"]}</a>
                   </label>
                 </td>
               </tr>
@@ -140,11 +206,61 @@
           });
 
           loadingSpinner.classList.add("hidden");
-          cvTable.classList.remove("hidden");
+          tableContainer.classList.remove("hidden");
         } catch (e) {
           console.error(e);
         }
-      })();
+      }
+      fetchRows();
+
+      cvTable.addEventListener("change", (e) => {
+        const checkboxes = Array.from(
+          cvTable.getElementsByClassName("row-selector"),
+        );
+        const selections = checkboxes.filter((c) => c.checked);
+        if (selections.length > 0) {
+          deleteText.innerHTML = `Delete (${selections.length})`;
+          deleteButton.classList.remove("disabled");
+        } else {
+          deleteText.innerHTML = "Delete";
+          deleteButton.classList.add("disabled");
+        }
+      });
+
+      deleteConfirmButton.addEventListener("click", async (e) => {
+        loadingSpinner.classList.remove("hidden");
+        tableContainer.classList.add("hidden");
+
+        const checkboxes = Array.from(
+          cvTable.getElementsByClassName("row-selector"),
+        );
+        const selections = checkboxes.filter((c) => c.checked);
+        const selectionIDs = selections.map(
+          (s) => document.querySelector(`#${s.id}-id`).innerHTML,
+        );
+
+        const formData = new FormData();
+        formData.append("cvListJson", JSON.stringify(selectionIDs));
+
+        try {
+          const response = await fetch("/api/cv", {
+            method: "DELETE",
+            body: formData,
+          });
+
+          const result = await response.json();
+          if (response.ok && result.success) {
+            deleteText.innerHTML = "Delete";
+            deleteButton.classList.add("disabled");
+            fetchRows();
+          } else {
+            loadingSpinner.classList.add("hidden");
+            tableContainer.classList.remove("hidden");
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      });
     </script>
   </body>
 </html>
