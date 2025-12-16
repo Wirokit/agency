@@ -13,10 +13,11 @@ from psycopg2.extras import register_uuid, RealDictCursor
 import json
 import threading
 
-# --- Environment ---
+# --- Environment - Only needed when running locally ---
 """ from dotenv import load_dotenv
 
 load_dotenv() """
+# ---
 
 # Create a Flask application
 application = Flask(__name__, static_url_path="/static")
@@ -73,7 +74,7 @@ def cleanup():
 
     # Fetch a db entry based on provided user id
     cur.execute(
-        f"SELECT id FROM cv WHERE date_created < now() - interval '{os.environ.get('RETENTION_DAYS')}' day"
+        f"SELECT id FROM cv WHERE date_uploaded < now() - interval '{os.environ.get('RETENTION_DAYS')}' day"
     )
 
     expired_records = cur.fetchall()
@@ -288,8 +289,8 @@ def getCVList():
 
     # Fetch a db entry based on provided user id
     query = """
-        SELECT id, data_owner, date_created FROM cv
-        ORDER BY date_created DESC
+        SELECT id, data_owner, date_uploaded FROM cv
+        ORDER BY date_uploaded DESC
     """
     cur.execute(query)
 
@@ -419,7 +420,7 @@ def upload_file():
 
             # Store CV information in the DB
             query = """
-                INSERT INTO cv (id, data_owner, date_created)
+                INSERT INTO cv (id, data_owner, date_uploaded)
                 VALUES (%s, %s, now())
             """
             cur.execute(query, (file_id, json_data["name"]))
