@@ -195,7 +195,7 @@
             </div>
 
             <!-- Result Area (for loading, success, or error) -->
-            <div id="result-container" class="text-center hidden">
+            <div id="result-container" class="text-center hidden pt-2">
               <!-- Loading Spinner -->
               <div id="loading-spinner" class="hidden">
                 <svg
@@ -284,6 +284,8 @@
           displayMessage("Please select a PDF file to upload.", "error");
           return;
         }
+
+        hideMessage();
 
         submitButton.textContent = "Uploading...";
         setLoading(true);
