@@ -1,7 +1,7 @@
 # Initial file by Gemini
 import os
 import uuid
-from flask import Flask, request, jsonify, send_from_directory, session
+from flask import Flask, render_template, request, jsonify, send_from_directory, session
 from werkzeug.utils import secure_filename
 from google import genai
 from cv_generator import generate_professional_cv
@@ -12,6 +12,7 @@ from psycopg2.extensions import AsIs
 from psycopg2.extras import register_uuid, RealDictCursor
 import json
 import threading
+from utils import generate_pin
 
 # --- Environment - Only needed when running locally ---
 """ from dotenv import load_dotenv
@@ -165,23 +166,16 @@ def session_is_valid(session):
 def serve_html():
     """Serves the login and upload pages to the frontend."""
 
-    html_path = ""
     html_file = ""
 
     valid_session = session_is_valid(session)
     if not valid_session:
-        html_path = os.path.join(VIEW_DIR, "login.html")
         html_file = "login.html"
     else:
-        html_path = os.path.join(VIEW_DIR, "upload_page.html")
         html_file = "upload_page.html"
 
-    # Check if html exists
-    if not os.path.exists(html_path):
-        return "Frontend ({html_file}) not found.", 404
-
     # Send the html file
-    return send_from_directory(VIEW_DIR, html_file)
+    return render_template(html_file)
 
 
 @application.route("/view", methods=["GET"])
@@ -193,11 +187,7 @@ def cv_list():
     if not valid_session:
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 
-    return send_from_directory(
-        VIEW_DIR,
-        "cv_list.html",
-        as_attachment=False,  # Set to True to force download
-    )
+    return render_template("cv_list.html")
 
 
 @application.route("/view/<file_id>", methods=["GET"])
@@ -448,7 +438,10 @@ def upload_file():
             print(f"An unexpected error occurred: {e}")
             return (
                 jsonify(
-                    {"success": False, "error": "An unexpected server error occurred."}
+                    {
+                        "success": False,
+                        "error": "An unexpected server error occurred: {e}",
+                    }
                 ),
                 500,
             )
@@ -459,6 +452,87 @@ def upload_file():
 
         # 9. Send the success response
         return jsonify({"success": True, "url": new_url})
+
+
+@application.route("/api/pin", methods=["POST"])
+def create_pin():
+    """
+    Creates an empty CV entry with a PIN so a CV can be uploaded by them at a later date
+    """
+
+    # Ensure user is logged in
+    valid_session = session_is_valid(session)
+    if not valid_session:
+        return jsonify({"success": False, "error": "Access forbidden."}), 403
+
+    try:
+        # Connect to the RDS database
+        conn = psycopg2.connect(
+            host=os.environ.get("RDS_HOSTNAME"),
+            database=os.environ.get("RDS_DB_NAME"),
+            user=os.environ.get("RDS_USERNAME"),
+            password=os.environ.get("RDS_PASSWORD"),
+            port=os.environ.get("RDS_PORT"),
+        )
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        pin = ""
+        failed_attempts = 0
+        while True:
+            pin = generate_pin()
+
+            # Ensure PIN is unique
+            query = "SELECT 1 FROM cv WHERE pin_code = %s"
+            cur.execute(query, (pin,))
+
+            row = cur.fetchone()
+            if row == None:
+                break
+            else:
+                failed_attempts += 1
+
+            if failed_attempts == 3:
+                message = "Generating a unique PIN failed 3 times. This shouldn't happen, so something is likely wrong."
+                print(message)
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": message,
+                        }
+                    ),
+                    500,
+                )
+
+        # Register the UUID format for psycopg2
+        register_uuid()
+
+        # Delete the rows with the provided IDs
+        query = "INSERT INTO cv (id, data_owner, pin_code) VALUES (%s, %s, %s)"
+        cur.execute(
+            query,
+            (
+                uuid.uuid4(),
+                request.values["recipientIdentifier"],
+                pin,
+            ),
+        )
+        conn.commit()
+
+        # Close connection
+        cur.close()
+        conn.close()
+
+        # Send the success response
+        return jsonify({"success": True, "pin": pin})
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return (
+            jsonify(
+                {"success": False, "error": "An unexpected server error occurred: {e}"}
+            ),
+            500,
+        )
 
 
 @application.route("/api/cv", methods=["DELETE"])

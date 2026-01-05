@@ -1,0 +1,185 @@
+<!-- PDF Upload button -->
+{% macro pdf_upload() %}
+<style>
+  .file-input-wrapper {
+    margin-bottom: 0;
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+    cursor: pointer;
+    ::-webkit-file-upload-button {
+      cursor: pointer;
+    }
+  }
+  .file-input-wrapper input[type="file"] {
+    font-size: 100px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .file-input-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1.5rem;
+    border: 2px dashed #cbd5e1; /* gray-300 */
+    border-radius: 0.5rem; /* rounded-lg */
+    background-color: #f8fafc; /* gray-50 */
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+  }
+  .file-input-wrapper:hover .file-input-label {
+    border-color: #3b82f6; /* blue-500 */
+    background-color: #eff6ff; /* blue-50 */
+  }
+  /* Style for when a file is selected */
+  .file-input-wrapper.file-selected .file-input-label {
+    border-color: #16a34a; /* green-600 */
+    background-color: #f0fdf4; /* green-50 */
+  }
+  /* Style for when a file is dragged on top of the file input */
+  .dragover {
+    border: 2px solid #3b82f6; /* gray-300 */
+  }
+</style>
+
+<div id="file-wrapper" class="file-input-wrapper w-full">
+  <label for="pdf-file" id="file-label" class="file-input-label text-gray-500">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="w-12 h-12 mr-3 text-gray-400"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      stroke-width="1.5"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
+      />
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M12 10v6m0 0l-3-3m3 3l3-3"
+      />
+    </svg>
+    <div>
+      <span class="font-medium text-blue-600"> Click to upload </span>
+      or drag and drop
+      <p id="file-name" class="text-sm text-gray-500 mt-1">
+        PDF files only (max 50MB)
+      </p>
+    </div>
+  </label>
+  <input
+    type="file"
+    id="pdf-file"
+    name="file"
+    accept="application/pdf"
+    class="file-input"
+  />
+</div>
+
+<script>
+  const pdfFile = document.getElementById("pdf-file");
+  const fileNameDisplay = document.getElementById("file-name");
+  const fileWrapper = document.getElementById("file-wrapper");
+  const fileLabel = document.getElementById("file-label");
+
+  /* Clear the dragover style if the file is dragged ANYWHERE other than the file input */
+  document.addEventListener("dragover", (e) => {
+    if (e.target.id !== "pdf-file") {
+      fileLabel.classList.remove("dragover");
+    }
+  });
+
+  fileWrapper.addEventListener("dragover", (e) => {
+    fileLabel.classList.add("dragover");
+  });
+
+  fileWrapper.addEventListener("drop", (e) => {
+    fileLabel.classList.remove("dragover");
+  });
+
+  // Update file name display on file selection
+  pdfFile.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      fileNameDisplay.textContent = file.name;
+      fileWrapper.classList.add("file-selected");
+      fileLabel.classList.add("border-green-600", "bg-green-50");
+    } else {
+      fileNameDisplay.textContent = "PDF files only (max 50MB)";
+      fileWrapper.classList.remove("file-selected");
+      fileLabel.classList.remove("border-green-600", "bg-green-50");
+    }
+  });
+</script>
+{% endmacro %}
+
+<!-- 
+  Show CV Settings by codes given in feature_list, feature codes:
+  all (show everything)
+  first_name
+  job_description
+  profile_text
+-->
+{% macro cv_settings(feature_list) %}
+<div class="space-y-4 border rounded-xs p-4">
+  <p class="w-full p-2 text-center text-heading font-bold text-lg">
+    CV Settings
+  </p>
+
+  <!-- First name check -->
+  {% if "all" in feature_list or "first_name" in feature_list %}
+  <div class="flex items-center gap-2">
+    <input
+      checked
+      id="pin-first-name-check"
+      type="checkbox"
+      name="firstNameOnly"
+      class="primary-color first-name-check w-4 h-4 border border-default-medium rounded-xs bg-neutral-secondary-medium focus:ring-2 focus:ring-brand-soft hover:cursor-pointer"
+    />
+    <label
+      for="pin-first-name-check"
+      class="select-none text-sm font-medium text-heading hover:cursor-pointer"
+    >
+      Only display first name
+    </label>
+  </div>
+  {% endif %}
+
+  <!-- Keywords / Job description -->
+  {% if "all" in feature_list or "job_description" in feature_list %}
+  <div>
+    <label for="pin-keyword-list" class="text-sm font-medium text-heading">
+      Keywords / Job description
+    </label>
+    <textarea
+      id="pin-keyword-list"
+      name="keywordList"
+      class="w-full mb-4 border border-default-medium rounded-xs text-heading text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+      placeholder="e.g. Web application built with custom web components, a Python server and a PostgreSQL database."
+    ></textarea>
+  </div>
+  {% endif %}
+
+  <!-- custom profile text -->
+  {% if "all" in feature_list or "profile_text" in feature_list %}
+  <div>
+    <label for="profile-text" class="text-sm font-medium text-heading">
+      Custom profile text (injected at the end of the profile section)
+    </label>
+    <textarea
+      id="profile-text"
+      name="profileText"
+      class="w-full mb-4 border border-default-medium rounded-xs text-heading text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+      placeholder="e.g. Curious, detail-oriented, and quick to learn, Sami brings fresh perspective and solid energy to any development team!"
+    ></textarea>
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}

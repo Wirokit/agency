@@ -1,0 +1,449 @@
+<!-- Base file created by Gemini AI -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico" />
+    <title>CV Tool</title>
+    <!-- 1. Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.css"
+      rel="stylesheet"
+    />
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      /* 2. Add custom styling for the file input */
+      .card {
+        box-shadow:
+          0 0 20px 0 rgb(0 0 0 / 0.1),
+          0 0 20px 0 rgb(0 0 0 / 0.1);
+      }
+      .tab-btn {
+        font-size: 1.2em;
+      }
+      .tab-btn:first-child {
+        border-radius: 0.75rem 0 0 0;
+      }
+      .tab-btn:last-child {
+        border-radius: 0 0.75rem 0 0;
+      }
+      .tab-btn:has(a.active) {
+        border-width: 1px 1px 0 1px;
+        border-color: #3b82f6;
+      }
+      .tab-btn:not(:has(a.active)) {
+        background-color: #b1b1b1;
+        border-bottom: 1px solid #3b82f6;
+      }
+      .tab-btn:not(:has(a.active)):hover {
+        background-color: #c0c0c0;
+      }
+      .card-content {
+        border-width: 0 1px 1px 1px;
+        border-color: #3b82f6;
+        border-radius: 0 0 0.75rem 0.75rem;
+      }
+      .primary-color {
+        color: #3b82f6;
+      }
+      .consent-container {
+        transition: all 0.2s ease-in-out;
+      }
+      .warn-border {
+        border-color: rgb(220, 53, 69);
+      }
+      .blocked {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 font-sans antialiased">
+    {% import "macros.html" as ui %}
+
+    <!-- Main Container -->
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="flex flex-col items-end">
+        <a
+          href="/view"
+          class="flex justify-center items-center mb-4 text-xl text-pink-600"
+        >
+          <b>CV List</b> <i data-lucide="chevron-right" class="w-8 h-8"></i>
+        </a>
+
+        <!-- Card -->
+        <div class="bg-white w-full max-w-lg rounded-xl card">
+          <div>
+            <ul
+              class="w-full flex flex-wrap -mb-px text-sm font-medium text-center text-body"
+            >
+              <li class="tab-btn w-1/2">
+                <a
+                  id="tab-upload"
+                  href="#"
+                  class="active w-full inline-flex items-center justify-center p-4 group"
+                >
+                  <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>
+                  <b>UPLOAD PDF</b>
+                </a>
+              </li>
+              <li class="tab-btn w-1/2">
+                <a
+                  id="tab-pin"
+                  href="#"
+                  class="w-full inline-flex items-center justify-center p-4 group"
+                >
+                  <i data-lucide="lock" class="w-5 h-5 mr-2"></i>
+                  <b>SEND PIN</b>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="card-content p-8 space-y-4">
+            <div id="upload-content">
+              <!-- Header -->
+              <div class="text-center mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">Upload PDF</h1>
+                <p class="text-gray-500 mt-2">
+                  Turn a PDF CV into a new Wirokit CV
+                </p>
+              </div>
+
+              <form id="upload-form" class="space-y-6">
+                <div
+                  class="consent-container w-full p-4 border border-default-medium rounded-xs text-center warn-border"
+                >
+                  <h3 class="mb-4 font-semibold text-heading">
+                    The data owner must give their consent for us to store and
+                    process their data!
+                  </h3>
+                  <label
+                    for="consent-check"
+                    class="p-2 items-center select-none text-md font-medium text-heading hover:cursor-pointer"
+                  >
+                    <input
+                      id="consent-check"
+                      type="checkbox"
+                      value=""
+                      class="primary-color w-5 h-5 mr-2 border border-default-medium rounded-xs bg-neutral-secondary-medium focus:ring-2 focus:ring-brand-soft hover:cursor-pointer"
+                    />
+                    Consent granted
+                  </label>
+                </div>
+
+                <div id="consent-block" class="space-y-6 blocked">
+                  <!-- File Input Area -->
+                  {{ ui.pdf_upload() }}
+
+                  <!-- CV Settings -->
+                  {{ ui.cv_settings(["all"]) }}
+
+                  <!-- Submit Button -->
+                  <button
+                    type="submit"
+                    id="submit-button"
+                    class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200"
+                  >
+                    Upload and Process
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div id="pin-content" class="min-w-3xl hidden">
+              <!-- Header -->
+              <div class="text-center mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">Send PIN</h1>
+                <p class="text-gray-500 mt-2">
+                  Get a PIN code with which a user can upload their own CV to be
+                  processed
+                </p>
+              </div>
+
+              <form id="pin-form" class="space-y-6">
+                <!-- PIN recipient name -->
+                <label for="recipient-identifier">
+                  <p class="text-sm font-medium text-heading">
+                    Recipient identifier (email, full name etc.)
+                  </p>
+                  <input
+                    autocomplete="off"
+                    data-form-type="other"
+                    type="text"
+                    id="recipient-identifier"
+                    name="recipientIdentifier"
+                    class="w-full mb-4 border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+                  />
+                </label>
+
+                <!-- CV Settings -->
+                {{ ui.cv_settings(["first_name", "job_description"]) }}
+
+                <!-- Submit Button -->
+                <button
+                  type="submit"
+                  id="pin-submit-button"
+                  class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200"
+                >
+                  Get PIN
+                </button>
+              </form>
+            </div>
+
+            <!-- Result Area (for loading, success, or error) -->
+            <div id="result-container" class="text-center hidden">
+              <!-- Loading Spinner -->
+              <div id="loading-spinner" class="hidden">
+                <svg
+                  class="animate-spin h-8 w-8 text-blue-600 mx-auto"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <p class="text-gray-500 mt-2">
+                  Processing your file, please wait...
+                </p>
+              </div>
+
+              <!-- Result Message -->
+              <div id="result-message"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. JavaScript Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
+    <script>
+      // Initialize Icons
+      lucide.createIcons();
+
+      // Tabs
+      const uploadTabButton = document.getElementById("tab-upload");
+      const uploadTabContent = document.getElementById("upload-content");
+      const pinTabButton = document.getElementById("tab-pin");
+      const pinTabContent = document.getElementById("pin-content");
+
+      // -- Upload tab elements --
+      // Consent blocker - disables all elements until checkbox is checked
+      const consentContainer = document.querySelector(".consent-container");
+      const consentCheck = document.getElementById("consent-check");
+      const consentBlocker = document.getElementById("consent-block");
+
+      const uploadForm = document.getElementById("upload-form");
+
+      // -- PIN tab elements --
+      const pinForm = document.getElementById("pin-form");
+
+      // Shared elements
+      const resultContainer = document.getElementById("result-container");
+      const loadingSpinner = document.getElementById("loading-spinner");
+      const resultMessage = document.getElementById("result-message");
+      const submitButton = document.getElementById("submit-button");
+
+      // Enable submit button only when consent is checked
+      consentCheck.addEventListener("change", (e) => {
+        hideMessage();
+        if (e.target.checked) {
+          consentBlocker.classList.remove("blocked");
+          consentContainer.classList.remove("warn-border");
+        } else {
+          consentBlocker.classList.add("blocked");
+          consentContainer.classList.add("warn-border");
+        }
+      });
+
+      // Handle form submission
+      uploadForm.addEventListener("submit", async (e) => {
+        e.preventDefault(); // Prevent default form submission
+
+        const formData = new FormData(uploadForm);
+        const formObject = Object.fromEntries(formData);
+
+        const file = formObject["file"];
+        if (!file || file["name"] == "") {
+          displayMessage("Please select a PDF file to upload.", "error");
+          return;
+        }
+
+        submitButton.textContent = "Uploading...";
+        setLoading(true);
+
+        const firstNameOnly = formObject["firstNameOnly"] === "on";
+        formData.set("firstNameOnly", firstNameOnly);
+
+        try {
+          // Post the file to the backend's /cv endpoint
+          const response = await fetch("/api/cv", {
+            method: "POST",
+            body: formData,
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.success && result.url) {
+            // Success! Display the new URL
+            const successHtml = `
+              <p class="text-green-700 font-medium">File processed successfully!</p>
+              <p class="text-gray-600 mt-2">Your new link is ready:</p>
+              <a href="${result.url}" target="_blank" class="block bg-gray-100 text-blue-600 font-mono break-words p-3 rounded-md mt-2 hover:bg-gray-200">
+                ${result.url}
+              </a>
+            `;
+            displayMessage(successHtml, "success");
+          } else {
+            // Handle backend error
+            displayMessage(
+              result.error || "An unknown error occurred on the server.",
+              "error",
+            );
+          }
+        } catch (error) {
+          // Handle network or fetch error
+          console.error("Upload Error:", error);
+          displayMessage(
+            "Failed to connect to the server. Please try again.",
+            "error",
+          );
+        } finally {
+          submitButton.textContent = "Upload and Process";
+          setLoading(false);
+        }
+      });
+
+      pinForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(pinForm);
+        const formObject = Object.fromEntries(formData);
+
+        if (formObject["recipientIdentifier"] === "") {
+          displayMessage("Please enter a recipient identifier.", "error");
+          return;
+        }
+
+        hideMessage();
+
+        const firstNameOnly = formObject["firstNameOnly"] === "on";
+        formData.set("firstNameOnly", firstNameOnly);
+
+        setLoading(true);
+
+        try {
+          // Post the file to the backend's /cv endpoint
+          const response = await fetch("/api/pin", {
+            method: "POST",
+            body: formData,
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.success && result.pin) {
+            // Success! Display the new URL
+            const successHtml = `
+              <p class="text-green-700 font-medium">PIN created!</p>
+              <p class="text-gray-600 mt-2">Give this code to the CV owner:</p>
+              <p class="block bg-gray-100 text-blue-600 font-mono break-words p-3 rounded-md mt-2 text-3xl">
+                ${result.pin}
+              </p>
+            `;
+            displayMessage(successHtml, "success");
+          } else {
+            // Handle backend error
+            displayMessage(
+              result.error || "An unknown error occurred on the server.",
+              "error",
+            );
+          }
+        } catch (error) {
+          // Handle network or fetch error
+          console.error("Upload Error:", error);
+          displayMessage(
+            "Failed to connect to the server. Please try again.",
+            "error",
+          );
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      uploadTabButton.addEventListener("click", (e) => {
+        e.preventDefault();
+
+        if (uploadTabButton.classList.contains("active")) {
+          return;
+        }
+
+        hideMessage();
+
+        uploadTabButton.classList.add("active");
+        uploadTabContent.classList.remove("hidden");
+        pinTabButton.classList.remove("active");
+        pinTabContent.classList.add("hidden");
+      });
+
+      pinTabButton.addEventListener("click", (e) => {
+        e.preventDefault();
+
+        if (pinTabButton.classList.contains("active")) {
+          return;
+        }
+
+        hideMessage();
+
+        pinTabButton.classList.add("active");
+        pinTabContent.classList.remove("hidden");
+        uploadTabButton.classList.remove("active");
+        uploadTabContent.classList.add("hidden");
+      });
+
+      // Helper function to display messages
+      function displayMessage(message, type) {
+        resultContainer.classList.remove("hidden");
+
+        if (type === "error") {
+          resultMessage.innerHTML = `<p class="text-red-600 font-medium">${message}</p>`;
+        } else {
+          resultMessage.innerHTML = message; // Assumes HTML for success
+        }
+      }
+
+      function setLoading(loading) {
+        submitButton.disabled = loading;
+
+        if (loading) {
+          submitButton.classList.add("disabled");
+          loadingSpinner.classList.remove("hidden");
+          resultContainer.classList.remove("hidden");
+        } else {
+          submitButton.classList.remove("disabled");
+          loadingSpinner.classList.add("hidden");
+        }
+      }
+
+      function hideMessage() {
+        resultContainer.classList.add("hidden");
+        resultMessage.innerHTML = "";
+      }
+    </script>
+  </body>
+</html>

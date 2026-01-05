@@ -119,7 +119,7 @@
               <tr class="header-row">
                 <th></th>
                 <th class="w-max"><p>Owner</p></th>
-                <th class="w-1/3"><p>Date Created</p></th>
+                <th class="w-1/3"><p>Date Uploaded</p></th>
                 <th class="w-full"><p>ID</p></th>
               </tr>
             </table>
@@ -195,10 +195,15 @@
                   </label>
                 </td>
                 <td><label for="row-${i}">${row["data_owner"]}</label></td>
-                <td><label for="row-${i}">${new Date(row["date_uploaded"]).toLocaleString()}</label></td>
+                <td><label for="row-${i}">${row["date_uploaded"] != null ? new Date(row["date_uploaded"]).toLocaleString() : "-"}</label></td>
                 <td>
                   <label for="row-${i}">
-                    <a id="row-${i}-id" href="/view/${row["id"]}" target="_blank">${row["id"]}</a>
+                    ${
+                      row["date_uploaded"] != null
+                        ? `<a id="row-${i}-id" href="/view/${row["id"]}" target="_blank">${row["id"]}</a>`
+                        : `<p id="row-${i}-id">${row["id"]}</p>`
+                    }
+
                   </label>
                 </td>
               </tr>
