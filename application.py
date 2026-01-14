@@ -147,7 +147,7 @@ def get_user_record(user, column="*"):
         return None
 
 
-def session_is_valid(session):
+def login_session_is_valid(session):
     valid_session = False
 
     user_id = session.get("user_id")
@@ -159,6 +159,39 @@ def session_is_valid(session):
     return valid_session
 
 
+def validate_pin(session):
+    pin = session.get("pin_code")
+    if pin:
+        # Connect to an RDS database
+        conn = psycopg2.connect(
+            host=os.environ.get("RDS_HOSTNAME"),
+            database=os.environ.get("RDS_DB_NAME"),
+            user=os.environ.get("RDS_USERNAME"),
+            password=os.environ.get("RDS_PASSWORD"),
+            port=os.environ.get("RDS_PORT"),
+        )
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Fetch a db entry based on provided PIN
+        query = """
+            SELECT id, data_owner, date_uploaded FROM cv
+            WHERE pin_code IS NOT NULL AND pin_code = %s
+        """
+        cur.execute(query, (session.get("pin_code"),))
+
+        result = cur.fetchone()
+
+        # Close connection
+        cur.close()
+        conn.close()
+
+        if not result:
+            return False
+
+        return result
+    return False
+
+
 # --- Views ---
 
 
@@ -168,11 +201,17 @@ def serve_html():
 
     html_file = ""
 
-    valid_session = session_is_valid(session)
-    if not valid_session:
+    valid_login_session = login_session_is_valid(session)
+    pin_session = validate_pin(session)
+    if not valid_login_session and not pin_session:
         html_file = "login.html"
-    else:
+    elif valid_login_session:
         html_file = "upload_page.html"
+    else:
+        if not pin_session["date_uploaded"]:
+            html_file = "pin_upload.html"
+        else:
+            return view_file(pin_session["id"])
 
     # Send the html file
     return render_template(html_file)
@@ -183,7 +222,7 @@ def cv_list():
     """Serves the CV list page to the frontend."""
 
     # Ensure user is logged in
-    valid_session = session_is_valid(session)
+    valid_session = login_session_is_valid(session)
     if not valid_session:
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 
@@ -195,8 +234,9 @@ def view_file(file_id):
     """Serves the CV to the frontend."""
 
     # Ensure user is logged in
-    valid_session = session_is_valid(session)
-    if not valid_session:
+    valid_session = login_session_is_valid(session)
+    pin_session = validate_pin(session)
+    if not valid_session and not pin_session:
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 
     try:
@@ -258,12 +298,51 @@ def check_login():
         return jsonify({"success": False})
 
 
+@application.route("/api/pin-login", methods=["POST"])
+def check_pin():
+    """Start a pin login session if pin is valid"""
+
+    # Ensure that data was sent
+    if not request.values["pin"]:
+        return jsonify({"success": False, "error": "Empty body."}), 400
+
+    # Connect to an RDS database
+    conn = psycopg2.connect(
+        host=os.environ.get("RDS_HOSTNAME"),
+        database=os.environ.get("RDS_DB_NAME"),
+        user=os.environ.get("RDS_USERNAME"),
+        password=os.environ.get("RDS_PASSWORD"),
+        port=os.environ.get("RDS_PORT"),
+    )
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    # Fetch a db entry based on provided PIN
+    query = """
+        SELECT id, data_owner FROM cv
+        WHERE pin_code IS NOT NULL AND pin_code = %s
+    """
+    cur.execute(query, (request.values["pin"],))
+
+    result = cur.fetchone()
+
+    # Close connection
+    cur.close()
+    conn.close()
+
+    if not result:
+        return jsonify({"success": False, "error": "Invalid PIN."}), 404
+
+    session["pin_code"] = request.values["pin"]
+
+    return jsonify({"success": True, "data": result})
+
+
 @application.route("/api/cv", methods=["GET"])
 def getCVList():
     """Returns a list of all CVs"""
 
     # Ensure user is logged in
-    valid_session = session_is_valid(session)
+    valid_session = login_session_is_valid(session)
     if not valid_session:
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 
@@ -300,7 +379,7 @@ def upload_file():
     """
 
     # Ensure user is logged in
-    valid_session = session_is_valid(session)
+    valid_session = login_session_is_valid(session)
     if not valid_session:
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 
@@ -461,7 +540,7 @@ def create_pin():
     """
 
     # Ensure user is logged in
-    valid_session = session_is_valid(session)
+    valid_session = login_session_is_valid(session)
     if not valid_session:
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 
@@ -542,7 +621,7 @@ def delete_file():
     """
 
     # Ensure user is logged in
-    valid_session = session_is_valid(session)
+    valid_session = login_session_is_valid(session)
     if not valid_session:
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 

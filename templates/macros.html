@@ -183,3 +183,167 @@
   {% endif %}
 </div>
 {% endmacro %}
+
+<!-- PIN input field -->
+{% macro pin_input() %}
+<style>
+  /* Hide the increase/decrese arrows on number input */
+  @layer utilities {
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      appearance: none;
+    }
+  }
+  .pin input {
+    border: 1px solid rgb(203 213 225);
+    padding: 0.5rem 0;
+    text-align: center;
+    font-size: 1.7rem;
+  }
+</style>
+<div class="pin w-full flex gap-1">
+  <input
+    id="pin-1"
+    class="w-1/6 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+    type="number"
+    required
+  />
+  <input
+    id="pin-2"
+    class="w-1/6 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+    type="number"
+    required
+  />
+  <input
+    id="pin-3"
+    class="w-1/6 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+    type="number"
+    required
+  />
+  <input
+    id="pin-4"
+    class="w-1/6 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+    type="number"
+    required
+  />
+  <input
+    id="pin-5"
+    class="w-1/6 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+    type="number"
+    required
+  />
+  <input
+    id="pin-6"
+    class="w-1/6 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+    type="number"
+    required
+  />
+</div>
+<script>
+  const pinArray = [
+    document.getElementById("pin-1"),
+    document.getElementById("pin-2"),
+    document.getElementById("pin-3"),
+    document.getElementById("pin-4"),
+    document.getElementById("pin-5"),
+    document.getElementById("pin-6"),
+  ];
+
+  pinArray.forEach((pinInput) => {
+    // Only allow input that contains numbers
+    // Also allow backspace | delete key | enter
+    pinInput.addEventListener("beforeinput", (e) => {
+      if (
+        !e.inputType.startsWith("delete") &&
+        e.inputType != "insertLineBreak" &&
+        !/^\d$/.test(e.data)
+      ) {
+        e.preventDefault();
+      }
+
+      // Handle backspace on empty input - move focus to previous input
+      // The "input" event will be triggered on the newly focused input
+      if (e.inputType == "deleteContentBackward" && pinInput.value == "") {
+        const inputNum = e.target.id[e.target.id.length - 1];
+        if (inputNum > 1) {
+          pinArray[inputNum - 2].focus();
+        }
+      } else if (
+        e.inputType == "deleteContentForward" &&
+        pinInput.value == ""
+      ) {
+        // Same for the delete key - does anyone actually use it?
+        const inputNum = e.target.id[e.target.id.length - 1];
+        if (inputNum < 6) {
+          pinArray[inputNum].focus();
+
+          // Input event won't work correctly, so do things manually
+          pinArray[inputNum].value = "";
+          e.preventDefault();
+        }
+      }
+    });
+
+    pinInput.addEventListener("input", (e) => {
+      // Replace any existing value with the input
+      if (pinInput.value.length > 0) {
+        e.preventDefault();
+        pinInput.value = e.data;
+      }
+
+      // Move focus to the next input if not last input
+      const inputNum = e.target.id[e.target.id.length - 1];
+      if (!e.inputType.startsWith("delete") && inputNum < 6) {
+        pinArray[inputNum].focus();
+      }
+    });
+
+    pinInput.addEventListener("paste", (e) => {
+      e.preventDefault();
+      let pasteText = e.clipboardData.getData("text");
+      pasteText = pasteText.trim(); // Remove surrounding empty space
+
+      // Ensure that pasted text contains only numbers
+      if (/^\d+$/.test(pasteText)) {
+        // Put the first pasted number to the focused field
+        pinInput.value = pasteText[0];
+
+        // Put the rest of the numbers to the following fields
+        const inputNum = e.target.id[e.target.id.length - 1];
+        let dataIndex = 1;
+        for (let x = inputNum; x < pinArray.length; x++) {
+          if (pasteText[dataIndex]) {
+            pinArray[x].value = pasteText[dataIndex];
+            dataIndex++;
+            pinArray[x].focus();
+          } else {
+            // Leave focus on the first empty space if not enough to fill all
+            pinArray[x].focus();
+            break;
+          }
+        }
+      }
+    });
+
+    // Allow navigation between pin inputs with arrow keys
+    pinInput.addEventListener("keydown", (e) => {
+      // We only care about arrow keys
+      if (!e.code.includes("Arrow")) {
+        return;
+      }
+
+      e.preventDefault();
+
+      const inputNum = e.target.id[e.target.id.length - 1];
+      switch (e.code) {
+        case "ArrowRight":
+          inputNum < 6 ? pinArray[inputNum].focus() : null;
+          break;
+        case "ArrowLeft":
+          inputNum > 1 ? pinArray[inputNum - 2].focus() : null;
+          break;
+      }
+    });
+  });
+</script>
+{% endmacro %}
