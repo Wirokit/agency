@@ -199,17 +199,17 @@ def validate_pin(session):
 def serve_html():
     """Serves the login and upload pages to the frontend."""
 
-    html_file = ""
+    html_file = "views/"
 
     valid_login_session = login_session_is_valid(session)
     pin_session = validate_pin(session)
     if not valid_login_session and not pin_session:
-        html_file = "login.html"
+        html_file += "login.html"
     elif valid_login_session:
-        html_file = "upload_page.html"
+        html_file += "upload_page.html"
     else:
         if not pin_session["date_uploaded"]:
-            html_file = "pin_upload.html"
+            html_file += "pin_upload.html"
         else:
             return view_file(pin_session["id"])
 
@@ -226,7 +226,7 @@ def cv_list():
     if not valid_session:
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 
-    return render_template("cv_list.html")
+    return render_template("views/cv_list.html")
 
 
 @application.route("/view/<file_id>", methods=["GET"])
@@ -296,6 +296,15 @@ def check_login():
             return jsonify({"success": False})
     else:
         return jsonify({"success": False})
+
+
+@application.route("/api/logout", methods=["POST"])
+def logout():
+    """End a login session"""
+
+    session.clear()
+
+    return jsonify({"success": True})
 
 
 @application.route("/api/pin-login", methods=["POST"])

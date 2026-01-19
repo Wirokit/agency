@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico" />
+    <title>Wirokit - CV Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      .base-height {
+        min-height: calc(100vh - 60px);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 font-sans antialiased">
+    <nav
+      class="bg-inherit fixed w-full z-20 top-0 start-0 border-b border-default shadow-md"
+    >
+      <div
+        class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4"
+      >
+        <div class="flex gap-4">
+          <a
+            href="https://www.wirokit.fi/"
+            target="_blank"
+            class="flex items-center space-x-3 rtl:space-x-reverse"
+          >
+            <img
+              src="/static/images/wirokit_icon_b.png"
+              class="w-10"
+              alt="Wirokit Logo"
+            />
+          </a>
+          <span
+            class="self-center text-xl text-heading font-semibold whitespace-nowrap"
+          >
+            CV Tool
+          </span>
+        </div>
+        <div class="flex gap-4">
+          <span class="hidden md:inline">
+            Logged in as test.user@emailaddr.com
+          </span>
+          <a id="log-out-btn" href="#" class="md:underline">Log out</a>
+        </div>
+      </div>
+    </nav>
+    <section class="base-height flex items-center justify-center mt-[60px]">
+      <header>{% block header %}{% endblock %}</header>
+      {% for message in get_flashed_messages() %}
+      <div class="flash">{{ message }}</div>
+      {% endfor %} {% block content %}{% endblock %}
+    </section>
+    <script>
+      const logOutBtn = document.getElementById("log-out-btn");
+
+      logOutBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+
+        try {
+          const response = await fetch("/api/logout", {
+            method: "POST",
+          });
+          const result = await response.json();
+
+          if (result.success) {
+            window.location.reload();
+          }
+        } catch (e) {
+          console.error("Logout error:", e);
+        }
+      });
+    </script>
+  </body>
+</html>
