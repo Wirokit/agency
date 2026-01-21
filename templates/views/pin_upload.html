@@ -16,6 +16,22 @@
   .warn-border {
     border-color: rgb(220, 53, 69);
   }
+  button.disabled {
+    pointer-events: none;
+    background-color: #b1b1b1;
+  }
+
+  label {
+    cursor: pointer;
+  }
+  input[type="checkbox"] {
+    cursor: pointer;
+    border-color: black;
+  }
+
+  .modal {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
 </style>
 
 <!-- Card -->
@@ -32,11 +48,37 @@
         <!-- File Input Area -->
         {{ ui.pdf_upload() }}
 
+        <div
+          id="consent-box"
+          class="consent-check border border-default rounded-xs warn-border p-2 text-center"
+        >
+          By submitting your CV and clicking "I Agree," you acknowledge and
+          consent to the terms laid out in our
+          <a id="policy-link" href="#" class="underline primary-color"
+            >Privacy Policy</a
+          >
+
+          <div class="flex items-center justify-center mt-2">
+            <label
+              for="consent-checkbox"
+              class="flex items-center justify-center"
+            >
+              <input
+                id="consent-checkbox"
+                type="checkbox"
+                class="w-4 h-4 mr-2 border border-default-medium rounded-xs bg-neutral-secondary-medium focus:ring-2 focus:ring-brand-soft"
+              />
+              I Agree
+            </label>
+          </div>
+        </div>
+
         <!-- Submit Button -->
         <button
+          disabled
           type="submit"
           id="submit-button"
-          class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200"
+          class="disabled w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200"
         >
           Upload and Process
         </button>
@@ -76,6 +118,29 @@
   </div>
 </div>
 
+{{ ui.modal("Privacy Policy", '
+<svg
+  class="animate-spin h-8 w-8 text-blue-600 mx-auto"
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  viewBox="0 0 24 24"
+>
+  <circle
+    class="opacity-25"
+    cx="12"
+    cy="12"
+    r="10"
+    stroke="currentColor"
+    stroke-width="4"
+  ></circle>
+  <path
+    class="opacity-75"
+    fill="currentColor"
+    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+  ></path>
+</svg>
+') }}
+
 <!-- 5. JavaScript Logic -->
 <script src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
 <script>
@@ -84,9 +149,58 @@
 
   const uploadForm = document.getElementById("upload-form");
   const resultContainer = document.getElementById("result-container");
+  const consentBox = document.getElementById("consent-box");
+  const consentCheckbox = document.getElementById("consent-checkbox");
+
   const loadingSpinner = document.getElementById("loading-spinner");
   const resultMessage = document.getElementById("result-message");
   const submitButton = document.getElementById("submit-button");
+
+  const policyLink = document.getElementById("policy-link");
+  const modalCloseButton = document.getElementById("modal-close-btn");
+  const privacyModal = document.getElementById("modal");
+  const privacyPolicyBody = document.getElementById("modal-body");
+
+  (async () => {
+    const response = await fetch("/api/privacy-policy", {
+      method: "GET",
+    });
+    const html = await response.text();
+
+    privacyPolicyBody.innerHTML = html;
+  })();
+
+  function handleModal(open) {
+    if (open) {
+      privacyModal.classList.remove("hidden");
+      privacyModal.ariaHidden = false;
+    } else {
+      privacyModal.classList.add("hidden");
+      privacyModal.ariaHidden = true;
+    }
+  }
+
+  policyLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    handleModal(true);
+  });
+
+  modalCloseButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    handleModal(false);
+  });
+
+  consentCheckbox.addEventListener("change", (e) => {
+    if (e.target.checked) {
+      consentBox.classList.remove("warn-border");
+      submitButton.classList.remove("disabled");
+      submitButton.disabled = false;
+    } else {
+      consentBox.classList.add("warn-border");
+      submitButton.classList.add("disabled");
+      submitButton.disabled = true;
+    }
+  });
 
   // Handle form submission
   uploadForm.addEventListener("submit", async (e) => {
@@ -106,13 +220,9 @@
     submitButton.textContent = "Uploading...";
     setLoading(true);
 
-    const firstNameOnly = formObject["firstNameOnly"] === "on";
-    formData.set("firstNameOnly", firstNameOnly);
-
     try {
-      // Post the file to the backend's /cv endpoint
       const response = await fetch("/api/cv", {
-        method: "POST",
+        method: "UPDATE",
         body: formData,
       });
 

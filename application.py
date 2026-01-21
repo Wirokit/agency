@@ -498,10 +498,19 @@ def upload_file():
 
             # Store CV information in the DB
             query = """
-                INSERT INTO cv (id, data_owner, date_uploaded)
-                VALUES (%s, %s, now())
+                INSERT INTO cv (id, data_owner, date_uploaded, contact_name, contact_email, contact_phone)
+                VALUES (%s, %s, now(), %s, %s, %s)
             """
-            cur.execute(query, (file_id, json_data["name"]))
+            cur.execute(
+                query,
+                (
+                    file_id,
+                    json_data["name"],
+                    contact_data[0],
+                    contact_data[1],
+                    contact_data[2],
+                ),
+            )
             conn.commit()
 
             # Close connection
@@ -540,6 +549,152 @@ def upload_file():
 
         # 9. Send the success response
         return jsonify({"success": True, "url": new_url})
+
+
+# Used by users that have loggen in via PIN to upload their own CV
+# Settings were previously set by admins in create_pin()
+@application.route("/api/cv", methods=["UPDATE"])
+def update_cv():
+    # Ensure that user has logged in with a valid PIN
+    pin_session = validate_pin(session)
+    if not pin_session:
+        return jsonify({"success": False, "error": "Access forbidden."}), 403
+
+    # Ensure that a file was sent
+    if "file" not in request.files:
+        return jsonify({"success": False, "error": "No file part in the request."}), 400
+
+    file = request.files["file"]
+
+    # Secure the original filename (prevents directory traversal attacks)
+    original_filename = secure_filename(file.filename)
+
+    # Save the original file
+    original_filepath = os.path.join(UPLOAD_FOLDER, original_filename)
+    file.save(original_filepath)
+
+    # Fetch cv settings from the DB
+    conn = psycopg2.connect(
+        host=os.environ.get("RDS_HOSTNAME"),
+        database=os.environ.get("RDS_DB_NAME"),
+        user=os.environ.get("RDS_USERNAME"),
+        password=os.environ.get("RDS_PASSWORD"),
+        port=os.environ.get("RDS_PORT"),
+    )
+    cur = conn.cursor()
+
+    # Register the UUID format for psycopg2
+    register_uuid()
+
+    # Fetch a db entry based on provided id
+    query = """
+        SELECT id, first_name_only, keyword_list, profile_text, contact_name, contact_email, contact_phone FROM cv
+        WHERE pin_code = %s
+    """
+    cur.execute(query, (session.get("pin_code"),))
+
+    result = cur.fetchone()
+    id = result[0]
+    first_name_only = result[1]
+    keyword_list = result[2] or []
+    profile_text = result[3] or ""
+
+    # Processed file info
+    processed_filename = f"{id}.html"
+    processed_filepath = os.path.join(PROCESSED_FOLDER, processed_filename)
+
+    # Generate prompt
+    prompt_preferences = ""
+    if first_name_only == True:
+        prompt_preferences += " Only take the first name."
+    if keyword_list:
+        keyword_list = keyword_list.replace("```", "")
+        prompt_preferences += f" Highlight skills relevant for the following job: ```\n{keyword_list}\n```"
+    else:
+        prompt_preferences += " Leave the 'highlightSkills' list empty."
+
+    updated_prompt = prompt.replace("{p}", prompt_preferences)
+
+    # --- PDF PROCESSING ---
+    try:
+        pdf_to_process = geminicli.files.upload(file=original_filepath)
+        response = geminicli.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[updated_prompt, pdf_to_process],
+            config={
+                "response_mime_type": "application/json",
+            },
+        )
+
+        result_json = response.text
+
+        # Ensure data is a dictionary
+        if isinstance(result_json, str):
+            json_data = json.loads(result_json)
+        else:
+            json_data = result_json
+
+        generate_professional_cv(
+            json_data,
+            contact_name=result[4],
+            contact_email=result[5],
+            contact_phone=result[6],
+            output_filename=processed_filepath,
+            profile_extra_text=profile_text,
+        )
+
+        # Upload HTML file to S3
+        with open(processed_filepath, "rb") as data:
+            s3.upload_fileobj(
+                data,
+                os.environ.get("S3_BUCKET_NAME"),
+                f"cv_html/{processed_filename}",
+            )
+
+        # UPDATE CV info in the DB
+        query = """
+            UPDATE cv
+            SET date_uploaded = now()
+            WHERE pin_code = %s
+        """
+        cur.execute(query, (session.get("pin_code"),))
+        conn.commit()
+
+        # Close connection
+        cur.close()
+        conn.close()
+
+        # --- End of PDF processing logic ---
+    except Exception as e:
+        # Check for gemini overload issues
+        if "The model is overloaded" in str(e):
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Gemini model is overloaded. Please try again.",
+                    }
+                ),
+                500,
+            )
+
+        # Catch other potential errors
+        print(f"An unexpected error occurred: {e}")
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "error": "An unexpected server error occurred: {e}",
+                }
+            ),
+            500,
+        )
+
+    # Build the URL for the new file
+    new_url = f"/view/{id}"
+
+    # Send the success response
+    return jsonify({"success": True, "url": new_url})
 
 
 @application.route("/api/pin", methods=["POST"])
@@ -677,6 +832,17 @@ def delete_file():
             ),
             500,
         )
+
+
+@application.route("/api/privacy-policy", methods=["GET"])
+def get_privacy_policy():
+    """
+    Returns the privacy policy in HTML form.
+    """
+
+    privacy_policy = open("privacy_statement.html", "r").read()
+
+    return privacy_policy
 
 
 # --- Run the Application ---

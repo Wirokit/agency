@@ -239,7 +239,6 @@
 
   // Enable submit button only when consent is checked
   consentCheck.addEventListener("change", (e) => {
-    console.log("boop");
     hideMessage();
     if (e.target.checked) {
       consentBlocker.classList.remove("blocked");
