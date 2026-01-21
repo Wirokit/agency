@@ -199,6 +199,7 @@
             );
             loginSubmitBtn.innerHTML = `<span class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4"></i> Verified</span>`;
             lucide.createIcons();
+            document.cookie = `user=${result.data["user"]}`;
             window.location.reload();
           } else {
             // Error State
@@ -263,6 +264,7 @@
 
           const result = await response.json();
           if (result.success) {
+            document.cookie = `user=${result.data["data_owner"]}`;
             window.location.reload();
           } else {
             if (result.error == "Invalid PIN.") {

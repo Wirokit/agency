@@ -43,9 +43,7 @@
           </span>
         </div>
         <div class="flex items-center gap-4">
-          <span class="hidden md:inline">
-            Logged in as test.user@emailaddr.com
-          </span>
+          <span id="logged-in-user" class="hidden md:inline"></span>
           <a id="log-out-btn" href="#" class="md:underline">Log out</a>
         </div>
       </div>
@@ -57,7 +55,11 @@
       {% endfor %} {% block content %}{% endblock %}
     </section>
     <script>
+      const loggedInUser = document.getElementById("logged-in-user");
       const logOutBtn = document.getElementById("log-out-btn");
+
+      const user = document.cookie.replace("user=", "");
+      loggedInUser.innerText = `Logged in as ${user}`;
 
       logOutBtn.addEventListener("click", async (e) => {
         e.preventDefault();
@@ -69,6 +71,7 @@
           const result = await response.json();
 
           if (result.success) {
+            document.cookie = "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
             window.location.reload();
           }
         } catch (e) {

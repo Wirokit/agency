@@ -211,7 +211,7 @@ def serve_html():
         if not pin_session["date_uploaded"]:
             html_file += "pin_upload.html"
         else:
-            return view_file(pin_session["id"])
+            return view_file(str(pin_session["id"]))
 
     # Send the html file
     return render_template(html_file)
@@ -291,7 +291,7 @@ def check_login():
 
         if password_correct:
             session["user_id"] = request.values["user"]
-            return jsonify({"success": True})
+            return jsonify({"success": True, "data": {"user": request.values["user"]}})
         else:
             return jsonify({"success": False})
     else:
