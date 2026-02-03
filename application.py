@@ -1,17 +1,13 @@
 # Initial file by Gemini
 import os
 import uuid
-from flask import Flask, render_template, request, jsonify, send_from_directory, session
+from flask import Flask, render_template, request, jsonify, session
 from werkzeug.utils import secure_filename
 from google import genai
-from cv_generator import generate_professional_cv
-import boto3
-import botocore
 import psycopg2
 from psycopg2.extensions import AsIs
 from psycopg2.extras import register_uuid, RealDictCursor
 import json
-import threading
 from utils import generate_pin
 
 # --- Environment - Only needed when running locally ---
@@ -46,66 +42,6 @@ ALLOWED_EXTENSIONS = {"pdf"}
 # Create a Gemini client
 geminicli = genai.Client()
 prompt = open("prompt.txt", "r").read()
-
-# Create an S3 client.
-s3 = boto3.client("s3")
-
-
-# Start cleanup script - Runs every 24h
-def cleanup():
-    # Don't run cleanup in development
-    if os.environ.get("DEBUG_MODE") == "TRUE":
-        return
-
-    print("Starting cleanup process")
-    records_cleaned = 0
-
-    # Connect to an RDS database
-    conn = psycopg2.connect(
-        host=os.environ.get("RDS_HOSTNAME"),
-        database=os.environ.get("RDS_DB_NAME"),
-        user=os.environ.get("RDS_USERNAME"),
-        password=os.environ.get("RDS_PASSWORD"),
-        port=os.environ.get("RDS_PORT"),
-    )
-    cur = conn.cursor()
-
-    # Register the UUID format for psycopg2
-    register_uuid()
-
-    # Fetch a db entry based on provided user id
-    cur.execute(
-        f"SELECT id FROM cv WHERE date_uploaded < now() - interval '{os.environ.get('RETENTION_DAYS')}' day"
-    )
-
-    expired_records = cur.fetchall()
-    for record in expired_records:
-        fileName = f"{str(record[0])}.html"
-        # Delete from S3
-        s3.delete_object(
-            Bucket=os.environ.get("S3_BUCKET_NAME"), Key=f"cv_html/{fileName}"
-        )
-        # Delete from local memory
-        if os.path.exists(f"processed_files/{fileName}"):
-            os.remove(f"processed_files/{fileName}")
-        # Delete DB record
-        query = "DELETE FROM cv WHERE id = %s"
-        cur.execute(query, (record))
-        records_cleaned += 1
-
-    # Commit changes
-    conn.commit()
-
-    # Close connection
-    cur.close()
-    conn.close()
-
-    print(f"Cleaned up {records_cleaned} records")
-    threading.Timer(86400, cleanup).start()
-
-
-# Start cleanup cycle on boot
-cleanup()
 
 
 def allowed_file(filename):
@@ -232,6 +168,7 @@ def cv_list():
 @application.route("/view/<file_id>", methods=["GET"])
 def view_file(file_id):
     """Serves the CV to the frontend."""
+    """VERSION 2 - All CV data is in JSON format rather than a html file"""
 
     # Ensure user is logged in
     valid_session = login_session_is_valid(session)
@@ -240,29 +177,43 @@ def view_file(file_id):
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 
     try:
-        # Securely build the filename
-        filename = f"{secure_filename(file_id)}.html"
-
-        # Check if the file exists
-        filepath = os.path.join(PROCESSED_FOLDER, filename)
-        if not os.path.exists(filepath):
-            # Download the file from S3
-            s3.download_file(
-                os.environ.get("S3_BUCKET_NAME"), f"cv_html/{filename}", filepath
-            )
-
-        # Send the file from the 'processed_files' directory
-        return send_from_directory(
-            PROCESSED_FOLDER,
-            filename,
-            as_attachment=False,  # Set to True to force download
+        # Connect to an RDS database
+        conn = psycopg2.connect(
+            host=os.environ.get("RDS_HOSTNAME"),
+            database=os.environ.get("RDS_DB_NAME"),
+            user=os.environ.get("RDS_USERNAME"),
+            password=os.environ.get("RDS_PASSWORD"),
+            port=os.environ.get("RDS_PORT"),
         )
-    except botocore.exceptions.ClientError as e:
-        if e.response["Error"]["Code"] == "404":
-            return "File not found.", 404
-        else:
-            print(f"Error serving file: {e}")
-            return "An error occurred.", 500
+        cur = conn.cursor()
+
+        # Register the UUID format for psycopg2
+        register_uuid()
+
+        query = """
+            SELECT cv_json, contact_name, contact_email, contact_phone FROM cv
+            WHERE id = %s
+        """
+        cur.execute(query, (file_id,))
+
+        result = cur.fetchone()
+        json = result[0]
+        contact = {
+            "name": result[1],
+            "email": result[2],
+            "phone": result[3],
+        }
+
+        # Close connection
+        cur.close()
+        conn.close()
+
+        return render_template(
+            "views/cv_view.html",
+            json=json,
+            contact=contact,
+            pin_user=session.get("pin_code") != None,
+        )
     except Exception as e:
         print(f"Error serving file: {e}")
         return "An error occurred.", 500
@@ -392,7 +343,7 @@ def upload_file():
     if not valid_session:
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 
-    # 1. Check if a file was sent
+    # Check if a file was sent
     if "file" not in request.files:
         return jsonify({"success": False, "error": "No file part in the request."}), 400
 
@@ -406,11 +357,11 @@ def upload_file():
     keyword_list = request.values["keywordList"]
     profile_text = request.values["profileText"]
 
-    # 2. Check if the user selected a file
+    # Check if the user selected a file
     if file.filename == "":
         return jsonify({"success": False, "error": "No file selected."}), 400
 
-    # 3. Check if the file is an allowed type (PDF)
+    # Check if the file is an allowed type (PDF)
     if not allowed_file(file.filename):
         return (
             jsonify(
@@ -435,19 +386,17 @@ def upload_file():
     updated_prompt = prompt.replace("{p}", prompt_preferences)
 
     if file:
-        # 4. Secure the filename (prevents directory traversal attacks)
+        # Secure the filename (prevents directory traversal attacks)
         original_filename = secure_filename(file.filename)
 
-        # 5. Save the original file
+        # Save the original file
         original_filepath = os.path.join(UPLOAD_FOLDER, original_filename)
         file.save(original_filepath)
 
-        # 6. Generate a unique ID for the processed file
+        # Generate a unique ID for the processed file
         file_id = str(uuid.uuid4())
-        processed_filename = f"{file_id}.html"
-        processed_filepath = os.path.join(PROCESSED_FOLDER, processed_filename)
 
-        # 7. --- PDF PROCESSING LOGIC ---
+        # --- PDF PROCESSING LOGIC ---
         try:
             pdf_to_process = geminicli.files.upload(file=original_filepath)
             response = geminicli.models.generate_content(
@@ -466,24 +415,13 @@ def upload_file():
             else:
                 json_data = result_json
 
-            generate_professional_cv(
-                json_data,
-                contact_name=contact_data[0],
-                contact_email=contact_data[1],
-                contact_phone=contact_data[2],
-                output_filename=processed_filepath,
-                profile_extra_text=profile_text,
-            )
+            json_data["profileTexts"].add(profile_text)
 
-            # Upload HTML file to S3
-            with open(processed_filepath, "rb") as data:
-                s3.upload_fileobj(
-                    data,
-                    os.environ.get("S3_BUCKET_NAME"),
-                    f"cv_html/{processed_filename}",
-                )
+            for skill in json_data["highlightSkills"]:
+                if skill in json_data["skills"]:
+                    json_data["skills"].remove(skill)
 
-            # Log new CV to the database
+            # Add new CV to the database
             conn = psycopg2.connect(
                 host=os.environ.get("RDS_HOSTNAME"),
                 database=os.environ.get("RDS_DB_NAME"),
@@ -498,14 +436,15 @@ def upload_file():
 
             # Store CV information in the DB
             query = """
-                INSERT INTO cv (id, data_owner, date_uploaded, contact_name, contact_email, contact_phone)
-                VALUES (%s, %s, now(), %s, %s, %s)
+                INSERT INTO cv (id, data_owner, date_uploaded, cv_json, contact_name, contact_email, contact_phone)
+                VALUES (%s, %s, now(), %s, %s, %s, %s)
             """
             cur.execute(
                 query,
                 (
                     file_id,
                     json_data["name"],
+                    json.dumps(json_data),
                     contact_data[0],
                     contact_data[1],
                     contact_data[2],
@@ -543,11 +482,11 @@ def upload_file():
                 500,
             )
 
-        # 8. Build the URL for the new file
+        # Build the URL for the new file
         # This URL points to our '/view/' endpoint below
         new_url = f"/view/{file_id}"
 
-        # 9. Send the success response
+        # Send the success response
         return jsonify({"success": True, "url": new_url})
 
 
@@ -588,7 +527,7 @@ def update_cv():
 
     # Fetch a db entry based on provided id
     query = """
-        SELECT id, first_name_only, keyword_list, profile_text, contact_name, contact_email, contact_phone FROM cv
+        SELECT id, first_name_only, keyword_list, profile_text FROM cv
         WHERE pin_code = %s
     """
     cur.execute(query, (session.get("pin_code"),))
@@ -598,10 +537,6 @@ def update_cv():
     first_name_only = result[1]
     keyword_list = result[2] or []
     profile_text = result[3] or ""
-
-    # Processed file info
-    processed_filename = f"{id}.html"
-    processed_filepath = os.path.join(PROCESSED_FOLDER, processed_filename)
 
     # Generate prompt
     prompt_preferences = ""
@@ -634,39 +569,31 @@ def update_cv():
         else:
             json_data = result_json
 
-        generate_professional_cv(
-            json_data,
-            contact_name=result[4],
-            contact_email=result[5],
-            contact_phone=result[6],
-            output_filename=processed_filepath,
-            profile_extra_text=profile_text,
-        )
+        json_data["profileTexts"].append(profile_text)
 
-        # Upload HTML file to S3
-        with open(processed_filepath, "rb") as data:
-            s3.upload_fileobj(
-                data,
-                os.environ.get("S3_BUCKET_NAME"),
-                f"cv_html/{processed_filename}",
-            )
+        for skill in json_data["highlightSkills"]:
+            if skill in json_data["skills"]:
+                json_data["skills"].remove(skill)
 
         # UPDATE CV info in the DB
         query = """
             UPDATE cv
-            SET date_uploaded = now()
+            SET date_uploaded = now(), cv_json = %s
             WHERE pin_code = %s
         """
-        cur.execute(query, (session.get("pin_code"),))
+        cur.execute(
+            query,
+            (
+                json.dumps(json_data),
+                session.get("pin_code"),
+            ),
+        )
         conn.commit()
-
-        # Close connection
-        cur.close()
-        conn.close()
 
         # --- End of PDF processing logic ---
     except Exception as e:
         # Check for gemini overload issues
+        print(f"A gemini error occurred: {e}")
         if "The model is overloaded" in str(e):
             return (
                 jsonify(
@@ -684,11 +611,15 @@ def update_cv():
             jsonify(
                 {
                     "success": False,
-                    "error": "An unexpected server error occurred: {e}",
+                    "error": f"An unexpected server error occurred: {e}",
                 }
             ),
             500,
         )
+    finally:
+        # Close connection
+        cur.close()
+        conn.close()
 
     # Build the URL for the new file
     new_url = f"/view/{id}"
@@ -707,6 +638,10 @@ def create_pin():
     valid_session = login_session_is_valid(session)
     if not valid_session:
         return jsonify({"success": False, "error": "Access forbidden."}), 403
+
+    contact_data = get_user_record(
+        session.get("user_id"), "contact_name, contact_email, contact_phone"
+    )
 
     try:
         # Connect to the RDS database
@@ -751,13 +686,19 @@ def create_pin():
         register_uuid()
 
         # Delete the rows with the provided IDs
-        query = "INSERT INTO cv (id, data_owner, pin_code) VALUES (%s, %s, %s)"
+        query = "INSERT INTO cv (id, data_owner, first_name_only, keyword_list, profile_text, pin_code, contact_name, contact_email, contact_phone) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
         cur.execute(
             query,
             (
                 uuid.uuid4(),
                 request.values["recipientIdentifier"],
+                request.values["firstNameOnly"] == "true",
+                request.values["keywordList"],
+                request.values["profileText"],
                 pin,
+                contact_data[0],
+                contact_data[1],
+                contact_data[2],
             ),
         )
         conn.commit()
@@ -792,17 +733,6 @@ def delete_file():
     cv_id_list = json.loads(request.values["cvListJson"])
 
     try:
-        # Delete from S3 and local
-        for id in cv_id_list:
-            # S3
-            s3.delete_object(
-                Bucket=os.environ.get("S3_BUCKET_NAME"), Key=f"cv_html/{id}.html"
-            )
-
-            # Local
-            if os.path.exists(f"processed_files/{id}.html"):
-                os.remove(f"processed_files/{id}.html")
-
         # Connect to the RDS database
         conn = psycopg2.connect(
             host=os.environ.get("RDS_HOSTNAME"),

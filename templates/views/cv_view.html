@@ -1,0 +1,191 @@
+<!doctype html>
+{% extends 'base.html' %}
+
+<!-- Block start -->
+{% block content %}
+<div class="relative max-w-3xl space-y-6">
+  <!-- CSS -->
+  <style>
+    @media print {
+      div {
+        break-inside: avoid;
+        print-color-adjust: exact;
+      }
+      .paper {
+        box-shadow: none !important;
+      }
+      .confidential-header {
+        display: block !important;
+      }
+      .print-hidden {
+        display: none !important;
+      }
+      .cv-container {
+        margin-top: 40px !important;
+      }
+    }
+    .confidential-header {
+      text-align: center;
+      margin: 0;
+      color: rgb(220, 53, 69);
+      position: absolute;
+      top: 0;
+      width: 100%;
+      display: none;
+    }
+    .card {
+      box-shadow: 0 1px 2px 1px;
+    }
+    .paper {
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+      line-height: 1.6;
+    }
+    .cv-container {
+      border-top: 3px solid #2c3e50;
+    }
+    .header {
+      color: #2980b9;
+    }
+    .sub-header {
+      color: #2c3e50;
+    }
+
+    /* Skill Styling */
+    .skill-tag {
+      display: inline-block;
+      background-color: #e8f4f8;
+      color: #2980b9;
+      padding: 5px 12px;
+      margin: 0 5px 5px 0;
+      border-radius: 15px;
+      font-size: 0.9em;
+      font-weight: 600;
+    }
+    .hightlight {
+      background-color: #3b82f6;
+      color: white;
+    }
+  </style>
+
+  <!-- HTML -->
+  <!-- <div
+    class="{% if pin_user != True %}hidden{% endif %} print-hidden w-full card p-4 rounded-xs text-center"
+  >
+    <p>
+      This is your generated CV. You may request changes or data deletion at any
+      time from the buttons below.
+    </p>
+  </div> -->
+
+  <div class="w-full paper">
+    <span class="confidential-header text-2xl"><b>CONFIDENTIAL</b></span>
+
+    <div class="space-y-10 pt-6 pb-12 px-12 cv-container">
+      <div class="text-center">
+        <img
+          class="top-logo w-[150px] m-auto"
+          src="/static/images/wirokit_b.png"
+        />
+        <p class="text-5xl mt-[-10px] text-[#2c3e50]">{{json.name}}</p>
+        <p class="text-xl mt-4 text-neutral-400">{{json.title}}</p>
+      </div>
+
+      <!-- Profile -->
+      <div>
+        <div class="font-bold uppercase text-lg mb-4 header">Profile</div>
+        <div class="space-y-4">
+          {% for profile in json.profileTexts %}
+          <p>{{profile}}</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Skills -->
+      <div>
+        <div class="font-bold uppercase text-lg mb-4 header">Skills</div>
+        <!-- Highlight -->
+        {% for skill in json.highlightSkills %}
+        <span class="skill-tag hightlight">{{skill}}</span>
+        {% endfor %}
+        <!-- Normal -->
+        {% for skill in json.skills %}
+        <span class="skill-tag">{{skill}}</span>
+        {% endfor %}
+      </div>
+
+      <!-- Work Experience -->
+      <div>
+        <div class="font-bold uppercase text-lg mb-4 header">
+          Work Experience
+        </div>
+        <span class="space-y-6">
+          {% for job in json.workExperience %}
+          <div>
+            <div class="flex justify-between items-center">
+              <b class="text-lg sub-header">{{job.title}}</b>
+              <p class="text-neutral-400 text-sm">{{job.timePeriod}}</p>
+            </div>
+            <div class="text-neutral-400 mb-2"><i>{{job.company}}</i></div>
+            <p>{{job.description}}</p>
+          </div>
+          {% endfor %}
+        </span>
+      </div>
+
+      <!-- Education -->
+      {% if json.education|length > 0 %}
+      <div>
+        <div class="font-bold uppercase text-lg mb-4 header">Education</div>
+        <span class="space-y-6">
+          {% for education in json.education %}
+          <div>
+            <div class="flex justify-between items-center">
+              <b class="text-lg">{{education.degree}}</b>
+              <p class="text-neutral-400 text-sm">{{education.timePeriod}}</p>
+            </div>
+            <div class="text-neutral-400 mb-2"><i>{{education.school}}</i></div>
+            <p>{{education.description}}</p>
+          </div>
+          {% endfor %}
+        </span>
+      </div>
+      {% endif %}
+
+      <!-- Contact info -->
+      <div class="space-y-2">
+        <div class="font-bold uppercase text-lg mb-4 header">
+          Wirokit contact
+        </div>
+        <b class="text-lg">{{contact.name}}</b>
+        <div class="flex items-center gap-2">
+          <i data-lucide="mail" class="secondary-text w-5 h-5"></i>
+          {{contact.email}}
+        </div>
+        <div class="flex items-center gap-2">
+          <i data-lucide="phone" class="secondary-text w-5 h-5"></i>
+          {{contact.phone}}
+        </div>
+      </div>
+      <div>
+        <b>Please note:</b> This document includes confidential and personal
+        information. The recipient of this document may store this document only
+        as long as it is required for the intended purpose. Any information in
+        this document cannot be exposed, transferred or disclosed to any third
+        parties. Any information in this document can be used only for agreed
+        upon purposes. If you are not the intended recipient of this document,
+        please contact the Wirokit contact person immediately and dispose of
+        this document.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Initialize Icons
+  lucide.createIcons();
+</script>
+
+<!-- Block end -->
+{% endblock %}

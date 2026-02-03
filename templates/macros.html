@@ -127,7 +127,7 @@
   job_description
   profile_text
 -->
-{% macro cv_settings(feature_list) %}
+{% macro cv_settings(id, feature_list) %}
 <div class="space-y-4 border rounded-xs p-4">
   <p class="w-full p-2 text-center text-heading font-bold text-lg">
     CV Settings
@@ -138,13 +138,13 @@
   <div class="flex items-center gap-2">
     <input
       checked
-      id="pin-first-name-check"
+      id="{{id}}-first-name-check"
       type="checkbox"
       name="firstNameOnly"
       class="primary-color first-name-check w-4 h-4 border border-default-medium rounded-xs bg-neutral-secondary-medium focus:ring-2 focus:ring-brand-soft hover:cursor-pointer"
     />
     <label
-      for="pin-first-name-check"
+      for="{{id}}-first-name-check"
       class="select-none text-sm font-medium text-heading hover:cursor-pointer"
     >
       Only display first name
@@ -155,11 +155,11 @@
   <!-- Keywords / Job description -->
   {% if "all" in feature_list or "job_description" in feature_list %}
   <div>
-    <label for="pin-keyword-list" class="text-sm font-medium text-heading">
+    <label for="{{id}}-keyword-list" class="text-sm font-medium text-heading">
       Keywords / Job description
     </label>
     <textarea
-      id="pin-keyword-list"
+      id="{{id}}-keyword-list"
       name="keywordList"
       class="w-full mb-4 border border-default-medium rounded-xs text-heading text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
       placeholder="e.g. Web application built with custom web components, a Python server and a PostgreSQL database."
@@ -170,11 +170,11 @@
   <!-- custom profile text -->
   {% if "all" in feature_list or "profile_text" in feature_list %}
   <div>
-    <label for="profile-text" class="text-sm font-medium text-heading">
+    <label for="{{id}}-profile-text" class="text-sm font-medium text-heading">
       Custom profile text (injected at the end of the profile section)
     </label>
     <textarea
-      id="profile-text"
+      id="{{id}}-profile-text"
       name="profileText"
       class="w-full mb-4 border border-default-medium rounded-xs text-heading text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
       placeholder="e.g. Curious, detail-oriented, and quick to learn, Sami brings fresh perspective and solid energy to any development team!"

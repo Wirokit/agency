@@ -12,6 +12,19 @@
     />
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+      @media print {
+        nav,
+        nav * {
+          display: none !important;
+        }
+        section {
+          margin-top: 0 !important;
+          padding: 0 !important;
+        }
+      }
+      section {
+        padding: 2rem 0;
+      }
       .base-height {
         min-height: calc(100vh - 60px);
       }
@@ -72,7 +85,7 @@
 
           if (result.success) {
             document.cookie = "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-            window.location.reload();
+            window.location.href = "/";
           }
         } catch (e) {
           console.error("Logout error:", e);
