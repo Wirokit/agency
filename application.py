@@ -191,8 +191,9 @@ def view_file(file_id):
         register_uuid()
 
         query = """
-            SELECT cv_json, contact_name, contact_email, contact_phone FROM cv
-            WHERE id = %s
+            SELECT cv.cv_json, c.name, c.email, c.phone FROM cv
+            JOIN contact_info c ON cv.contact_id = c.id
+            WHERE cv.id = %s
         """
         cur.execute(query, (file_id,))
 
@@ -348,9 +349,7 @@ def upload_file():
         return jsonify({"success": False, "error": "No file part in the request."}), 400
 
     # Get contact data for the current user
-    contact_data = get_user_record(
-        session.get("user_id"), "contact_name, contact_email, contact_phone"
-    )
+    user_data = get_user_record(session.get("user_id"), "contact_id")
 
     file = request.files["file"]
     first_name_only = request.values["firstNameOnly"]
@@ -415,7 +414,7 @@ def upload_file():
             else:
                 json_data = result_json
 
-            json_data["profileTexts"].add(profile_text)
+            json_data["profileTexts"].append(profile_text)
 
             for skill in json_data["highlightSkills"]:
                 if skill in json_data["skills"]:
@@ -436,8 +435,8 @@ def upload_file():
 
             # Store CV information in the DB
             query = """
-                INSERT INTO cv (id, data_owner, date_uploaded, cv_json, contact_name, contact_email, contact_phone)
-                VALUES (%s, %s, now(), %s, %s, %s, %s)
+                INSERT INTO cv (id, data_owner, date_uploaded, cv_json, contact_id)
+                VALUES (%s, %s, now(), %s, %s)
             """
             cur.execute(
                 query,
@@ -445,9 +444,7 @@ def upload_file():
                     file_id,
                     json_data["name"],
                     json.dumps(json_data),
-                    contact_data[0],
-                    contact_data[1],
-                    contact_data[2],
+                    user_data[0],
                 ),
             )
             conn.commit()
@@ -527,16 +524,16 @@ def update_cv():
 
     # Fetch a db entry based on provided id
     query = """
-        SELECT id, first_name_only, keyword_list, profile_text FROM cv
+        SELECT id, settings_json FROM cv
         WHERE pin_code = %s
     """
     cur.execute(query, (session.get("pin_code"),))
 
     result = cur.fetchone()
     id = result[0]
-    first_name_only = result[1]
-    keyword_list = result[2] or []
-    profile_text = result[3] or ""
+    first_name_only = result[1]["first_name_only"] or False
+    keyword_list = result[1]["keyword_list"] or []
+    profile_text = result[1]["profile_text"] or ""
 
     # Generate prompt
     prompt_preferences = ""
@@ -639,9 +636,7 @@ def create_pin():
     if not valid_session:
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 
-    contact_data = get_user_record(
-        session.get("user_id"), "contact_name, contact_email, contact_phone"
-    )
+    user_data = get_user_record(session.get("user_id"), "contact_id")
 
     try:
         # Connect to the RDS database
@@ -686,19 +681,21 @@ def create_pin():
         register_uuid()
 
         # Delete the rows with the provided IDs
-        query = "INSERT INTO cv (id, data_owner, first_name_only, keyword_list, profile_text, pin_code, contact_name, contact_email, contact_phone) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        query = "INSERT INTO cv (id, data_owner, pin_code, contact_id, settings_json) VALUES (%s, %s, %s, %s, %s)"
         cur.execute(
             query,
             (
                 uuid.uuid4(),
                 request.values["recipientIdentifier"],
-                request.values["firstNameOnly"] == "true",
-                request.values["keywordList"],
-                request.values["profileText"],
                 pin,
-                contact_data[0],
-                contact_data[1],
-                contact_data[2],
+                user_data[0],
+                json.dumps(
+                    {
+                        "first_name_only": request.values["firstNameOnly"] == "true",
+                        "keyword_list": request.values["keywordList"],
+                        "profile_text": request.values["profileText"],
+                    }
+                ),
             ),
         )
         conn.commit()
