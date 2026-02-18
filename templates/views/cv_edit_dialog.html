@@ -1,0 +1,835 @@
+<style>
+  .accordion-button {
+    font-weight: 500;
+  }
+  .accordion-button .icon {
+    background-color: #29355f;
+    border-radius: 90px;
+    padding: 5px;
+    color: white;
+  }
+
+  textarea {
+    field-sizing: content;
+  }
+</style>
+
+<meta id="cv_id" data-other="{{cv_id}}" />
+
+<dialog
+  id="edit_dialog"
+  class="hidden modal card w-full max-w-2xl bg-white rounded-2xl overflow-hidden border border-slate-200 flex relative"
+>
+  <div class="size-full">
+    <div class="modal-box overflow-y-auto max-h-[80vh] p-6 space-y-4">
+      <p class="text-xl font-bold">Edit CV</p>
+
+      <!-- Basic Info -->
+      <button
+        type="button"
+        class="accordion-button flex items-center w-full p-5 gap-3"
+        onclick="toggleAccordion(event, 'info-wrapper')"
+      >
+        <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
+        <span>Basic Info</span>
+      </button>
+      <div id="info-wrapper" class="hidden wrapper pb-4 px-12 space-y-4">
+        <div class="relative w-full pt-2">
+          <label
+            for="info_name"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+          >
+            Name
+          </label>
+          <input
+            id="info_name"
+            name="name"
+            type="text"
+            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full max-w-[300px]"
+            value="{{json.name}}"
+          />
+        </div>
+
+        <div class="relative w-full pt-2">
+          <label
+            for="info_title"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+          >
+            Title
+          </label>
+          <input
+            id="info_title"
+            type="text"
+            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full max-w-[300px]"
+            value="{{json.title}}"
+          />
+        </div>
+      </div>
+
+      <!-- Profile edit -->
+      <button
+        type="button"
+        class="accordion-button flex items-center w-full p-5 gap-3"
+        onclick="toggleAccordion(event, 'profile-container')"
+      >
+        <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
+        <span>Profile Paragraphs</span>
+      </button>
+      <div id="profile-container" class="hidden p-4 px-12 space-y-4">
+        <div
+          id="profile-wrapper"
+          class="wrapper space-y-4"
+          aria-labelledby="accordion-collapse-heading-1"
+        >
+          {% for profile in json.profileTexts %}
+          <div id="container-profile-{{loop.index}}" class="flex gap-2">
+            <!-- prettier-ignore -->
+            <textarea
+              id="profile-{{loop.index}}"
+              class="border border-[rgba(0,0,0,0.2)] rounded-sm p-4 w-full min-w-100"
+            >{{profile}}</textarea>
+
+            <div
+              class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
+            >
+              {{loop.index}}
+            </div>
+            <button
+              type="button"
+              id="delete-experience-{{loop.index}}"
+              class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+              onclick="handleDeleteEvent(event)"
+            >
+              <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+            </button>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="flex w-full gap-2">
+          <button
+            type="button"
+            id="add-profile-btn"
+            onclick="addProfile(event)"
+            class="flex w-full items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-3"
+          >
+            <i data-lucide="plus" class="text-green-600 w-5 h-5"></i>
+            <span>ADD</span>
+          </button>
+          <button
+            type="button"
+            id="delete-experience-1"
+            class="invisible flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+            onclick="event.preventDefault()"
+          >
+            <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Skills edit -->
+      <button
+        type="button"
+        class="accordion-button flex items-center w-full p-5 gap-3"
+        onclick="toggleAccordion(event, 'skills-wrapper')"
+      >
+        <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
+        <span>Skills</span>
+      </button>
+      <div id="skills-wrapper" class="hidden wrapper pb-4 px-12 space-y-2">
+        <p class="flex items-center text-md gap-2 text-yellow-600">
+          <i data-lucide="circle-alert" class="w-5 h-5"></i>
+          Click skill to toggle highlight
+          <i data-lucide="circle-alert" class="w-5 h-5"></i>
+        </p>
+        <div id="skill-list">
+          <!-- Highlight -->
+          {% for skill in json.highlightSkills %}
+          <div class="inline-flex items-center w-fit">
+            <span
+              class="skill-tag highlight hover:cursor-pointer"
+              onclick="toggleSkillHighlight(this)"
+              unselectable="on"
+              onselectstart="return false;"
+              onmousedown="return false;"
+            >
+              {{skill}}
+            </span>
+            <button
+              type="button"
+              class="ml-[-15px] rounded-xl bg-red-600"
+              onclick="handleDeleteEvent(event)"
+            >
+              <i data-lucide="x" class="text-white w-4 h-4"></i>
+            </button>
+          </div>
+          {% endfor %}
+          <!-- Normal -->
+          {% for skill in json.skills %}
+          <div class="inline-flex items-center w-fit">
+            <span
+              class="skill-tag hover:cursor-pointer"
+              onclick="toggleSkillHighlight(this)"
+              unselectable="on"
+              onselectstart="return false;"
+              onmousedown="return false;"
+            >
+              {{skill}}
+            </span>
+            <button
+              type="button"
+              class="ml-[-15px] rounded-lg bg-red-600"
+              onclick="handleDeleteEvent(event)"
+            >
+              <i data-lucide="x" class="text-white w-4 h-4"></i>
+            </button>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="w-full mt-1">
+          <label for="skill-input">Add a new skill</label>
+          <div class="flex items-center" class="w-full">
+            <input
+              id="skill-input"
+              type="text"
+              class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm"
+              onchange="handleSkillAddEvent(event)"
+            />
+            <button
+              type="button"
+              id="add-skill-btn"
+              onclick="handleSkillAddEvent(event)"
+            >
+              <i data-lucide="plus" class="text-green-600 w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Work Experience -->
+      <button
+        type="button"
+        class="accordion-button flex items-center w-full p-5 gap-3"
+        onclick="toggleAccordion(event, 'work-wrapper')"
+      >
+        <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
+        <span>Work Experience</span>
+      </button>
+      <div id="work-wrapper" class="hidden wrapper pb-4 px-12 space-y-4">
+        <div id="experience-list" class="space-y-8">
+          {% for experience in json.workExperience %}
+          <div class="flex gap-2">
+            <div class="w-full space-y-2">
+              <div class="relative w-full pt-2">
+                <label
+                  for="experience-title-{{loop.index}}"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                >
+                  Title
+                </label>
+                <input
+                  id="experience-title-{{loop.index}}"
+                  type="text"
+                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+                  value="{{experience.title}}"
+                />
+              </div>
+
+              <div class="relative w-full pt-2">
+                <label
+                  for="experience-company-{{loop.index}}"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                >
+                  Company
+                </label>
+                <input
+                  id="experience-company-{{loop.index}}"
+                  type="text"
+                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+                  value="{{experience.company}}"
+                />
+              </div>
+
+              <div class="relative w-full pt-2">
+                <label
+                  for="experience-duration-{{loop.index}}"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                >
+                  Duration
+                </label>
+                <input
+                  id="experience-duration-{{loop.index}}"
+                  type="text"
+                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+                  value="{{experience.timePeriod}}"
+                />
+              </div>
+
+              <div class="relative w-full pt-2">
+                <label
+                  for="experience-description-{{loop.index}}"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                >
+                  Description
+                </label>
+                <!-- prettier-ignore -->
+                <textarea
+                  id="experience-description-{{loop.index}}"
+                  type="text"
+                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+                >{{experience.description}}</textarea>
+              </div>
+            </div>
+
+            <div
+              class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
+            >
+              {{loop.index}}
+            </div>
+            <button
+              type="button"
+              id="delete-experience-1"
+              class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+              onclick="handleDeleteEvent(event)"
+            >
+              <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+            </button>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="flex w-full gap-2">
+          <button
+            type="button"
+            id="add-profile-btn"
+            onclick="experienceAddEvent(event)"
+            class="flex w-full items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-2 text-green-600"
+          >
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            <span>ADD</span>
+          </button>
+          <button
+            type="button"
+            id="delete-experience-x"
+            class="invisible flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+            onclick="event.preventDefault()"
+          >
+            <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Education -->
+      <button
+        type="button"
+        class="accordion-button flex items-center w-full p-5 gap-3"
+        onclick="toggleAccordion(event, 'edu-wrapper')"
+      >
+        <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
+        <span>Education</span>
+      </button>
+      <div id="edu-wrapper" class="hidden wrapper pb-4 px-12 space-y-4">
+        <div id="edu-list" class="space-y-8">
+          {% for education in json.education %}
+          <div class="flex gap-2">
+            <div class="w-full space-y-2">
+              <div class="relative w-full pt-2">
+                <label
+                  for="edu-title-{{loop.index}}"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                >
+                  Title | Degree
+                </label>
+                <input
+                  id="edu-title-{{loop.index}}"
+                  type="text"
+                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+                  value="{{education.degree}}"
+                />
+              </div>
+
+              <div class="relative w-full pt-2">
+                <label
+                  for="edu-company-{{loop.index}}"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                >
+                  School
+                </label>
+                <input
+                  id="edu-company-{{loop.index}}"
+                  type="text"
+                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+                  value="{{education.school}}"
+                />
+              </div>
+
+              <div class="relative w-full pt-2">
+                <label
+                  for="edu-duration-{{loop.index}}"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                >
+                  Duration
+                </label>
+                <input
+                  id="edu-duration-{{loop.index}}"
+                  type="text"
+                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+                  value="{{education.timePeriod}}"
+                />
+              </div>
+
+              <div class="relative w-full pt-2">
+                <label
+                  for="edu-description-{{loop.index}}"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                >
+                  Description
+                </label>
+                <!-- prettier-ignore -->
+                <textarea
+                  id="edu-description-{{loop.index}}"
+                  type="text"
+                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+                >{{education.description}}</textarea>
+              </div>
+            </div>
+
+            <div
+              class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
+            >
+              {{loop.index}}
+            </div>
+            <button
+              type="button"
+              id="delete-edu-1"
+              class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+              onclick="handleDeleteEvent(event)"
+            >
+              <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+            </button>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="flex w-full gap-2">
+          <button
+            type="button"
+            id="add-profile-btn"
+            onclick="educationAddEvent(event)"
+            class="flex w-full items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-2 text-green-600"
+          >
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            <span>ADD</span>
+          </button>
+          <button
+            type="button"
+            id="delete-edu-x"
+            class="invisible flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+            onclick="event.preventDefault()"
+          >
+            <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- New accordions here -->
+    </div>
+
+    <div class="modal-action p-6 border-default border-t-2">
+      <button
+        type="submit"
+        id="delete-confirm-btn"
+        class="bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 transition duration-200 mb-2"
+        onclick="submitChanges(event)"
+      >
+        Save
+      </button>
+      <button
+        type="button"
+        class="py-3 px-4 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-4 focus:bg-gray-300 transition duration-200 mb-2"
+        onclick="closeModal(event, 'edit_dialog')"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  // Initialize Icons
+  lucide.createIcons();
+
+  const dialog = document.getElementById("edit_dialog");
+  const profileWrapper = document.getElementById("profile-wrapper");
+  const addProfileButton = document.getElementById("add-profile-btn");
+
+  let initialEditContent;
+  let nextProfileIndex = profileWrapper.children.length + 1;
+  let nextExperienceIndex =
+    document.getElementById("experience-list").children.length + 1;
+  let nextEduIndex = document.getElementById("edu-list").children.length + 1;
+
+  document.body.addEventListener("keydown", (e) => {
+    if (dialog.open && e.key == "Escape") {
+      e.preventDefault();
+      closeModal(null);
+    }
+  });
+
+  function toggleAccordion(e, target) {
+    e.preventDefault();
+
+    const buttonEl = e.currentTarget;
+    const targetEl = document.getElementById(target);
+    if (targetEl.classList.contains("hidden")) {
+      buttonEl
+        .getElementsByClassName("icon")[0]
+        .setAttribute("data-lucide", "chevron-up");
+      buttonEl.classList.add("active");
+      targetEl.classList.remove("hidden");
+    } else {
+      buttonEl
+        .getElementsByClassName("icon")[0]
+        .setAttribute("data-lucide", "chevron-down");
+      buttonEl.classList.remove("active");
+      targetEl.classList.add("hidden");
+    }
+    lucide.createIcons();
+  }
+
+  function addProfile(e) {
+    e.preventDefault();
+
+    const newParagraph = document.createElement("div");
+    newParagraph.id = `container-profile-${nextProfileIndex}`;
+    newParagraph.classList.add("flex", "gap-2");
+    newParagraph.innerHTML = `
+      <textarea
+        id="profile-${nextProfileIndex}"
+        class="border border-[rgba(0,0,0,0.2)] rounded-sm p-4 w-full min-w-100"
+      ></textarea>
+
+      <div
+        class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
+      >
+        ${nextProfileIndex}
+      </div>
+      <button
+        type="button"
+        id="delete-experience-${nextProfileIndex}"
+        class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+        onclick="handleDeleteEvent(event)"
+      >
+        <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+      </button>
+    `;
+    profileWrapper.appendChild(newParagraph);
+    nextProfileIndex += 1;
+
+    // Initialize new icon
+    lucide.createIcons();
+  }
+
+  function toggleSkillHighlight(skillNode) {
+    if (skillNode.classList.contains("highlight")) {
+      skillNode.classList.remove("highlight");
+    } else {
+      skillNode.classList.add("highlight");
+    }
+  }
+
+  function handleDeleteEvent(e) {
+    e.preventDefault();
+
+    e.currentTarget.parentElement.remove();
+  }
+
+  function handleSkillAddEvent(e) {
+    e.preventDefault();
+
+    const skillInput = document.getElementById("skill-input");
+
+    const skillEl = document.createElement("div");
+    skillEl.classList.add("inline-flex", "items-center", "w-fit");
+    skillEl.innerHTML = `
+      <span
+        class="skill-tag hover:cursor-pointer"
+        onclick="toggleSkillHighlight(this)"
+      >
+        ${skillInput.value}
+      </span>
+      <button
+        type="button"
+        class="ml-[-15px] rounded-lg bg-red-600"
+        onclick="handleDeleteEvent(event)"
+      >
+        <i data-lucide="x" class="text-white w-4 h-4"></i>
+      </button>
+    `;
+
+    document.getElementById("skill-list").appendChild(skillEl);
+    skillInput.value = "";
+
+    // Initialize new icon
+    lucide.createIcons();
+  }
+
+  function experienceAddEvent(e) {
+    e.preventDefault();
+
+    const experienceEl = document.createElement("div");
+    experienceEl.classList.add("flex", "gap-2");
+
+    experienceEl.innerHTML = `
+      <div class="w-full space-y-2">
+        <div class="relative w-full pt-2">
+          <label
+            for="experience-title-${nextExperienceIndex}"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+          >
+            Title
+          </label>
+          <input
+            id="experience-title-${nextExperienceIndex}"
+            type="text"
+            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+          />
+        </div>
+
+        <div class="relative w-full pt-2">
+          <label
+            for="experience-company-${nextExperienceIndex}"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+          >
+            Company
+          </label>
+          <input
+            id="experience-company-${nextExperienceIndex}"
+            type="text"
+            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+          />
+        </div>
+
+        <div class="relative w-full pt-2">
+          <label
+            for="experience-duration-${nextExperienceIndex}"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+          >
+            Duration
+          </label>
+          <input
+            id="experience-duration-${nextExperienceIndex}"
+            type="text"
+            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+          />
+        </div>
+
+        <div class="relative w-full pt-2">
+          <label
+            for="experience-description-${nextExperienceIndex}"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+          >
+            Description
+          </label>
+          <textarea
+            id="experience-description-${nextExperienceIndex}"
+            type="text"
+            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+          ></textarea>
+        </div>
+      </div>
+
+      <div
+        class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
+      >
+        ${nextExperienceIndex}
+      </div>
+      <button
+        type="button"
+        id="delete-experience-${nextExperienceIndex}"
+        class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+        onclick="handleDeleteEvent(event)"
+      >
+        <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+      </button>
+    `;
+
+    document.getElementById("experience-list").appendChild(experienceEl);
+    nextExperienceIndex += 1;
+    lucide.createIcons();
+  }
+
+  function educationAddEvent(e) {
+    e.preventDefault();
+
+    const eduEl = document.createElement("div");
+    eduEl.classList.add("flex", "gap-2");
+
+    eduEl.innerHTML = `
+      <div class="w-full space-y-2">
+        <div class="relative w-full pt-2">
+          <label
+            for="edu-title-${nextEduIndex}"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+          >
+            Title | Degree
+          </label>
+          <input
+            id="edu-title-${nextEduIndex}"
+            type="text"
+            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+          />
+        </div>
+
+        <div class="relative w-full pt-2">
+          <label
+            for="edu-company-${nextEduIndex}"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+          >
+            School
+          </label>
+          <input
+            id="edu-company-${nextEduIndex}"
+            type="text"
+            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+          />
+        </div>
+
+        <div class="relative w-full pt-2">
+          <label
+            for="edu-duration-${nextEduIndex}"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+          >
+            Duration
+          </label>
+          <input
+            id="edu-duration-${nextEduIndex}"
+            type="text"
+            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+          />
+        </div>
+
+        <div class="relative w-full pt-2">
+          <label
+            for="edu-description-${nextEduIndex}"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+          >
+            Description
+          </label>
+          <!-- prettier-ignore -->
+          <textarea
+            id="edu-description-${nextEduIndex}"
+            type="text"
+            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+          ></textarea>
+        </div>
+      </div>
+
+      <div
+        class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
+      >
+        ${nextEduIndex}
+      </div>
+      <button
+        type="button"
+        id="delete-edu-${nextEduIndex}"
+        class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+        onclick="handleDeleteEvent(event)"
+      >
+        <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+      </button>
+    `;
+
+    document.getElementById("edu-list").appendChild(eduEl);
+    nextEduIndex += 1;
+    lucide.createIcons();
+  }
+
+  async function submitChanges(e) {
+    e.preventDefault();
+
+    const jsonData = {};
+
+    // Basic info
+    jsonData.name = document.getElementById("info_name").value;
+    jsonData.title = document.getElementById("info_title").value;
+
+    // Profiles
+    const profileList = document.getElementById("profile-wrapper");
+    jsonData.profileTexts = [];
+    for (const child of profileList.children) {
+      const value = child.getElementsByTagName("textarea")[0].value;
+      jsonData.profileTexts.push(value);
+    }
+
+    // Skills
+    const skillsList = document.getElementById("skill-list");
+    jsonData.highlightSkills = [];
+    jsonData.skills = [];
+    for (const child of skillsList.children) {
+      let skillNode = child.getElementsByClassName("skill-tag")[0];
+      let value = skillNode.textContent.replaceAll("\n", "").trim();
+
+      if (skillNode.classList.contains("highlight")) {
+        jsonData.highlightSkills.push(value);
+      } else {
+        jsonData.skills.push(value);
+      }
+    }
+
+    // Work Experience
+    const experienceList = document.getElementById("experience-list");
+    jsonData.workExperience = [];
+    for (const child of experienceList.children) {
+      const experienceJson = {};
+
+      const inputs = child.getElementsByTagName("input");
+      experienceJson.title = inputs[0].value;
+      experienceJson.company = inputs[1].value;
+      experienceJson.timePeriod = inputs[2].value;
+      experienceJson.description =
+        child.getElementsByTagName("textarea")[0].value;
+
+      jsonData.workExperience.push(experienceJson);
+    }
+
+    // Education
+    const educationList = document.getElementById("edu-list");
+    jsonData.education = [];
+    for (const child of educationList.children) {
+      const eduJson = {};
+
+      const inputs = child.getElementsByTagName("input");
+      eduJson.degree = inputs[0].value;
+      eduJson.school = inputs[1].value;
+      eduJson.timePeriod = inputs[2].value;
+      eduJson.description = child.getElementsByTagName("textarea")[0].value;
+
+      jsonData.education.push(eduJson);
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append(
+        "cv_id",
+        document.getElementById("cv_id").getAttribute("data-other"),
+      );
+      formData.append("cv_json", JSON.stringify(jsonData));
+
+      const response = await fetch("/api/cv-edit", {
+        method: "UPDATE",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        window.location.reload();
+      } else {
+        // Handle backend error
+      }
+    } catch (error) {
+      // Handle network or fetch error
+      console.error("Upload Error:", error);
+    }
+  }
+</script>

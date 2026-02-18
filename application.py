@@ -211,6 +211,7 @@ def view_file(file_id):
 
         return render_template(
             "views/cv_view.html",
+            cv_id=file_id,
             json=json,
             contact=contact,
             pin_user=session.get("pin_code") != None,
@@ -743,6 +744,62 @@ def delete_file():
         # Delete the rows with the provided IDs
         query = "DELETE FROM cv WHERE id IN %s"
         cur.execute(query, (tuple(cv_id_list),))
+        conn.commit()
+
+        # Close connection
+        cur.close()
+        conn.close()
+
+        # Send the success response
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return (
+            jsonify(
+                {"success": False, "error": "An unexpected server error occurred."}
+            ),
+            500,
+        )
+
+
+@application.route("/api/cv-edit", methods=["UPDATE"])
+def edit_cv():
+    """
+    Handles json updates when admin edits the cv
+    """
+
+    # Ensure user is logged in
+    valid_session = login_session_is_valid(session)
+    if not valid_session:
+        return jsonify({"success": False, "error": "Access forbidden."}), 403
+
+    cv_id = request.values["cv_id"]
+    cv_json = json.loads(request.values["cv_json"])
+
+    try:
+        # Connect to the RDS database
+        conn = psycopg2.connect(
+            host=os.environ.get("RDS_HOSTNAME"),
+            database=os.environ.get("RDS_DB_NAME"),
+            user=os.environ.get("RDS_USERNAME"),
+            password=os.environ.get("RDS_PASSWORD"),
+            port=os.environ.get("RDS_PORT"),
+        )
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        register_uuid()
+
+        query = """
+            UPDATE cv
+            SET cv_json = %s
+            WHERE id = %s
+        """
+        cur.execute(
+            query,
+            (
+                json.dumps(cv_json),
+                cv_id,
+            ),
+        )
         conn.commit()
 
         # Close connection
