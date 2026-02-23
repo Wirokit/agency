@@ -73,14 +73,15 @@
   </style>
 
   <!-- HTML -->
-  {% if pin_user == True %}
-  <div class="print-hidden w-full card p-4 rounded-xs text-center">
+  {% if user_type == "pin" %}
+  <div class="print-hidden w-full card p-4 rounded-xs text-center mt-8">
     This is your generated CV. You may request changes or data deletion at any
     time from the buttons below.
   </div>
   {% endif %}
 
   <!-- Admin buttons -->
+  {% if user_type == "admin" %}
   <div class="print-hidden w-full p-4 rounded-xs text-center mt-8 red-paper">
     <p class="text-lg mb-4"><b>Admin Actions</b></p>
     <div class="flex justify-center gap-4">
@@ -104,6 +105,7 @@
       </button>
     </div>
   </div>
+  {% endif %}
 
   <div class="print-hidden py-4"></div>
 
@@ -212,7 +214,11 @@
   </div>
 </div>
 
+{% if user_type == "admin" %}
+<!-- Include edit modal if user is an admin -->
 {% include 'views/cv_edit_dialog.html' %}
+<!---->
+{% endif%}
 
 <script>
   // Initialize Icons

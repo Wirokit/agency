@@ -209,12 +209,18 @@ def view_file(file_id):
         cur.close()
         conn.close()
 
+        user_type = "viewer"
+        if pin_session != False:
+            user_type = "pin"
+        elif valid_session != False:
+            user_type = "admin"
+
         return render_template(
             "views/cv_view.html",
             cv_id=file_id,
             json=json,
             contact=contact,
-            pin_user=session.get("pin_code") != None,
+            user_type=user_type,
         )
     except Exception as e:
         print(f"Error serving file: {e}")
