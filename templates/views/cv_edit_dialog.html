@@ -70,16 +70,15 @@
       <button
         type="button"
         class="accordion-button flex items-center w-full p-5 gap-3"
-        onclick="toggleAccordion(event, 'profile-container')"
+        onclick="toggleAccordion(event, 'profile-wrapper')"
       >
         <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
         <span>Profile Paragraphs</span>
       </button>
-      <div id="profile-container" class="hidden p-4 px-12 space-y-4">
+      <div id="profile-wrapper" class="hidden p-4 px-12 space-y-4">
         <div
-          id="profile-wrapper"
-          class="wrapper space-y-4"
-          aria-labelledby="accordion-collapse-heading-1"
+          id="profile-list"
+          class="space-y-4"
         >
           {% for profile in json.profileTexts %}
           <div id="container-profile-{{loop.index}}" class="flex gap-2">
@@ -90,6 +89,7 @@
             >{{profile}}</textarea>
 
             <div
+              id="list-index"
               class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
             >
               {{loop.index}}
@@ -98,7 +98,7 @@
               type="button"
               id="delete-experience-{{loop.index}}"
               class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
-              onclick="handleDeleteEvent(event)"
+              onclick="handleDeleteEvent(event, 'profile-list')"
             >
               <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
             </button>
@@ -109,7 +109,7 @@
           <button
             type="button"
             id="add-profile-btn"
-            onclick="addProfile(event)"
+            onclick="handleAddProfile(event)"
             class="flex w-full items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-3"
           >
             <i data-lucide="plus" class="text-green-600 w-5 h-5"></i>
@@ -281,6 +281,7 @@
             </div>
 
             <div
+              id="list-index"
               class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
             >
               {{loop.index}}
@@ -289,7 +290,7 @@
               type="button"
               id="delete-experience-1"
               class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
-              onclick="handleDeleteEvent(event)"
+              onclick="handleDeleteEvent(event, 'experience-list')"
             >
               <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
             </button>
@@ -394,6 +395,7 @@
             </div>
 
             <div
+              id="list-index"
               class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
             >
               {{loop.index}}
@@ -402,7 +404,7 @@
               type="button"
               id="delete-edu-1"
               class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
-              onclick="handleDeleteEvent(event)"
+              onclick="handleDeleteEvent(event, 'edu-list')"
             >
               <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
             </button>
@@ -446,7 +448,7 @@
       <button
         type="button"
         class="py-3 px-4 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-4 focus:bg-gray-300 transition duration-200 mb-2"
-        onclick="closeModal(event, 'edit_dialog')"
+        onclick="closeModal('edit_dialog', event)"
       >
         Cancel
       </button>
@@ -459,11 +461,8 @@
   lucide.createIcons();
 
   const dialog = document.getElementById("edit_dialog");
-  const profileWrapper = document.getElementById("profile-wrapper");
-  const addProfileButton = document.getElementById("add-profile-btn");
 
-  let initialEditContent;
-  let nextProfileIndex = profileWrapper.children.length + 1;
+  let nextProfileIndex = document.getElementById("profile-list").children.length + 1;
   let nextExperienceIndex =
     document.getElementById("experience-list").children.length + 1;
   let nextEduIndex = document.getElementById("edu-list").children.length + 1;
@@ -471,7 +470,7 @@
   document.body.addEventListener("keydown", (e) => {
     if (dialog.open && e.key == "Escape") {
       e.preventDefault();
-      closeModal(null);
+      closeModal("edit_dialog", null);
     }
   });
 
@@ -496,7 +495,7 @@
     lucide.createIcons();
   }
 
-  function addProfile(e) {
+  function handleAddProfile(e) {
     e.preventDefault();
 
     const newParagraph = document.createElement("div");
@@ -509,20 +508,21 @@
       ></textarea>
 
       <div
+        id="list-index"
         class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
       >
-        ${nextProfileIndex}
+        ${document.getElementById("profile-list").children.length + 1}
       </div>
       <button
         type="button"
         id="delete-experience-${nextProfileIndex}"
         class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
-        onclick="handleDeleteEvent(event)"
+        onclick="handleDeleteEvent(event, 'profile-list')"
       >
         <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
       </button>
     `;
-    profileWrapper.appendChild(newParagraph);
+    document.getElementById("profile-list").appendChild(newParagraph);
     nextProfileIndex += 1;
 
     // Initialize new icon
@@ -537,10 +537,18 @@
     }
   }
 
-  function handleDeleteEvent(e) {
+  function handleDeleteEvent(e, listId) {
     e.preventDefault();
 
     e.currentTarget.parentElement.remove();
+
+    if (listId) {
+      const wrapper = document.getElementById(listId);
+      for (let i = 0; i < wrapper.children.length; i++) {
+        const el = wrapper.children[i];
+        el.children.namedItem("list-index").textContent = i + 1;
+      }
+    }
   }
 
   function handleSkillAddEvent(e) {
@@ -639,15 +647,16 @@
       </div>
 
       <div
+        id="list-index"
         class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
       >
-        ${nextExperienceIndex}
+        ${document.getElementById("experience-list").children.length + 1}
       </div>
       <button
         type="button"
         id="delete-experience-${nextExperienceIndex}"
         class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
-        onclick="handleDeleteEvent(event)"
+        onclick="handleDeleteEvent(event, 'experience-list')"
       >
         <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
       </button>
@@ -725,15 +734,16 @@
       </div>
 
       <div
+        id="list-index"
         class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
       >
-        ${nextEduIndex}
+        ${document.getElementById("edu-list").children.length + 1}
       </div>
       <button
         type="button"
         id="delete-edu-${nextEduIndex}"
         class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
-        onclick="handleDeleteEvent(event)"
+        onclick="handleDeleteEvent(event, 'edu-list')"
       >
         <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
       </button>
@@ -754,7 +764,7 @@
     jsonData.title = document.getElementById("info_title").value;
 
     // Profiles
-    const profileList = document.getElementById("profile-wrapper");
+    const profileList = document.getElementById("profile-list");
     jsonData.profileTexts = [];
     for (const child of profileList.children) {
       const value = child.getElementsByTagName("textarea")[0].value;
