@@ -1,5 +1,5 @@
 <!doctype html>
-{% import "macros.html" as ui %}{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 <!-- Block start -->
 {% block content %}
@@ -72,11 +72,27 @@
     }
   </style>
 
+  <meta id="cv_id" data-other="{{cv_id}}" />
+
   <!-- HTML -->
   {% if user_type == "pin" %}
   <div class="print-hidden w-full card p-4 rounded-xs text-center mt-8">
-    This is your generated CV. You may request changes or data deletion at any
-    time from the buttons below.
+    <p>
+      This is your generated CV. Please contact the contact person listed at the
+      bottom of the CV if changes should be made. You may also delete this CV
+      from our system at any time by pressing the button below.
+    </p>
+    <div class="w-full mt-2 flex justify-center">
+      <button
+        id="delete-btn"
+        type="button"
+        class="bg-red-700 hover:bg-red-800 text-white flex items-center gap-2 font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-red-300 transition duration-200 border border-default"
+        onclick="openModal('delete_dialog', event)"
+      >
+        <i data-lucide="trash" class="w-4 h-4"></i>
+        <p id="delete-text">Delete CV</p>
+      </button>
+    </div>
   </div>
   {% endif %}
 
@@ -88,7 +104,7 @@
       <button
         id="edit-btn"
         type="button"
-        class="bg-[#29355f] hover:bg-[#5065b1] text-white flex items-center gap-2 font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200 border border-default"
+        class="bg-blue-800 hover:bg-blue-900 text-white flex items-center gap-2 font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200 border border-default"
         onclick="openModal('edit_dialog', event)"
       >
         <i data-lucide="pen" class="w-4 h-4"></i>
@@ -97,7 +113,7 @@
       <button
         id="delete-btn"
         type="button"
-        class="bg-red-700 hover:bg-red-500 text-white flex items-center gap-2 font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-red-300 transition duration-200 border border-default"
+        class="bg-red-700 hover:bg-red-800 text-white flex items-center gap-2 font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-red-300 transition duration-200 border border-default"
         onclick="openModal('delete_dialog', event)"
       >
         <i data-lucide="trash" class="w-4 h-4"></i>
@@ -217,8 +233,11 @@
 {% if user_type == "admin" %}
 <!-- Include edit modal if user is an admin -->
 {% include 'views/cv_edit_dialog.html' %}
+<!---->
+{% endif%}
 
 <!-- Delete confirmation popup -->
+{% if user_type == "admin" or user_type == "pin" %}
 <dialog
   id="delete_dialog"
   class="modal card max-w-md bg-white rounded-2xl overflow-hidden border border-slate-200 p-6"
@@ -226,17 +245,13 @@
   <div class="modal-box">
     <h3 class="text-lg font-bold">Are you sure?</h3>
     <p class="py-4 mb-2">
-      This CV is <b>permanently</b> deleted and cannot be recovered.
+      This CV will be <b>permanently</b> deleted and cannot be recovered.
     </p>
     <div class="modal-action">
       <form method="dialog" class="flex gap-2 items-center">
-        <button
-          id="delete-confirm-btn"
-          class="bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 transition duration-200 mb-2"
-          onclick="closeModal('delete_dialog', event)"
-        >
-          Delete
-        </button>
+        {{ ui.loadingButton("delete-confirm-btn", "handleDelete(event)",
+        "Delete", "bg-red-700 text-white font-bold hover:bg-red-800
+        focus:ring-red-300") }}
         <button
           class="py-3 px-4 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-4 focus:bg-gray-300 transition duration-200 mb-2"
           onclick="closeModal('delete_dialog', event)"
@@ -247,8 +262,7 @@
     </div>
   </div>
 </dialog>
-<!---->
-{% endif%}
+{% endif %}
 
 <script>
   // Initialize Icons
@@ -283,6 +297,45 @@
     }
     modal.close();
     modal.classList.add("hidden");
+  }
+
+  async function handleDelete(e) {
+    e.preventDefault();
+
+    const confirmButton = document.getElementById("delete-confirm-btn");
+
+    // Loading state
+    confirmButton.classList.add("loading");
+    confirmButton.setAttribute("disabled", "");
+
+    const formData = new FormData();
+    formData.append(
+      "cvListJson",
+      JSON.stringify([
+        document.getElementById("cv_id").getAttribute("data-other"),
+      ]),
+    );
+
+    try {
+      const response = await fetch("/api/cv", {
+        method: "DELETE",
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        closeModal("delete_dialog");
+        window.location.href = "/";
+      } else {
+        alert(result.error);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      // End loading state
+      confirmButton.classList.remove("loading");
+      confirmButton.removeAttribute("disabled");
+    }
   }
 </script>
 

@@ -729,12 +729,19 @@ def delete_file():
     Handles file deletion.
     """
 
-    # Ensure user is logged in
-    valid_session = login_session_is_valid(session)
-    if not valid_session:
-        return jsonify({"success": False, "error": "Access forbidden."}), 403
+    admin_session = login_session_is_valid(session)
+    pin_session = validate_pin(session)
 
     cv_id_list = json.loads(request.values["cvListJson"])
+
+    # If logged in by PIN, ensure the CV being deleted corresponds to the PIN used
+    if pin_session != False and len(cv_id_list) == 1:
+        cv_id = cv_id_list[0]
+        if pin_session["id"] != cv_id:
+            return jsonify({"success": False, "error": "Access forbidden."}), 403
+    elif not admin_session:
+        # Else, ensure the user is a logged in admin
+        return jsonify({"success": False, "error": "Access forbidden."}), 403
 
     try:
         # Connect to the RDS database
@@ -817,9 +824,7 @@ def edit_cv():
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return (
-            jsonify(
-                {"success": False, "error": "An unexpected server error occurred."}
-            ),
+            jsonify({"success": False, "error": f"{e}"}),
             500,
         )
 

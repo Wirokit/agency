@@ -33,9 +33,16 @@
       .base-height {
         min-height: calc(100vh - 60px);
       }
+      button.disabled,
+      button.loading {
+        background-color: rgba(0, 0, 0, 0.1);
+        pointer-events: none;
+      }
     </style>
   </head>
   <body class="bg-gray-100 font-sans antialiased">
+    {% import "macros.html" as ui %}
+
     <nav
       class="bg-inherit fixed w-full z-20 top-0 start-0 border-b border-default shadow-md"
     >

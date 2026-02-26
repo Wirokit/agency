@@ -14,8 +14,6 @@
   }
 </style>
 
-<meta id="cv_id" data-other="{{cv_id}}" />
-
 <dialog
   id="edit_dialog"
   class="hidden modal card w-full max-w-2xl bg-white rounded-2xl overflow-hidden border border-slate-200 flex relative"
@@ -76,10 +74,7 @@
         <span>Profile Paragraphs</span>
       </button>
       <div id="profile-wrapper" class="hidden p-4 px-12 space-y-4">
-        <div
-          id="profile-list"
-          class="space-y-4"
-        >
+        <div id="profile-list" class="space-y-4">
           {% for profile in json.profileTexts %}
           <div id="container-profile-{{loop.index}}" class="flex gap-2">
             <!-- prettier-ignore -->
@@ -436,22 +431,20 @@
       <!-- New accordions here -->
     </div>
 
-    <div class="modal-action p-6 border-default border-t-2">
-      <button
-        type="submit"
-        id="delete-confirm-btn"
-        class="bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 transition duration-200 mb-2"
-        onclick="submitChanges(event)"
-      >
-        Save
-      </button>
+    <div
+      class="flex items-center gap-2 modal-action p-6 border-default border-t-2 mb-2"
+    >
+      {{ ui.loadingButton("edit-confirm-btn", "submitChanges(event)", "Save",
+      "bg-green-600 text-white font-bold hover:bg-green-700
+      focus:ring-green-300") }}
       <button
         type="button"
-        class="py-3 px-4 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-4 focus:bg-gray-300 transition duration-200 mb-2"
+        class="py-3 px-4 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-4 focus:bg-gray-300 transition duration-200"
         onclick="closeModal('edit_dialog', event)"
       >
         Cancel
       </button>
+      <p id="edit-message"></p>
     </div>
   </div>
 </dialog>
@@ -462,7 +455,8 @@
 
   const dialog = document.getElementById("edit_dialog");
 
-  let nextProfileIndex = document.getElementById("profile-list").children.length + 1;
+  let nextProfileIndex =
+    document.getElementById("profile-list").children.length + 1;
   let nextExperienceIndex =
     document.getElementById("experience-list").children.length + 1;
   let nextEduIndex = document.getElementById("edu-list").children.length + 1;
@@ -757,6 +751,12 @@
   async function submitChanges(e) {
     e.preventDefault();
 
+    const confirmButton = document.getElementById("edit-confirm-btn");
+
+    // Loading state
+    confirmButton.classList.add("loading");
+    confirmButton.setAttribute("disabled", "");
+
     const jsonData = {};
 
     // Basic info
@@ -817,6 +817,10 @@
       jsonData.education.push(eduJson);
     }
 
+    // Hide and prepare message
+    const editMessage = document.getElementById("edit-message");
+    editMessage.setAttribute("class", "hidden text-sm");
+
     try {
       const formData = new FormData();
       formData.append(
@@ -832,14 +836,25 @@
 
       const result = await response.json();
 
+      editMessage.classList.remove("hidden");
       if (response.ok && result.success) {
+        editMessage.classList.add("text-green-700");
+        editMessage.textContent = "Done! Reloading page...";
         window.location.reload();
       } else {
         // Handle backend error
+        editMessage.classList.add("text-red-700");
+        editMessage.textContent = `Error: ${result.error}`;
       }
     } catch (error) {
       // Handle network or fetch error
       console.error("Upload Error:", error);
+      editMessage.classList.add("text-red-700");
+      editMessage.textContent = error;
+    } finally {
+      // End loading state
+      confirmButton.classList.remove("loading");
+      confirmButton.removeAttribute("disabled");
     }
   }
 </script>
