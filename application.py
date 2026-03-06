@@ -3,12 +3,11 @@ import os
 import uuid
 from flask import Flask, render_template, request, jsonify, session
 from werkzeug.utils import secure_filename
-from google import genai
 import psycopg2
 from psycopg2.extensions import AsIs
 from psycopg2.extras import register_uuid, RealDictCursor
 import json
-from utils import generate_pin
+from utils import generate_pin, parse_pdf, generate_extraction_prompt, query_bedrock
 
 # --- Environment - Only needed when running locally ---
 """ from dotenv import load_dotenv
@@ -38,10 +37,6 @@ application.config.from_mapping(
 
 # Define allowed file extensions
 ALLOWED_EXTENSIONS = {"pdf"}
-
-# Create a Gemini client
-geminicli = genai.Client()
-prompt = open("prompt.txt", "r").read()
 
 
 def allowed_file(filename):
@@ -379,112 +374,79 @@ def upload_file():
             400,
         )
 
-    # Prompt settings
-    prompt_preferences = ""
-    if first_name_only == "true":
-        prompt_preferences += " Only take the first name."
-    if keyword_list != "":
-        keyword_list = keyword_list.replace("```", "")
-        prompt_preferences += f" Highlight skills relevant for the following job: ```\n{keyword_list}\n```"
-    else:
-        prompt_preferences += " Leave the 'highlightSkills' list empty."
+    # Secure the filename (prevents directory traversal attacks)
+    original_filename = secure_filename(file.filename)
 
-    updated_prompt = prompt.replace("{p}", prompt_preferences)
+    # Save the original file
+    original_filepath = os.path.join(UPLOAD_FOLDER, original_filename)
+    file.save(original_filepath)
 
-    if file:
-        # Secure the filename (prevents directory traversal attacks)
-        original_filename = secure_filename(file.filename)
+    # Parse PDF into raw string
+    cv_data = parse_pdf(original_filepath)
 
-        # Save the original file
-        original_filepath = os.path.join(UPLOAD_FOLDER, original_filename)
-        file.save(original_filepath)
+    # Generate prompt for the AI Model
+    prompt = generate_extraction_prompt(
+        cv_data, first_name_only=first_name_only == "true"
+    )
 
-        # Generate a unique ID for the processed file
+    try:
+        parsed_json = query_bedrock(prompt)
+
+        ### Highlight skills based on keywords, if provided. ###
+        if keyword_list != "":
+            highlight_json = query_bedrock(
+                f"""
+                    I am going to provide a Job Description and a Master Skill List.
+
+                    Your task is to analyze the Job Description and extract only the skills from my Master Skill List that are directly relevant or implicitly required for the role.
+
+                    Return the extracted skill array as "highlightSkills".
+
+                    Job Description: ""\"{keyword_list}""\"
+                    Master Skill List: ""\"{json.dumps(parsed_json["skills"])}""\"
+                """
+            )
+            parsed_json["highlightSkills"] = highlight_json["highlightSkills"]
+
+            # Remove duplicate skills
+            for skill in parsed_json["highlightSkills"]:
+                if skill in parsed_json["skills"]:
+                    parsed_json["skills"].remove(skill)
+
+        # Inject custom profile text into the json object
+        if profile_text != "":
+            parsed_json["profileTexts"].append(profile_text)
+
+        # Generate a unique ID for the processed CV
         file_id = str(uuid.uuid4())
 
-        # --- PDF PROCESSING LOGIC ---
-        try:
-            pdf_to_process = geminicli.files.upload(file=original_filepath)
-            response = geminicli.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=[updated_prompt, pdf_to_process],
-                config={
-                    "response_mime_type": "application/json",
-                },
-            )
+        conn = psycopg2.connect(
+            host=os.environ.get("RDS_HOSTNAME"),
+            database=os.environ.get("RDS_DB_NAME"),
+            user=os.environ.get("RDS_USERNAME"),
+            password=os.environ.get("RDS_PASSWORD"),
+            port=os.environ.get("RDS_PORT"),
+        )
+        cur = conn.cursor()
 
-            result_json = response.text
+        # Register the UUID format for psycopg2
+        register_uuid()
 
-            # Ensure data is a dictionary
-            if isinstance(result_json, str):
-                json_data = json.loads(result_json)
-            else:
-                json_data = result_json
-
-            json_data["profileTexts"].append(profile_text)
-
-            for skill in json_data["highlightSkills"]:
-                if skill in json_data["skills"]:
-                    json_data["skills"].remove(skill)
-
-            # Add new CV to the database
-            conn = psycopg2.connect(
-                host=os.environ.get("RDS_HOSTNAME"),
-                database=os.environ.get("RDS_DB_NAME"),
-                user=os.environ.get("RDS_USERNAME"),
-                password=os.environ.get("RDS_PASSWORD"),
-                port=os.environ.get("RDS_PORT"),
-            )
-            cur = conn.cursor()
-
-            # Register the UUID format for psycopg2
-            register_uuid()
-
-            # Store CV information in the DB
-            query = """
-                INSERT INTO cv (id, data_owner, date_uploaded, cv_json, contact_id)
-                VALUES (%s, %s, now(), %s, %s)
-            """
-            cur.execute(
-                query,
-                (
-                    file_id,
-                    json_data["name"],
-                    json.dumps(json_data),
-                    user_data[0],
-                ),
-            )
-            conn.commit()
-
-            # Close connection
-            cur.close()
-            conn.close()
-
-            # --- End of PDF processing logic ---
-        except Exception as e:
-            # Check for gemini overload issues
-            if "The model is overloaded" in str(e):
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "error": "Gemini model is overloaded. Please try again.",
-                        }
-                    ),
-                    500,
-                )
-
-            # Catch other potential errors
-            print(f"An unexpected error occurred: {e}")
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": "An unexpected server error occurred: {e}",
-                    }
-                ),
-                500,
-            )
+        # Add new CV to the database
+        query = """
+            INSERT INTO cv (id, data_owner, date_uploaded, cv_json, contact_id)
+            VALUES (%s, %s, now(), %s, %s)
+        """
+        cur.execute(
+            query,
+            (
+                file_id,
+                parsed_json["name"],
+                json.dumps(parsed_json),
+                user_data[0],
+            ),
+        )
+        conn.commit()
 
         # Build the URL for the new file
         # This URL points to our '/view/' endpoint below
@@ -492,6 +454,25 @@ def upload_file():
 
         # Send the success response
         return jsonify({"success": True, "url": new_url})
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "error": "An unexpected server error occurred: {e}",
+                }
+            ),
+            500,
+        )
+    finally:
+        # Remove original file if it exists
+        if os.path.exists(original_filepath):
+            os.remove(original_filepath)
+
+        # Close the DB connection
+        cur.close()
+        conn.close()
 
 
 # Used by users that have loggen in via PIN to upload their own CV
@@ -542,44 +523,52 @@ def update_cv():
     keyword_list = result[1]["keyword_list"] or []
     profile_text = result[1]["profile_text"] or ""
 
-    # Generate prompt
-    prompt_preferences = ""
-    if first_name_only == True:
-        prompt_preferences += " Only take the first name."
-    if keyword_list:
-        keyword_list = keyword_list.replace("```", "")
-        prompt_preferences += f" Highlight skills relevant for the following job: ```\n{keyword_list}\n```"
-    else:
-        prompt_preferences += " Leave the 'highlightSkills' list empty."
+    # Parse PDF into raw string
+    cv_data = parse_pdf(original_filepath)
 
-    updated_prompt = prompt.replace("{p}", prompt_preferences)
+    # Generate prompt for the AI Model
+    prompt = generate_extraction_prompt(
+        cv_data, first_name_only=first_name_only == "true"
+    )
 
-    # --- PDF PROCESSING ---
     try:
-        pdf_to_process = geminicli.files.upload(file=original_filepath)
-        response = geminicli.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[updated_prompt, pdf_to_process],
-            config={
-                "response_mime_type": "application/json",
-            },
+        parsed_json = query_bedrock(prompt)
+
+        ### Highlight skills based on keywords, if provided. ###
+        if keyword_list != "":
+            highlight_json = query_bedrock(
+                f"""
+                    I am going to provide a Job Description and a Master Skill List.
+
+                    Your task is to analyze the Job Description and extract only the skills from my Master Skill List that are directly relevant or implicitly required for the role.
+
+                    Return the extracted skill array as "highlightSkills".
+
+                    Job Description: ""\"{keyword_list}""\"
+                    Master Skill List: ""\"{json.dumps(parsed_json["skills"])}""\"
+                """
+            )
+            parsed_json["highlightSkills"] = highlight_json["highlightSkills"]
+
+            # Remove duplicate skills
+            for skill in parsed_json["highlightSkills"]:
+                if skill in parsed_json["skills"]:
+                    parsed_json["skills"].remove(skill)
+
+        # Inject custom profile text into the json object
+        if profile_text != "":
+            parsed_json["profileTexts"].append(profile_text)
+
+        conn = psycopg2.connect(
+            host=os.environ.get("RDS_HOSTNAME"),
+            database=os.environ.get("RDS_DB_NAME"),
+            user=os.environ.get("RDS_USERNAME"),
+            password=os.environ.get("RDS_PASSWORD"),
+            port=os.environ.get("RDS_PORT"),
         )
+        cur = conn.cursor()
 
-        result_json = response.text
-
-        # Ensure data is a dictionary
-        if isinstance(result_json, str):
-            json_data = json.loads(result_json)
-        else:
-            json_data = result_json
-
-        json_data["profileTexts"].append(profile_text)
-
-        for skill in json_data["highlightSkills"]:
-            if skill in json_data["skills"]:
-                json_data["skills"].remove(skill)
-
-        # UPDATE CV info in the DB
+        # Add new CV to the database
         query = """
             UPDATE cv
             SET date_uploaded = now(), cv_json = %s
@@ -588,48 +577,33 @@ def update_cv():
         cur.execute(
             query,
             (
-                json.dumps(json_data),
+                json.dumps(parsed_json),
                 session.get("pin_code"),
             ),
         )
         conn.commit()
 
-        # --- End of PDF processing logic ---
+        # Send the success response
+        return jsonify({"success": True})
     except Exception as e:
-        # Check for gemini overload issues
-        print(f"A gemini error occurred: {e}")
-        if "The model is overloaded" in str(e):
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": "Gemini model is overloaded. Please try again.",
-                    }
-                ),
-                500,
-            )
-
-        # Catch other potential errors
         print(f"An unexpected error occurred: {e}")
         return (
             jsonify(
                 {
                     "success": False,
-                    "error": f"An unexpected server error occurred: {e}",
+                    "error": "An unexpected server error occurred: {e}",
                 }
             ),
             500,
         )
     finally:
-        # Close connection
+        # Remove original file if it exists
+        if os.path.exists(original_filepath):
+            os.remove(original_filepath)
+
+        # Close the DB connection
         cur.close()
         conn.close()
-
-    # Build the URL for the new file
-    new_url = f"/view/{id}"
-
-    # Send the success response
-    return jsonify({"success": True, "url": new_url})
 
 
 @application.route("/api/pin", methods=["POST"])
