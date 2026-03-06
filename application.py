@@ -709,9 +709,10 @@ def delete_file():
     cv_id_list = json.loads(request.values["cvListJson"])
 
     # If logged in by PIN, ensure the CV being deleted corresponds to the PIN used
-    if pin_session != False and len(cv_id_list) == 1:
-        cv_id = cv_id_list[0]
-        if pin_session["id"] != cv_id:
+    # assumes first CV if somehow multiple were sent
+    if pin_session != False:
+        cv_id_list = [cv_id_list[0]]
+        if str(pin_session["id"]) != cv_id_list[0]:
             return jsonify({"success": False, "error": "Access forbidden."}), 403
     elif not admin_session:
         # Else, ensure the user is a logged in admin
