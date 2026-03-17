@@ -2,6 +2,7 @@
 import os
 import uuid
 from flask import Flask, render_template, request, jsonify, session
+from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
 import psycopg2
 from psycopg2.extensions import AsIs
@@ -17,6 +18,9 @@ load_dotenv() """
 
 # Create a Flask application
 application = Flask(__name__, static_url_path="/static")
+
+# Bcrypt for password hashing
+bcrypt = Bcrypt(application)
 
 # Define upload and processed directories
 # os.path.dirname(__file__) gets the directory this script is in
@@ -123,11 +127,25 @@ def validate_pin(session):
     return False
 
 
+@application.before_request
+def before_request():
+    """Check if user is required to change their password. Serves change page if yes."""
+    user = session.get("user_id")
+    if user and request.endpoint.startswith("serve_"):
+        user_record = get_user_record(
+            user,
+            "require_pw_update",
+        )
+
+        if user_record[0]:
+            return render_template("views/update_pw.html", forced=True)
+
+
 # --- Views ---
 
 
 @application.route("/", methods=["GET"])
-def serve_html():
+def serve_landing():
     """Serves the login and upload pages to the frontend."""
 
     html_file = "views/"
@@ -142,14 +160,14 @@ def serve_html():
         if not pin_session["date_uploaded"]:
             html_file += "pin_upload.html"
         else:
-            return view_file(str(pin_session["id"]))
+            return serve_cv(str(pin_session["id"]))
 
     # Send the html file
     return render_template(html_file)
 
 
 @application.route("/view", methods=["GET"])
-def cv_list():
+def serve_cv_list():
     """Serves the CV list page to the frontend."""
 
     # Ensure user is logged in
@@ -160,8 +178,8 @@ def cv_list():
     return render_template("views/cv_list.html")
 
 
-@application.route("/view/<file_id>", methods=["GET"])
-def view_file(file_id):
+@application.route("/view/<cv_id>", methods=["GET"])
+def serve_cv(cv_id):
     """Serves the CV to the frontend."""
     """VERSION 2 - All CV data is in JSON format rather than a html file"""
 
@@ -190,7 +208,7 @@ def view_file(file_id):
             JOIN contact_info c ON cv.contact_id = c.id
             WHERE cv.id = %s
         """
-        cur.execute(query, (file_id,))
+        cur.execute(query, (cv_id,))
 
         result = cur.fetchone()
         json = result[0]
@@ -212,7 +230,7 @@ def view_file(file_id):
 
         return render_template(
             "views/cv_view.html",
-            cv_id=file_id,
+            cv_id=cv_id,
             json=json,
             contact=contact,
             user_type=user_type,
@@ -234,16 +252,16 @@ def check_login():
         return jsonify({"success": False, "error": "Empty body."}), 400
 
     # Get db entry based on given user id
-    user_record = get_user_record(request.values["user"], "password")
+    user_record = get_user_record(request.values["user"], "password_hash")
 
     # Check that password matches
     if user_record:
-        stored_password = user_record[0]
+        hashed_password = user_record[0]
 
-        # Compare passwords - UNHASHED
-        password_correct = request.values["password"] == stored_password
+        # Compare passwords
+        match = bcrypt.check_password_hash(hashed_password, request.values["password"])
 
-        if password_correct:
+        if match:
             session["user_id"] = request.values["user"]
             return jsonify({"success": True, "data": {"user": request.values["user"]}})
         else:
@@ -813,6 +831,74 @@ def get_privacy_policy():
     privacy_policy = open("privacy_statement.html", "r").read()
 
     return privacy_policy
+
+
+@application.route("/api/password", methods=["UPDATE"])
+def update_password():
+    """
+    Update a user's password
+    """
+
+    # Ensure that data was sent
+    if not request.values["old_password"] or not request.values["new_password"]:
+        return jsonify({"success": False, "error": "Empty body."}), 400
+
+    # Get db entry based on logged in user
+    user_record = get_user_record(session["user_id"], "password_hash")
+
+    # Check that user exists
+    if not user_record:
+        return jsonify({"success": False, "error": "Not logged in."})
+
+    old_hashed_password = user_record[0]
+
+    # Check that old password matches
+    match = bcrypt.check_password_hash(
+        old_hashed_password, request.values["old_password"]
+    )
+
+    if not match:
+        return jsonify({"success": False, "error": "Current password is incorrect."})
+
+    try:
+        # Connect to the RDS database
+        conn = psycopg2.connect(
+            host=os.environ.get("RDS_HOSTNAME"),
+            database=os.environ.get("RDS_DB_NAME"),
+            user=os.environ.get("RDS_USERNAME"),
+            password=os.environ.get("RDS_PASSWORD"),
+            port=os.environ.get("RDS_PORT"),
+        )
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        query = """
+            UPDATE users
+            SET password_hash = %s, require_pw_update = false
+            WHERE id = %s
+        """
+        cur.execute(
+            query,
+            (
+                bcrypt.generate_password_hash(request.values["new_password"]).decode(
+                    "utf-8"
+                ),
+                session["user_id"],
+            ),
+        )
+        conn.commit()
+
+        # Close connection
+        cur.close()
+        conn.close()
+
+        # Send the success response
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return (
+            jsonify({"success": False, "error": f"{e}"}),
+            500,
+        )
 
 
 # --- Run the Application ---
