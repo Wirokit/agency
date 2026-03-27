@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@import "flowbite/src/themes/default";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  --bg-dark: rgb(29, 29, 29);
+  --bg-dark-paper: rgb(59, 59, 59);
+}
+
+a:hover,
+button:hover {
+  cursor: pointer;
+}

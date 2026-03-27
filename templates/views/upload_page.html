@@ -60,11 +60,11 @@
     </a>
 
     <!-- Card -->
-    <div class="bg-white w-full max-w-md rounded-xl card">
+    <div
+      class="bg-white dark:bg-(--bg-dark-paper) w-full max-w-md rounded-xl card"
+    >
       <div>
-        <ul
-          class="w-full flex flex-wrap -mb-px text-sm font-medium text-center text-body"
-        >
+        <ul class="w-full flex flex-wrap text-sm font-medium text-center">
           <li class="tab-btn w-1/2">
             <a
               id="tab-upload"
@@ -91,7 +91,7 @@
       <div class="card-content p-8 space-y-4">
         <div id="upload-content">
           <!-- Header -->
-          <p class="text-center mb-6 text-gray-500 mt-2">
+          <p class="text-center mb-6 opacity-[0.5] mt-2">
             Turn a PDF CV into a new Wirokit CV
           </p>
 
@@ -136,7 +136,7 @@
           </form>
         </div>
 
-        <div id="pin-content" class="min-w-3xl hidden">
+        <div id="pin-content" class="hidden">
           <!-- Header -->
           <p class="text-center mb-6 text-gray-500">
             Get a PIN code with which a user can upload their own CV to be
