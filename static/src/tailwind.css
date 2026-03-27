@@ -4,11 +4,32 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 html {
-  --bg-dark: rgb(29, 29, 29);
-  --bg-dark-paper: rgb(59, 59, 59);
+  --bg-dark-paper: #4a4e8d60;
+
+  --color-funky: #c323b0;
+
+  --color-primary: #4a4e8d;
+  --color-primary-hover: #2a2e64;
+  --color-secondary: #c323b0;
+
+  &:where(.dark, .dark *) {
+    --color-primary: #c323b0;
+    --color-primary-hover: #ce50bf;
+    --color-secondary: #4a4e8d;
+    --color-white: #ffffffde;
+  }
 }
 
 a:hover,
 button:hover {
   cursor: pointer;
+}
+
+.card {
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.16),
+    0 3px 6px rgba(0, 0, 0, 0.23);
+  &:where(.dark, .dark *) {
+    box-shadow: none;
+  }
 }

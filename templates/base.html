@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico" />
-    <title>Wirokit - CV Tool</title>
+    <title>Agency</title>
     <link
       rel="stylesheet"
       href="{{url_for('static',filename='dist/tailwind.css')}}"
@@ -31,13 +31,6 @@
           background-image: url("{{url_for('static',filename='images/bg.jpg')}}");
         }
       }
-      .w-bg {
-        position: fixed;
-        top: 20%;
-        left: -10%;
-        width: 50%;
-        z-index: -100;
-      }
       section {
         padding: 2rem 0;
       }
@@ -49,13 +42,37 @@
         background-color: rgba(0, 0, 0, 0.1);
         pointer-events: none;
       }
+      nav.scrolled {
+        transition: all 0.1s;
+        box-shadow:
+          0 3px 6px rgba(0, 0, 0, 0.16),
+          0 3px 6px rgba(0, 0, 0, 0.23);
+        background-color: white;
+        &:where(.dark, .dark *) {
+          box-shadow: none;
+          background-color: black;
+        }
+      }
+      .user-menu button:hover {
+        background-color: rgba(0, 0, 0, 0.2);
+        &:where(.dark, .dark *) {
+          background-color: rgba(255, 255, 255, 0.2);
+        }
+      }
     </style>
   </head>
   <body
     class="font-sans antialiased dark:text-white"
     onscroll="handleScroll(event)"
   >
-    <img class="w-bg" src="{{url_for('static',filename='images/w-bg.png')}}" />
+    <img
+      class="fixed top-[20%] left-[-10%] w-[50%] z-[-100]"
+      src="{{url_for('static',filename='images/w-bg.png')}}"
+    />
+    <img
+      class="fixed bottom-[20%] right-[-10%] w-[50%] z-[-100]"
+      src="{{url_for('static',filename='images/w-bg.png')}}"
+    />
     {% import "macros.html" as ui %}
 
     <nav id="top-nav" class="bg-inherit fixed w-full z-20 top-0 start-0">
@@ -70,20 +87,18 @@
           />
           <img
             src="/static/images/wirokit_icon_w.png"
-            class="w-10 hidden dark:block"
+            class="w-10 hidden dark:block dark:opacity-[87%]"
             alt="Wirokit Logo"
           />
-          <span
-            class="self-center text-xl text-heading font-semibold whitespace-nowrap"
-          >
-            CV Tool
+          <span class="self-center text-xl font-semibold whitespace-nowrap">
+            Agency
           </span>
         </a>
         <div>
           <button
             id="profile-icon"
             type="button"
-            class="flex items-center justify-center text-center w-[35px] h-[35px] bg-gray-300 dark:bg-[#C323B0] rounded-[90px] hover:cursor-pointer"
+            class="flex items-center justify-center text-center w-[35px] h-[35px] text-white bg-(--color-primary) rounded-[90px] hover:cursor-pointer"
             onclick="toggleMenu(event)"
           >
             {{session['user_id'][0]}}
@@ -92,14 +107,14 @@
 
         <div
           id="user-menu"
-          class="hidden absolute top-[55px] right-[10px] w-[250px] rounded-xl bg-white py-2 border border-default dark:bg-[#4a4e8d]"
+          class="user-menu card hidden absolute top-[55px] right-[10px] w-[250px] rounded-xl bg-white py-2 border border-default dark:bg-[#4a4e8d]"
         >
           <div id="menu-content">
             <div class="text-center italic mb-2">ADMIN</div>
             <div class="flex items-center px-4 gap-2 mb-3">
               <span
                 id="menu-profile-icon"
-                class="flex items-center justify-center text-center w-[40px] h-[40px] bg-gray-300 dark:bg-[#C323B0] rounded-[90px]"
+                class="flex items-center justify-center text-center w-[40px] h-[40px] text-white bg-(--color-primary) rounded-[90px]"
               >
                 {{session['user_id'][0]}}
               </span>
@@ -110,7 +125,7 @@
 
             <button
               type="button"
-              class="flex items-center py-3 px-4 w-full text-start gap-3 hover:bg-[#ffffff30] justify-between"
+              class="flex items-center py-3 px-4 w-full text-start gap-3 justify-between"
               onclick="toggleThemeSelector(event)"
             >
               <div class="flex items-center gap-3">
@@ -121,7 +136,7 @@
             </button>
             <button
               type="button"
-              class="flex items-center py-3 px-4 w-full text-start gap-3 hover:bg-[#ffffff30]"
+              class="flex items-center py-3 px-4 w-full text-start gap-3"
               onclick="logOut(event)"
             >
               <i data-lucide="log-in"></i>
@@ -144,7 +159,7 @@
             <button
               id="btn-theme-default"
               type="button"
-              class="flex items-center py-3 px-4 w-full text-start gap-3 hover:bg-[#ffffff30]"
+              class="flex items-center py-3 px-4 w-full text-start gap-3"
               onclick="changeTheme(event, 'system')"
             >
               <i data-lucide="check" class="invisible"></i>
@@ -154,7 +169,7 @@
             <button
               id="btn-theme-dark"
               type="button"
-              class="flex items-center py-3 px-4 w-full text-start gap-3 hover:bg-[#ffffff30]"
+              class="flex items-center py-3 px-4 w-full text-start gap-3"
               onclick="changeTheme(event, 'dark')"
             >
               <i data-lucide="check" class="invisible"></i>
@@ -164,7 +179,7 @@
             <button
               id="btn-theme-light"
               type="button"
-              class="flex items-center py-3 px-4 w-full text-start gap-3 hover:bg-[#ffffff30]"
+              class="flex items-center py-3 px-4 w-full text-start gap-3"
               onclick="changeTheme(event, 'light')"
             >
               <i data-lucide="check" class="invisible"></i>
@@ -209,9 +224,9 @@
 
       function handleScroll(event) {
         if (window.scrollY > 5) {
-          nav.classList.add("dark:bg-black");
+          nav.classList.add("scrolled");
         } else {
-          nav.classList.remove("dark:bg-black");
+          nav.classList.remove("scrolled");
         }
       }
 

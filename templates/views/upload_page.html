@@ -4,45 +4,17 @@
 <!-- Main Container -->
 {% block content %}
 <style>
-  /* 2. Add custom styling for the file input */
-  .card {
-    box-shadow:
-      0 0 20px 0 rgb(0 0 0 / 0.1),
-      0 0 20px 0 rgb(0 0 0 / 0.1);
-  }
-  .tab-btn {
-    font-size: 1.2em;
-  }
-  .tab-btn:first-child {
-    border-radius: 0.75rem 0 0 0;
-  }
-  .tab-btn:last-child {
-    border-radius: 0 0.75rem 0 0;
-  }
-  .tab-btn:has(a.active) {
-    border-width: 1px 1px 0 1px;
-    border-color: #3b82f6;
-  }
   .tab-btn:not(:has(a.active)) {
-    background-color: #b1b1b1;
-    border-bottom: 1px solid #3b82f6;
+    background-color: #696b8a60;
   }
   .tab-btn:not(:has(a.active)):hover {
-    background-color: #c0c0c0;
-  }
-  .card-content {
-    border-width: 0 1px 1px 1px;
-    border-color: #3b82f6;
-    border-radius: 0 0 0.75rem 0.75rem;
-  }
-  .primary-color {
-    color: #3b82f6;
+    background-color: #4e4e5260;
   }
   .consent-container {
     transition: all 0.2s ease-in-out;
   }
   .warn-border {
-    border-color: rgb(220, 53, 69);
+    border-color: rgb(212, 0, 21);
   }
   .blocked {
     pointer-events: none;
@@ -54,18 +26,18 @@
   <div class="flex flex-col items-end">
     <a
       href="/view"
-      class="flex justify-center items-center mb-4 text-xl text-pink-600"
+      class="flex justify-center items-center mb-4 text-xl text-(--color-primary)"
     >
       <b>CV List</b> <i data-lucide="chevron-right" class="w-8 h-8"></i>
     </a>
 
     <!-- Card -->
     <div
-      class="bg-white dark:bg-(--bg-dark-paper) w-full max-w-md rounded-xl card"
+      class="w-full max-w-md card bg-white border-t-2 border-default rounded-xl dark:bg-(--bg-dark-paper) dark:rounded-none"
     >
       <div>
         <ul class="w-full flex flex-wrap text-sm font-medium text-center">
-          <li class="tab-btn w-1/2">
+          <li class="tab-btn w-1/2 rounded-tl-xl dark:rounded-none">
             <a
               id="tab-upload"
               href="#"
@@ -75,7 +47,7 @@
               <b>UPLOAD PDF</b>
             </a>
           </li>
-          <li class="tab-btn w-1/2">
+          <li class="tab-btn w-1/2 rounded-tr-xl dark:rounded-none">
             <a
               id="tab-pin"
               href="#"
@@ -99,19 +71,19 @@
             <div
               class="consent-container w-full p-4 border border-default-medium rounded-xs text-center warn-border"
             >
-              <h3 class="mb-4 font-semibold text-heading">
+              <h3 class="mb-4 font-semibold">
                 The data owner must give their consent for us to store and
                 process their data!
               </h3>
               <label
                 for="consent-check"
-                class="flex p-2 justify-center items-center select-none text-md font-medium text-heading hover:cursor-pointer"
+                class="flex p-2 justify-center items-center select-none text-md font-medium hover:cursor-pointer"
               >
                 <input
                   id="consent-check"
                   type="checkbox"
                   value=""
-                  class="primary-color w-5 h-5 mr-2 border border-default-medium rounded-xs bg-neutral-secondary-medium focus:ring-2 focus:ring-brand-soft hover:cursor-pointer"
+                  class="w-5 h-5 mr-2 border border-default-medium rounded-xs accent-(--color-funky) focus:ring-2 focus:ring-brand-soft hover:cursor-pointer"
                 />
                 Consent granted
               </label>
@@ -128,7 +100,7 @@
               <button
                 type="submit"
                 id="submit-button"
-                class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200"
+                class="w-full bg-(--color-primary) text-white dark:text-inherit font-bold py-3 px-4 rounded-lg hover:bg-(--color-primary-hover) focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200"
               >
                 Upload and Process
               </button>
@@ -146,7 +118,7 @@
           <form id="pin-form" class="space-y-6">
             <!-- PIN recipient name -->
             <label for="recipient-identifier">
-              <p class="text-sm font-medium text-heading">
+              <p class="text-sm font-medium">
                 Recipient identifier (email, full name etc.)
               </p>
               <input
@@ -166,7 +138,7 @@
             <button
               type="submit"
               id="pin-submit-button"
-              class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200"
+              class="w-full bg-(--color-primary) text-white dark:text-inherit font-bold py-3 px-4 rounded-lg hover:bg-(--color-primary-hover) focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200"
             >
               Get PIN
             </button>
@@ -177,26 +149,6 @@
         <div id="result-container" class="text-center hidden pt-2">
           <!-- Loading Spinner -->
           <div id="loading-spinner" class="hidden">
-            <svg
-              class="animate-spin h-8 w-8 text-blue-600 mx-auto"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              ></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
             <p class="text-gray-500 mt-2">
               Processing your file, please wait...
             </p>
