@@ -1353,6 +1353,11 @@
       display: block;
     }
   }
+  .dark\:flex {
+    &:where(.dark, .dark *) {
+      display: flex;
+    }
+  }
   .dark\:hidden {
     &:where(.dark, .dark *) {
       display: none;

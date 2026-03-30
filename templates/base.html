@@ -125,9 +125,13 @@
               class="flex items-center py-3 px-4 w-full text-start gap-3 justify-between"
               onclick="toggleThemeSelector(event)"
             >
-              <div class="flex items-center gap-3">
+              <div class="flex dark:hidden items-center gap-3">
                 <i data-lucide="sun"></i>
                 Theme: Light
+              </div>
+              <div class="hidden dark:flex items-center gap-3">
+                <i data-lucide="moon"></i>
+                Theme: Dark
               </div>
               <i data-lucide="chevron-right"></i>
             </button>
@@ -160,7 +164,9 @@
               onclick="changeTheme(event, 'system')"
             >
               <i data-lucide="check" class="invisible"></i>
-              Device default (Dark)
+              <p>
+                Device default (<span id="preferred-color-scheme">Light</span>)
+              </p>
             </button>
 
             <button
@@ -198,11 +204,18 @@
       // Initialize Icons
       lucide.createIcons();
 
+      const prefersDarkMode = window.matchMedia(
+        "(prefers-color-scheme: dark)",
+      ).matches;
+
+      if (prefersDarkMode) {
+        document.getElementById("preferred-color-scheme").innerText = "Dark";
+      }
+
       document.documentElement.classList.toggle(
         "dark",
         localStorage.theme === "dark" ||
-          (!("theme" in localStorage) &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches),
+          (!("theme" in localStorage) && prefersDarkMode),
       );
 
       document
