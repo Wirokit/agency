@@ -4,7 +4,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 html {
-  --bg-dark-paper: #4a4e8d60;
+  --bg-paper: #ffffff;
+  --bg-dialog: #ffffff;
+  --bg-dialog-actions: #ffffff;
 
   --color-funky: #c323b0;
 
@@ -13,6 +15,9 @@ html {
   --color-secondary: #c323b0;
 
   &:where(.dark, .dark *) {
+    --bg-paper: #4a4e8d60;
+    --bg-dialog: rgb(43, 44, 52);
+    --bg-dialog-actions: rgb(21, 21, 27);
     --color-primary: #c323b0;
     --color-primary-hover: #970c87;
     --color-secondary: #4a4e8d;
@@ -29,6 +34,7 @@ button:hover {
   box-shadow:
     0 3px 6px rgba(0, 0, 0, 0.16),
     0 3px 6px rgba(0, 0, 0, 0.23);
+  border-top: 2px solid var(--color-default);
   &:where(.dark, .dark *) {
     box-shadow: none;
   }

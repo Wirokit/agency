@@ -91,7 +91,7 @@
   <!-- HTML -->
   {% if user_type == "pin" %}
   <div
-    class="print-hidden w-full p-4 rounded-xs dark:rounded-none text-center mt-8 card bg-white border border-red-600"
+    class="print-hidden w-full p-4 rounded-xs dark:rounded-none text-center mt-8 card bg-(--bg-paper) border-t-2 border-default"
   >
     <p>
       This is your generated CV. Please contact the contact person listed at the
@@ -115,7 +115,7 @@
   <!-- Admin buttons -->
   {% if user_type == "admin" %}
   <div
-    class="print-hidden w-full p-4 rounded-xs dark:rounded-none text-center mt-8 card bg-white dark:bg-(--bg-dark-paper)"
+    class="print-hidden w-full p-4 rounded-xs dark:rounded-none text-center mt-8 card bg-(--bg-paper) border-t-2 border-default"
   >
     <p class="text-lg mb-4"><b>Admin Actions</b></p>
     <div class="flex justify-center gap-4">
@@ -144,7 +144,7 @@
   <div class="print-hidden py-4"></div>
 
   <div
-    class="w-full mb-8 card rounded-xs dark:rounded-none bg-white dark:bg-(--bg-dark-paper) border-t-2 border-default"
+    class="w-full mb-8 card rounded-xs dark:rounded-none bg-(--bg-paper) border-t-2 border-default"
   >
     <span class="confidential-header text-2xl border-b-2 border-black">
       <b>CONFIDENTIAL</b>
@@ -263,26 +263,26 @@
 {% if user_type == "admin" or user_type == "pin" %}
 <dialog
   id="delete_dialog"
-  class="modal card max-w-md bg-white rounded-2xl overflow-hidden border border-slate-200 p-6"
+  class="modal card max-w-md bg-(--bg-dialog) rounded-2xl overflow-hidden"
 >
-  <div class="modal-box">
+  <div class="modal-box px-6 pt-6">
     <h3 class="text-lg font-bold">Are you sure?</h3>
-    <p class="py-4 mb-2">
+    <p class="py-4">
       This CV will be <b>permanently</b> deleted and cannot be recovered.
     </p>
-    <div class="modal-action">
-      <form method="dialog" class="flex gap-2 items-center">
-        {{ ui.loading_button("delete-confirm-btn", "handleDelete(event)",
-        "Delete", "bg-red-700 text-white font-bold hover:bg-red-800
-        focus:ring-red-300") }}
-        <button
-          class="py-3 px-4 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-4 focus:bg-gray-300 transition duration-200 mb-2"
-          onclick="closeModal('delete_dialog', event)"
-        >
-          Cancel
-        </button>
-      </form>
-    </div>
+  </div>
+  <div class="modal-action bg-(--bg-dialog-actions) p-6">
+    <form method="dialog" class="flex gap-2 items-center">
+      {{ ui.loading_button("delete-confirm-btn", "handleDelete(event)",
+      "Delete", "bg-red-700 text-white font-bold hover:bg-red-800
+      focus:ring-red-300 rounded-sm") }}
+      <button
+        class="py-3 px-4 rounded-lg focus:outline-none focus:ring-4 transition duration-200 mb-2"
+        onclick="closeModal('delete_dialog', event)"
+      >
+        Cancel
+      </button>
+    </form>
   </div>
 </dialog>
 {% endif %}

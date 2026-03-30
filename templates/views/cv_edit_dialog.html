@@ -3,12 +3,27 @@
     font-weight: 500;
   }
   .accordion-button .icon {
-    background-color: #29355f;
+    background-color: var(--color-primary);
     border-radius: 90px;
     padding: 5px;
-    color: white;
+    color: var(--color-white);
   }
 
+  label {
+    background-color: var(--bg-dialog);
+  }
+  input,
+  textarea {
+    background-color: var(--bg-dialog-actions);
+  }
+
+  .index {
+    background-color: var(--bg-dialog-actions);
+  }
+
+  dialog {
+    color: inherit;
+  }
   textarea {
     field-sizing: content;
   }
@@ -16,7 +31,7 @@
 
 <dialog
   id="edit_dialog"
-  class="hidden modal card w-full max-w-2xl bg-white rounded-2xl overflow-hidden border border-slate-200 flex relative"
+  class="hidden modal card w-full max-w-2xl bg-(--bg-dialog) rounded-2xl overflow-hidden flex relative"
 >
   <div class="size-full">
     <div class="modal-box overflow-y-auto max-h-[80vh] p-6 space-y-4">
@@ -35,7 +50,7 @@
         <div class="relative w-full pt-2">
           <label
             for="info_name"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold"
           >
             Name
           </label>
@@ -51,7 +66,7 @@
         <div class="relative w-full pt-2">
           <label
             for="info_title"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold"
           >
             Title
           </label>
@@ -85,7 +100,7 @@
 
             <div
               id="list-index"
-              class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
+              class="index flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
             >
               {{loop.index}}
             </div>
@@ -217,7 +232,7 @@
               <div class="relative w-full pt-2">
                 <label
                   for="experience-title-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
                 >
                   Title
                 </label>
@@ -232,7 +247,7 @@
               <div class="relative w-full pt-2">
                 <label
                   for="experience-company-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
                 >
                   Company
                 </label>
@@ -247,7 +262,7 @@
               <div class="relative w-full pt-2">
                 <label
                   for="experience-duration-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
                 >
                   Duration
                 </label>
@@ -262,7 +277,7 @@
               <div class="relative w-full pt-2">
                 <label
                   for="experience-description-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
                 >
                   Description
                 </label>
@@ -277,7 +292,7 @@
 
             <div
               id="list-index"
-              class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
+              class="index flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
             >
               {{loop.index}}
             </div>
@@ -331,7 +346,7 @@
               <div class="relative w-full pt-2">
                 <label
                   for="edu-title-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
                 >
                   Title | Degree
                 </label>
@@ -346,7 +361,7 @@
               <div class="relative w-full pt-2">
                 <label
                   for="edu-company-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
                 >
                   School
                 </label>
@@ -361,7 +376,7 @@
               <div class="relative w-full pt-2">
                 <label
                   for="edu-duration-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
                 >
                   Duration
                 </label>
@@ -376,7 +391,7 @@
               <div class="relative w-full pt-2">
                 <label
                   for="edu-description-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
                 >
                   Description
                 </label>
@@ -391,7 +406,7 @@
 
             <div
               id="list-index"
-              class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
+              class="index flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
             >
               {{loop.index}}
             </div>
@@ -432,14 +447,14 @@
     </div>
 
     <div
-      class="flex items-center gap-2 modal-action p-6 border-default border-t-2 mb-2"
+      class="flex items-center gap-2 modal-action p-6 border-default border-t-2 dark:bg-(--bg-dialog-actions)"
     >
       {{ ui.loading_button("edit-confirm-btn", "submitChanges(event)", "Save",
-      "bg-green-600 text-white font-bold hover:bg-green-700
-      focus:ring-green-300") }}
+      "bg-green-600 text-white font-bold hover:bg-green-800 focus:ring-green-300
+      rounded-sm") }}
       <button
         type="button"
-        class="py-3 px-4 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-4 focus:bg-gray-300 transition duration-200"
+        class="py-3 px-4 rounded-sm focus:outline-none focus:ring-4 transition duration-200"
         onclick="closeModal('edit_dialog', event)"
       >
         Cancel
@@ -503,7 +518,7 @@
 
       <div
         id="list-index"
-        class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
+        class="index flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
       >
         ${document.getElementById("profile-list").children.length + 1}
       </div>
@@ -586,7 +601,7 @@
         <div class="relative w-full pt-2">
           <label
             for="experience-title-${nextExperienceIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold"
           >
             Title
           </label>
@@ -600,7 +615,7 @@
         <div class="relative w-full pt-2">
           <label
             for="experience-company-${nextExperienceIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold"
           >
             Company
           </label>
@@ -614,7 +629,7 @@
         <div class="relative w-full pt-2">
           <label
             for="experience-duration-${nextExperienceIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold"
           >
             Duration
           </label>
@@ -628,7 +643,7 @@
         <div class="relative w-full pt-2">
           <label
             for="experience-description-${nextExperienceIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold"
           >
             Description
           </label>
@@ -642,7 +657,7 @@
 
       <div
         id="list-index"
-        class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
+        class="index flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
       >
         ${document.getElementById("experience-list").children.length + 1}
       </div>
@@ -672,7 +687,7 @@
         <div class="relative w-full pt-2">
           <label
             for="edu-title-${nextEduIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold"
           >
             Title | Degree
           </label>
@@ -686,7 +701,7 @@
         <div class="relative w-full pt-2">
           <label
             for="edu-company-${nextEduIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold"
           >
             School
           </label>
@@ -700,7 +715,7 @@
         <div class="relative w-full pt-2">
           <label
             for="edu-duration-${nextEduIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold"
           >
             Duration
           </label>
@@ -714,7 +729,7 @@
         <div class="relative w-full pt-2">
           <label
             for="edu-description-${nextEduIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold bg-white"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold"
           >
             Description
           </label>
@@ -729,7 +744,7 @@
 
       <div
         id="list-index"
-        class="flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
+        class="index flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
       >
         ${document.getElementById("edu-list").children.length + 1}
       </div>
