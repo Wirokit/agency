@@ -16,8 +16,8 @@ html {
 
   &:where(.dark, .dark *) {
     --bg-paper: #4a4e8d60;
-    --bg-dialog: rgb(43, 44, 52);
-    --bg-dialog-actions: rgb(21, 21, 27);
+    --bg-dialog: #2b2c34;
+    --bg-dialog-actions: #15151b;
     --color-primary: #c323b0;
     --color-primary-hover: #970c87;
     --color-secondary: #4a4e8d;
@@ -28,6 +28,10 @@ html {
 a:hover,
 button:hover {
   cursor: pointer;
+}
+
+dialog {
+  color: inherit;
 }
 
 .card {

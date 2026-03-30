@@ -869,6 +869,9 @@
   .bg-\[\#4a4e8d\] {
     background-color: #4a4e8d;
   }
+  .bg-\[\#15151b\] {
+    background-color: #15151b;
+  }
   .bg-blue-100 {
     background-color: var(--color-blue-100);
   }
@@ -1071,9 +1074,6 @@
   .text-heading {
     color: var(--color-heading);
   }
-  .text-pink-600 {
-    color: var(--color-pink-600);
-  }
   .text-red-500 {
     color: var(--color-red-500);
   }
@@ -1122,6 +1122,9 @@
   }
   .opacity-\[0\.5\] {
     opacity: 0.5;
+  }
+  .opacity-\[0\.6\] {
+    opacity: 0.6;
   }
   .opacity-\[0\.8\] {
     opacity: 0.8;
@@ -1378,6 +1381,11 @@
       background-color: #4a4e8d;
     }
   }
+  .dark\:bg-\[\#15151b\] {
+    &:where(.dark, .dark *) {
+      background-color: #15151b;
+    }
+  }
   .dark\:text-inherit {
     &:where(.dark, .dark *) {
       color: inherit;
@@ -1487,8 +1495,8 @@ html {
   --color-secondary: #c323b0;
   &:where(.dark, .dark *) {
     --bg-paper: #4a4e8d60;
-    --bg-dialog: rgb(43, 44, 52);
-    --bg-dialog-actions: rgb(21, 21, 27);
+    --bg-dialog: #2b2c34;
+    --bg-dialog-actions: #15151b;
     --color-primary: #c323b0;
     --color-primary-hover: #970c87;
     --color-secondary: #4a4e8d;
@@ -1497,6 +1505,9 @@ html {
 }
 a:hover, button:hover {
   cursor: pointer;
+}
+dialog {
+  color: inherit;
 }
 .card {
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
