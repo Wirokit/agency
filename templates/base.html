@@ -29,6 +29,8 @@
       body {
         &:where(.dark, .dark *) {
           background-image: url("{{url_for('static',filename='images/bg.jpg')}}");
+          background-repeat: no-repeat;
+          background-size: 100% auto;
         }
       }
       section {
@@ -36,11 +38,6 @@
       }
       .base-height {
         min-height: calc(100vh - 60px);
-      }
-      button.disabled,
-      button.loading {
-        background-color: rgba(0, 0, 0, 0.1);
-        pointer-events: none;
       }
       nav.scrolled {
         transition: all 0.1s;
@@ -107,7 +104,7 @@
 
         <div
           id="user-menu"
-          class="user-menu card hidden absolute top-[55px] right-[10px] w-[250px] rounded-xl bg-white py-2 border border-default dark:bg-[#4a4e8d]"
+          class="user-menu card hidden absolute top-[55px] w-[250px] rounded-xl bg-white py-2 border border-default dark:bg-[#4a4e8d]"
         >
           <div id="menu-content">
             <div class="text-center italic mb-2">ADMIN</div>
@@ -234,6 +231,7 @@
         e.preventDefault();
 
         if (menu.classList.contains("hidden")) {
+          menu.style.left = `${e.srcElement.offsetLeft - 220}px`;
           menu.classList.remove("hidden");
         } else {
           menu.classList.add("hidden");
@@ -279,7 +277,11 @@
 
       // If menu is open, close the menu when user clicks somewhere else
       window.addEventListener("mouseup", (e) => {
-        if (!menu.classList.contains("hidden") && !menu.contains(e.target)) {
+        if (
+          !menu.classList.contains("hidden") &&
+          !menu.contains(e.target) &&
+          e.srcElement?.id !== "profile-icon"
+        ) {
           toggleMenu(e);
         }
       });
