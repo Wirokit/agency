@@ -14,7 +14,7 @@ html {
 
   &:where(.dark, .dark *) {
     --color-primary: #c323b0;
-    --color-primary-hover: #ce50bf;
+    --color-primary-hover: #970c87;
     --color-secondary: #4a4e8d;
     --color-white: #ffffffde;
   }
