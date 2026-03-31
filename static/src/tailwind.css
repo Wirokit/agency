@@ -62,3 +62,9 @@ button.loading {
   opacity: 0.5;
   pointer-events: none;
 }
+
+.hand-written {
+  font-family: "Rock Salt", cursive;
+  font-weight: 400;
+  font-style: normal;
+}

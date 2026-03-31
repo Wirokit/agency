@@ -4,14 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico" />
-    <title>Wirokit - CV Bank</title>
+    <title>Agency</title>
     <link
       rel="stylesheet"
       href="{{url_for('static',filename='dist/tailwind.css')}}"
     />
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Custom styles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&family=Rock+Salt&display=swap"
+      rel="stylesheet"
+    />
     <style>
       body {
         &:where(.dark, .dark *) {
@@ -58,7 +62,7 @@
             class="hidden dark:block w-10 mb-3"
             alt="Wirokit Logo"
           />
-          <h1 class="text-xl font-bold">Agency</h1>
+          <p class="hand-written">AGENCY</p>
           <p id="instructions" class="text-sm mt-1 opacity-[0.8]">
             Please enter your PIN to continue
           </p>
@@ -74,7 +78,7 @@
               class="hidden px-3 text-red-400 text-xs flex items-center gap-2"
             >
               <i data-lucide="alert-circle" class="w-4 h-4"></i>
-              <span id="pinErrorMessage">asd</span>
+              <span id="pinErrorMessage"></span>
             </div>
 
             <button
@@ -136,7 +140,7 @@
             <a
               id="method-toggle"
               href="#"
-              class="text-sm font-medium text-fg-brand underline hover:no-underline"
+              class="text-sm font-medium text-fg-brand hover:underline"
             >
               Login via username instead
             </a>

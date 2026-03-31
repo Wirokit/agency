@@ -10,6 +10,12 @@
       href="{{url_for('static',filename='dist/tailwind.css')}}"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&family=Rock+Salt&display=swap"
+      rel="stylesheet"
+    />
     <style>
       @media print {
         nav,
@@ -89,8 +95,8 @@
             class="w-10 hidden dark:block dark:opacity-[87%]"
             alt="Wirokit Logo"
           />
-          <span class="self-center text-xl font-semibold whitespace-nowrap">
-            Agency
+          <span class="hand-written self-center whitespace-nowrap">
+            AGENCY
           </span>
         </a>
         <div>
@@ -110,7 +116,7 @@
           class="user-menu card hidden absolute top-[55px] w-[250px] rounded-xl bg-white py-2 border border-default dark:bg-[#4a4e8d]"
         >
           <div id="menu-content">
-            <div class="text-center italic mb-2">
+            <div class="hand-written text-sm text-center mb-2">
               {{"ADMIN" if session['user_id'] else "GUEST"}}
             </div>
             <div class="flex items-center px-4 gap-2 mb-3">
