@@ -25,6 +25,14 @@ html {
   }
 }
 
+body {
+  &:where(.dark, .dark *) {
+    background-image: url("{{url_for('static',filename='images/bg.jpg')}}");
+    background-repeat: no-repeat;
+    background-size: 100% auto;
+  }
+}
+
 a:hover,
 button:hover {
   cursor: pointer;
@@ -32,6 +40,11 @@ button:hover {
 
 dialog {
   color: inherit;
+}
+
+input,
+textarea {
+  border-color: var(--color-slate-300);
 }
 
 .card {

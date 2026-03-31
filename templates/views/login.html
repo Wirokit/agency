@@ -13,6 +13,13 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Custom styles -->
     <style>
+      body {
+        &:where(.dark, .dark *) {
+          background-image: url("{{url_for('static',filename='images/bg.jpg')}}");
+          background-repeat: no-repeat;
+          background-size: 100% auto;
+        }
+      }
       .card {
         box-shadow:
           0 0 20px 0 rgb(0 0 0 / 0.1),
@@ -21,44 +28,58 @@
     </style>
   </head>
   <body
-    class="bg-slate-100 flex items-center justify-center min-h-screen text-slate-800 font-sans"
+    class="bg-slate-100 flex items-center justify-center min-h-screen dark:text-(--color-white)"
   >
     {% import "macros.html" as ui %}
 
     <div class="w-full max-w-sm p-6">
       <!-- Card Container -->
       <div
-        class="card px-8 py-6 bg-white rounded-2xl overflow-hidden border border-slate-200"
+        class="relative card px-8 py-6 bg-(--bg-paper) rounded-2xl overflow-hidden"
       >
-        <!-- Header -->
-        <div
-          class="bg-slate-50 border-b border-slate-100 flex flex-col items-center"
-        >
-          <div class="bg-blue-100 p-3 rounded-full mb-3 text-blue-600">
-            <i data-lucide="lock" class="w-6 h-6"></i>
+        <button class="absolute top-1 right-1" onclick="toggleTheme(event)">
+          <div class="hidden dark:block p-2 rounded-full text-yellow-500">
+            <i data-lucide="sun" class="w-6 h-6"></i>
           </div>
-          <h1 class="text-xl font-bold text-slate-800">CV Tool</h1>
-          <p id="instructions" class="text-slate-500 text-sm mt-1">
+          <div class="dark:hidden p-2 rounded-full text-blue-500">
+            <i data-lucide="moon" class="w-6 h-6"></i>
+          </div>
+        </button>
+
+        <!-- Header -->
+        <div class="flex flex-col items-center">
+          <img
+            src="/static/images/wirokit_icon_b.png"
+            class="dark:hidden w-10 mb-3"
+            alt="Wirokit Logo"
+          />
+          <img
+            src="/static/images/wirokit_icon_w.png"
+            class="hidden dark:block w-10 mb-3"
+            alt="Wirokit Logo"
+          />
+          <h1 class="text-xl font-bold">Agency</h1>
+          <p id="instructions" class="text-sm mt-1 opacity-[0.8]">
             Please enter your PIN to continue
           </p>
         </div>
 
         <!-- Login Form -->
         <div class="pt-4">
-          <form id="pinForm">
+          <form id="pinForm" class="space-y-6">
             {{ ui.pin_input() }}
 
             <div
               id="pinError"
-              class="hidden mt-4 p-3 bg-red-50 border border-red-100 text-red-600 text-xs rounded-lg flex items-center gap-2"
+              class="hidden px-3 text-red-400 text-xs flex items-center gap-2"
             >
               <i data-lucide="alert-circle" class="w-4 h-4"></i>
-              <span id="pinErrorMessage"></span>
+              <span id="pinErrorMessage">asd</span>
             </div>
 
             <button
               type="submit"
-              class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex justify-center items-center gap-2"
+              class="w-full mt-2 bg-(--color-primary) hover:bg-(--color-primary-hover) text-white font-semibold py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex justify-center items-center gap-2"
             >
               <span>Confirm</span>
               <i data-lucide="arrow-right" class="w-4 h-4"></i>
@@ -72,7 +93,7 @@
                 id="username"
                 name="username"
                 placeholder="Username"
-                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors outline-none pl-10"
+                class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors outline-none pl-10"
                 required
               />
               <div class="absolute left-3 top-3.5 text-slate-400">
@@ -85,7 +106,7 @@
                 type="password"
                 id="password"
                 name="password"
-                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors outline-none pl-10"
+                class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors outline-none pl-10"
                 placeholder="Password"
                 required
               />
@@ -96,7 +117,7 @@
 
             <div
               id="loginError"
-              class="hidden p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg flex items-center gap-2"
+              class="hidden px-3 text-red-400 text-xs flex items-center gap-2"
             >
               <i data-lucide="alert-circle" class="w-4 h-4"></i>
               <span id="loginErrorMessage"></span>
@@ -104,7 +125,7 @@
 
             <button
               type="submit"
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex justify-center items-center gap-2"
+              class="w-full bg-(--color-primary) hover:bg-(--color-primary-hover) text-white font-semibold py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex justify-center items-center gap-2"
             >
               <span>Sign In</span>
               <i data-lucide="arrow-right" class="w-4 h-4"></i>
@@ -123,8 +144,8 @@
         </div>
 
         <!-- Footer -->
-        <div class="mt-6 bg-slate-50 border-t border-slate-100 text-center">
-          <p class="text-xs text-slate-400">Wirokit &copy; 2025</p>
+        <div class="mt-6 text-center">
+          <p class="text-xs opacity-[0.6]">Wirokit &copy; 2026</p>
         </div>
       </div>
     </div>
@@ -132,6 +153,16 @@
     <script>
       // Initialize Icons
       lucide.createIcons();
+
+      const prefersDarkMode = window.matchMedia(
+        "(prefers-color-scheme: dark)",
+      ).matches;
+
+      document.documentElement.classList.toggle(
+        "dark",
+        localStorage.theme === "dark" ||
+          (!("theme" in localStorage) && prefersDarkMode),
+      );
 
       const loginForm = document.getElementById("loginForm");
       const usernameInput = document.getElementById("username");
@@ -143,10 +174,27 @@
       const pinForm = document.getElementById("pinForm");
       const pinError = document.getElementById("pinError");
       const pinSubmitBtn = pinForm.querySelector("button");
-      const pinSubmitContent = pinSubmitBtn.innerHTML;
+      const pinButtonContent = pinSubmitBtn.innerHTML;
 
       const instructionsField = document.getElementById("instructions");
       const methodToggle = document.getElementById("method-toggle");
+
+      function toggleTheme(e) {
+        e.preventDefault();
+
+        switch (localStorage.theme) {
+          case "dark":
+            localStorage.theme = "light";
+            break;
+          case "light":
+            localStorage.theme = "dark";
+            break;
+          default:
+            localStorage.theme = prefersDarkMode ? "dark" : "light";
+        }
+
+        window.location.reload();
+      }
 
       methodToggle.addEventListener("click", (e) => {
         e.preventDefault();
@@ -204,6 +252,8 @@
             lucide.createIcons();
             window.location.reload();
           } else {
+            displayError("Incorrect Username or Password.", "error");
+
             // Error State
             loginError.classList.remove("hidden");
             passwordInput.classList.add(
@@ -214,7 +264,7 @@
 
             // Reset button
             loginSubmitBtn.disabled = false;
-            loginSubmitBtn.innerHTML = originalBtnContent;
+            loginSubmitBtn.innerHTML = loginSubmitContent;
 
             // Shake animation effect
             loginForm.classList.add("animate-[shake_0.5s_ease-in-out]");
@@ -234,7 +284,7 @@
         } finally {
           // --- End Loading State ---
           loginSubmitBtn.disabled = false;
-          loginSubmitBtn.innerHTML = originalBtnContent;
+          loginSubmitBtn.innerHTML = loginSubmitContent;
           lucide.createIcons();
           // ---
         }
@@ -313,7 +363,7 @@
           lucide.createIcons();
         } else {
           pinSubmitBtn.disabled = false;
-          pinSubmitBtn.innerHTML = pinSubmitContent;
+          pinSubmitBtn.innerHTML = pinButtonContent;
           loginSubmitBtn.disabled = false;
           loginSubmitBtn.innerHTML = loginSubmitContent;
           methodToggle.disabled = false;

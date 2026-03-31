@@ -27,7 +27,9 @@
         }
       }
       body {
+        background-color: var(--color-slate-100);
         &:where(.dark, .dark *) {
+          background-color: unset;
           background-image: url("{{url_for('static',filename='images/bg.jpg')}}");
           background-repeat: no-repeat;
           background-size: 100% auto;
@@ -98,7 +100,8 @@
             class="flex items-center justify-center text-center w-[35px] h-[35px] text-white bg-(--color-primary) rounded-[90px] hover:cursor-pointer"
             onclick="toggleMenu(event)"
           >
-            {{session['user_id'][0]}}
+            {{session['user_id'][0] if session['user_id'] else
+            session["pin_user"][0]}}
           </button>
         </div>
 
@@ -107,15 +110,21 @@
           class="user-menu card hidden absolute top-[55px] w-[250px] rounded-xl bg-white py-2 border border-default dark:bg-[#4a4e8d]"
         >
           <div id="menu-content">
-            <div class="text-center italic mb-2">ADMIN</div>
+            <div class="text-center italic mb-2">
+              {{"ADMIN" if session['user_id'] else "GUEST"}}
+            </div>
             <div class="flex items-center px-4 gap-2 mb-3">
               <span
                 id="menu-profile-icon"
                 class="flex items-center justify-center text-center w-[40px] h-[40px] text-white bg-(--color-primary) rounded-[90px]"
               >
-                {{session['user_id'][0]}}
+                {{session['user_id'][0] if session['user_id'] else
+                session["pin_user"][0]}}
               </span>
-              <span id="logged-in-user">{{session['user_id']}}</span>
+              <span id="logged-in-user"
+                >{{session['user_id'] if session['user_id'] else
+                session["pin_user"]}}</span
+              >
             </div>
 
             <hr class="border-gray-300" />

@@ -313,6 +313,7 @@ def check_pin():
     if not result:
         return jsonify({"success": False, "error": "Invalid PIN."}), 404
 
+    session["pin_user"] = result["data_owner"]
     session["pin_code"] = request.values["pin"]
 
     return jsonify({"success": True, "data": result})

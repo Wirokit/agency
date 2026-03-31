@@ -91,7 +91,7 @@
   <!-- HTML -->
   {% if user_type == "pin" %}
   <div
-    class="print-hidden w-full p-4 rounded-xs dark:rounded-none text-center mt-8 card bg-(--bg-paper) border-t-2 border-default"
+    class="print-hidden w-full p-4 rounded-xs dark:rounded-none dark:rounded-none text-center mt-8 card bg-(--bg-paper) border-t-2 border-default"
   >
     <p>
       This is your generated CV. Please contact the contact person listed at the
@@ -102,7 +102,7 @@
       <button
         id="delete-btn"
         type="button"
-        class="bg-red-700 hover:bg-red-800 text-white flex items-center gap-2 font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-red-300 transition duration-200 border border-default"
+        class="bg-red-700 hover:bg-red-800 text-white flex items-center gap-2 font-bold py-2 px-4 rounded-sm focus:outline-none focus:ring-4 focus:ring-red-300 transition duration-200 border border-default"
         onclick="openModal('delete_dialog', event)"
       >
         <i data-lucide="trash" class="w-4 h-4"></i>
