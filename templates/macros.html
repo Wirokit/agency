@@ -2,7 +2,6 @@
 {% macro pdf_upload() %}
 <style>
   .file-input-wrapper {
-    margin-bottom: 0;
     position: relative;
     overflow: hidden;
     display: inline-block;
@@ -20,24 +19,28 @@
     cursor: pointer;
   }
   .file-input-label {
+    color: inherit;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 2.5rem 1.5rem;
-    border: 2px dashed #cbd5e1; /* gray-300 */
+    border: 2px dashed #739fd5; /* gray-300 */
     border-radius: 0.5rem; /* rounded-lg */
-    background-color: #f8fafc; /* gray-50 */
+    background-color: inherit; /* gray-50 */
     cursor: pointer;
     transition: all 0.2s ease-in-out;
   }
   .file-input-wrapper:hover .file-input-label {
-    border-color: #3b82f6; /* blue-500 */
-    background-color: #eff6ff; /* blue-50 */
+    border-color: #3b82f6;
+    background-color: #e2e4ff;
+    &:where(.dark, .dark *) {
+      border-color: #3b82f6;
+      background-color: var(--color-secondary);
+    }
   }
   /* Style for when a file is selected */
   .file-input-wrapper.file-selected .file-input-label {
     border-color: #16a34a; /* green-600 */
-    background-color: #f0fdf4; /* green-50 */
   }
   /* Style for when a file is dragged on top of the file input */
   .dragover {
@@ -46,10 +49,10 @@
 </style>
 
 <div id="file-wrapper" class="file-input-wrapper w-full">
-  <label for="pdf-file" id="file-label" class="file-input-label text-gray-500">
+  <label for="pdf-file" id="file-label" class="file-input-label">
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      class="w-12 h-12 mr-3 text-gray-400"
+      class="w-12 h-12 mr-3 text-(--color-primary)"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -67,11 +70,9 @@
       />
     </svg>
     <div>
-      <span class="font-medium text-blue-600"> Click to upload </span>
+      <span class="font-medium text-(--color-primary)"> Click to upload </span>
       or drag and drop
-      <p id="file-name" class="text-sm text-gray-500 mt-1">
-        PDF files only (max 50MB)
-      </p>
+      <p id="file-name" class="text-sm mt-1">PDF files only (max 50MB)</p>
     </div>
   </label>
   <input
@@ -128,10 +129,8 @@
   profile_text
 -->
 {% macro cv_settings(id, feature_list) %}
-<div class="space-y-4 border rounded-xs p-4">
-  <p class="w-full p-2 text-center text-heading font-bold text-lg">
-    CV Settings
-  </p>
+<div class="space-y-4">
+  <p class="w-full p-2 text-center font-bold text-lg">CV Settings</p>
 
   <!-- First name check -->
   {% if "all" in feature_list or "first_name" in feature_list %}
@@ -141,11 +140,11 @@
       id="{{id}}-first-name-check"
       type="checkbox"
       name="firstNameOnly"
-      class="primary-color first-name-check w-4 h-4 border border-default-medium rounded-xs bg-neutral-secondary-medium focus:ring-2 focus:ring-brand-soft hover:cursor-pointer"
+      class="first-name-check w-4 h-4 border border-default-medium rounded-xs accent-(--color-funky) focus:ring-2 focus:ring-brand-soft hover:cursor-pointer"
     />
     <label
       for="{{id}}-first-name-check"
-      class="select-none text-sm font-medium text-heading hover:cursor-pointer"
+      class="select-none text-sm font-medium hover:cursor-pointer"
     >
       Only display first name
     </label>
@@ -161,7 +160,7 @@
     <textarea
       id="{{id}}-keyword-list"
       name="keywordList"
-      class="w-full mb-4 border border-default-medium rounded-xs text-heading text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+      class="w-full mb-4 border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
       placeholder="e.g. Web application built with custom web components, a Python server and a PostgreSQL database."
     ></textarea>
   </div>
@@ -176,7 +175,7 @@
     <textarea
       id="{{id}}-profile-text"
       name="profileText"
-      class="w-full mb-4 border border-default-medium rounded-xs text-heading text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+      class="w-full mb-4 border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
       placeholder="e.g. Curious, detail-oriented, and quick to learn, Sami brings fresh perspective and solid energy to any development team!"
     ></textarea>
   </div>
@@ -199,6 +198,9 @@
     padding: 0.5rem 0;
     text-align: center;
     font-size: 1.7rem;
+    &:where(.dark, .dark *) {
+      border-color: rgba(203, 213, 225, 0.2);
+    }
   }
 </style>
 <div class="pin w-full flex gap-1">
@@ -358,20 +360,19 @@
 >
   <!-- Modal content -->
   <div
-    class="flex max-w-2xl max-h-[70%] bg-white border border-default rounded-xl shadow-md overflow-hidden"
+    class="flex max-w-2xl max-h-[70%] bg-(--bg-dialog) border border-default rounded-xl shadow-md overflow-hidden"
   >
     <div class="relative h-full overflow-y-auto" style="height: inherit">
       <!-- Modal header -->
       <div
         id="modal-header"
-        class="sticky w-full top-0 bg-white w-full flex items-center justify-between border-b border-default p-4 md:p-6"
+        class="sticky w-full top-0 bg-(--bg-dialog-actions) w-full flex items-center justify-between border-b border-default p-4 md:p-6"
       >
         <h3 class="text-lg font-medium text-heading">{{title}}</h3>
         <button
           id="modal-close-btn"
           type="button"
-          class="text-body bg-transparent hover:bg-neutral-tertiary hover:text-heading rounded-base text-sm w-9 h-9 ms-auto inline-flex justify-center items-center"
-          data-modal-hide="default-modal"
+          class="text-body bg-transparent hover:bg-neutral-tertiary hover:rounded-base text-sm w-9 h-9 ms-auto inline-flex justify-center items-center"
         >
           <svg
             class="w-5 h-5"
@@ -410,12 +411,12 @@
 {% endmacro %}
 
 <!-- Loading spinner -->
-{% macro spinner(hidden, containerClasses, size) %}
+{% macro spinner(hidden, containerClasses, spinnerClasses) %}
 <div
   class="spinner {{'hidden' if hidden == True else ''}} {{containerClasses}}"
 >
   <svg
-    class="animate-spin text-blue-600 mx-auto {{size}}"
+    class="animate-spin mx-auto {{spinnerClasses}}"
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
@@ -438,15 +439,16 @@
 {% endmacro %}
 
 <!-- Button with a spinner to indicate loading -->
-{% macro loadingButton(id, onclick, buttonText, buttonClass) %}
+{% macro loading_button(id, onclick, button_text, button_class) %}
 <button
   type="submit"
   id="{{id}}"
-  class="loading-button relative flex justify-center items-center py-3 px-4 rounded-lg focus:outline-none focus:ring-4 transition duration-200 {{buttonClass}}"
+  class="loading-button relative flex justify-center items-center py-3 px-4 rounded-lg focus:outline-none focus:ring-4 transition duration-200 {{button_class}}"
   onclick="{{onclick}}"
 >
-  <p>{{buttonText}}</p>
-  {{spinner( True, "absolute left-0 right-0 mx-auto", "w-6 h-6" )}}
+  <p>{{button_text}}</p>
+  {{spinner( True, "absolute left-0 right-0 mx-auto", "w-6 h-6 text-blue-200"
+  )}}
 </button>
 
 <style>

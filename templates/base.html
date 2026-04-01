@@ -4,13 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico" />
-    <title>Wirokit - CV Tool</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Agency</title>
     <link
-      href="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.css"
       rel="stylesheet"
+      href="{{url_for('static',filename='dist/tailwind.css')}}"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&family=Rock+Salt&display=swap"
+      rel="stylesheet"
+    />
     <style>
       @media print {
         nav,
@@ -27,74 +32,178 @@
           margin: auto;
         }
       }
+      body {
+        background-color: var(--color-slate-100);
+        &:where(.dark, .dark *) {
+          background-color: unset;
+          background-image: url("{{url_for('static',filename='images/bg.jpg')}}");
+          background-repeat: no-repeat;
+          background-size: 100% auto;
+        }
+      }
       section {
         padding: 2rem 0;
       }
       .base-height {
         min-height: calc(100vh - 60px);
       }
-      button.disabled,
-      button.loading {
-        background-color: rgba(0, 0, 0, 0.1);
-        pointer-events: none;
+      nav.scrolled {
+        transition: all 0.1s;
+        box-shadow:
+          0 3px 6px rgba(0, 0, 0, 0.16),
+          0 3px 6px rgba(0, 0, 0, 0.23);
+        background-color: white;
+        &:where(.dark, .dark *) {
+          box-shadow: none;
+          background-color: black;
+        }
+      }
+      .user-menu button:hover {
+        background-color: rgba(0, 0, 0, 0.2);
+        &:where(.dark, .dark *) {
+          background-color: rgba(255, 255, 255, 0.2);
+        }
       }
     </style>
   </head>
-  <body class="bg-gray-100 font-sans antialiased">
+  <body
+    class="font-sans antialiased dark:text-white"
+    onscroll="handleScroll(event)"
+  >
+    <img
+      class="fixed top-[20%] left-[-10%] w-[50%] z-[-100]"
+      src="{{url_for('static',filename='images/w-bg.png')}}"
+    />
+    <img
+      class="fixed bottom-[20%] right-[-10%] w-[50%] z-[-100]"
+      src="{{url_for('static',filename='images/w-bg.png')}}"
+    />
     {% import "macros.html" as ui %}
 
-    <nav
-      class="bg-inherit fixed w-full z-20 top-0 start-0 border-b border-default shadow-md"
-    >
+    <nav id="top-nav" class="bg-inherit fixed w-full z-20 top-0 start-0">
       <div
         class="max-w-screen-xl h-[60px] flex flex-wrap items-center justify-between mx-auto p-2 px-4"
       >
         <a href="/" class="flex gap-4 items-center">
           <img
             src="/static/images/wirokit_icon_b.png"
-            class="w-10"
+            class="w-10 dark:hidden"
             alt="Wirokit Logo"
           />
-          <span
-            class="self-center text-xl text-heading font-semibold whitespace-nowrap"
-          >
-            CV Tool
+          <img
+            src="/static/images/wirokit_icon_w.png"
+            class="w-10 hidden dark:block dark:opacity-[87%]"
+            alt="Wirokit Logo"
+          />
+          <span class="hand-written self-center whitespace-nowrap">
+            AGENCY
           </span>
         </a>
         <div>
           <button
             id="profile-icon"
             type="button"
-            class="flex items-center justify-center text-center w-[35px] h-[35px] bg-gray-300 rounded-[90px] hover:cursor-pointer"
+            class="flex items-center justify-center text-center w-[35px] h-[35px] text-white bg-(--color-primary) rounded-[90px] hover:cursor-pointer"
             onclick="toggleMenu(event)"
           >
-            {{session['user_id'][0]}}
+            {{session['user_id'][0] if session['user_id'] else
+            session["pin_user"][0]}}
           </button>
         </div>
 
         <div
           id="user-menu"
-          class="hidden absolute top-[55px] right-[10px] w-[250px] rounded-xl bg-white py-2 shadow-xl border border-default"
+          class="user-menu card hidden absolute top-[55px] w-[250px] rounded-xl bg-white py-2 border border-default dark:bg-[#4a4e8d]"
         >
-          <div class="text-center italic mb-2">ADMIN</div>
-          <div class="flex items-center px-4 gap-2 mb-3">
-            <span
-              id="menu-profile-icon"
-              class="flex items-center justify-center text-center w-[40px] h-[40px] bg-gray-300 rounded-[90px]"
+          <div id="menu-content">
+            <div class="hand-written text-sm text-center mb-2">
+              {{"ADMIN" if session['user_id'] else "GUEST"}}
+            </div>
+            <div class="flex items-center px-4 gap-2 mb-3">
+              <span
+                id="menu-profile-icon"
+                class="flex items-center justify-center text-center w-[40px] h-[40px] text-white bg-(--color-primary) rounded-[90px]"
+              >
+                {{session['user_id'][0] if session['user_id'] else
+                session["pin_user"][0]}}
+              </span>
+              <span id="logged-in-user"
+                >{{session['user_id'] if session['user_id'] else
+                session["pin_user"]}}</span
+              >
+            </div>
+
+            <hr class="border-gray-300" />
+
+            <button
+              type="button"
+              class="flex items-center py-3 px-4 w-full text-start gap-3 justify-between"
+              onclick="toggleThemeSelector(event)"
             >
-              {{session['user_id'][0]}}
-            </span>
-            <span id="logged-in-user">{{session['user_id']}}</span>
+              <div class="flex dark:hidden items-center gap-3">
+                <i data-lucide="sun"></i>
+                Theme: Light
+              </div>
+              <div class="hidden dark:flex items-center gap-3">
+                <i data-lucide="moon"></i>
+                Theme: Dark
+              </div>
+              <i data-lucide="chevron-right"></i>
+            </button>
+            <button
+              type="button"
+              class="flex items-center py-3 px-4 w-full text-start gap-3"
+              onclick="logOut(event)"
+            >
+              <i data-lucide="log-in"></i>
+              Log out
+            </button>
           </div>
-          <hr />
-          <button
-            type="button"
-            class="flex items-center py-3 px-4 w-full text-start gap-3 hover:bg-gray-300"
-            onclick="logOut(event)"
-          >
-            <i data-lucide="log-in"></i>
-            Log out
-          </button>
+
+          <div id="theme-selector" class="hidden">
+            <button
+              type="button"
+              class="flex items-center py-3 px-4 w-full text-start gap-3 font-medium"
+              onclick="toggleThemeSelector(event)"
+            >
+              <i data-lucide="arrow-left"></i>
+              Theme
+            </button>
+
+            <hr class="border-gray-300" />
+
+            <button
+              id="btn-theme-default"
+              type="button"
+              class="flex items-center py-3 px-4 w-full text-start gap-3"
+              onclick="changeTheme(event, 'system')"
+            >
+              <i data-lucide="check" class="invisible"></i>
+              <p>
+                Device default (<span id="preferred-color-scheme">Light</span>)
+              </p>
+            </button>
+
+            <button
+              id="btn-theme-dark"
+              type="button"
+              class="flex items-center py-3 px-4 w-full text-start gap-3"
+              onclick="changeTheme(event, 'dark')"
+            >
+              <i data-lucide="check" class="invisible"></i>
+              Dark theme
+            </button>
+
+            <button
+              id="btn-theme-light"
+              type="button"
+              class="flex items-center py-3 px-4 w-full text-start gap-3"
+              onclick="changeTheme(event, 'light')"
+            >
+              <i data-lucide="check" class="invisible"></i>
+              Light theme
+            </button>
+          </div>
         </div>
       </div>
     </nav>
@@ -104,28 +213,104 @@
       <div class="flash">{{ message }}</div>
       {% endfor %} {% block content %}{% endblock %}
     </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
     <script>
+      // Initialize Icons
+      lucide.createIcons();
+
+      const prefersDarkMode = window.matchMedia(
+        "(prefers-color-scheme: dark)",
+      ).matches;
+
+      if (prefersDarkMode) {
+        document.getElementById("preferred-color-scheme").innerText = "Dark";
+      }
+
+      document.documentElement.classList.toggle(
+        "dark",
+        localStorage.theme === "dark" ||
+          (!("theme" in localStorage) && prefersDarkMode),
+      );
+
+      document
+        .getElementById(
+          `btn-theme-${!("theme" in localStorage) ? "default" : localStorage.theme}`,
+        )
+        .getElementsByClassName("invisible")[0]
+        .classList.remove("invisible");
+
+      const nav = document.getElementById("top-nav");
       const menu = document.getElementById("user-menu");
+
+      // Menu content
+      const menuDefaultContent = document.getElementById("menu-content");
+      const menuThemeSelector = document.getElementById("theme-selector");
+
+      function handleScroll(event) {
+        if (window.scrollY > 5) {
+          nav.classList.add("scrolled");
+        } else {
+          nav.classList.remove("scrolled");
+        }
+      }
 
       function toggleMenu(e) {
         e.preventDefault();
 
         if (menu.classList.contains("hidden")) {
+          menu.style.left = `${e.srcElement.offsetLeft - 220}px`;
           menu.classList.remove("hidden");
         } else {
           menu.classList.add("hidden");
+
+          // Close theme menu if it was open
+          menuThemeSelector.classList.add("hidden");
+          menuDefaultContent.classList.remove("hidden");
         }
       }
 
+      function toggleThemeSelector(e) {
+        e.preventDefault();
+
+        if (menuThemeSelector.classList.contains("hidden")) {
+          menuDefaultContent.classList.add("hidden");
+          menuThemeSelector.classList.remove("hidden");
+        } else {
+          menuThemeSelector.classList.add("hidden");
+          menuDefaultContent.classList.remove("hidden");
+        }
+      }
+
+      function changeTheme(e, mode) {
+        e.preventDefault();
+
+        if (
+          localStorage.theme == "mode" ||
+          (!localStorage.theme && mode == "system")
+        ) {
+          return;
+        }
+
+        if (mode == "system") {
+          localStorage.removeItem("theme");
+        } else if (mode == "light") {
+          localStorage.theme = "light";
+        } else if (mode == "dark") {
+          localStorage.theme = "dark";
+        }
+
+        window.location.reload();
+      }
+
       // If menu is open, close the menu when user clicks somewhere else
-      window.addEventListener("click", (e) => {
+      window.addEventListener("mouseup", (e) => {
         if (
           !menu.classList.contains("hidden") &&
-          e.srcElement.id != "profile-icon" &&
-          e.srcElement.id != "user-menu" &&
-          e.srcElement.offsetParent.id != "user-menu"
+          !menu.contains(e.target) &&
+          e.srcElement?.id !== "profile-icon"
         ) {
-          menu.classList.add("hidden");
+          toggleMenu(e);
         }
       });
 

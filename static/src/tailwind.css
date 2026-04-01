@@ -1,0 +1,70 @@
+@import "tailwindcss";
+@import "flowbite/src/themes/default";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  --bg-paper: #ffffff;
+  --bg-dialog: #ffffff;
+  --bg-dialog-actions: #ffffff;
+
+  --color-funky: #c323b0;
+
+  --color-primary: #4a4e8d;
+  --color-primary-hover: #2a2e64;
+  --color-secondary: #c323b0;
+
+  &:where(.dark, .dark *) {
+    --bg-paper: #4a4e8d60;
+    --bg-dialog: #2b2c34;
+    --bg-dialog-actions: #15151b;
+    --color-primary: #c323b0;
+    --color-primary-hover: #970c87;
+    --color-secondary: #4a4e8d;
+    --color-white: #ffffffde;
+  }
+}
+
+body {
+  &:where(.dark, .dark *) {
+    background-image: url("{{url_for('static',filename='images/bg.jpg')}}");
+    background-repeat: no-repeat;
+    background-size: 100% auto;
+  }
+}
+
+a:hover,
+button:hover {
+  cursor: pointer;
+}
+
+dialog {
+  color: inherit;
+}
+
+input,
+textarea {
+  border-color: var(--color-slate-300);
+}
+
+.card {
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.16),
+    0 3px 6px rgba(0, 0, 0, 0.23);
+  border-top: 2px solid var(--color-default);
+  &:where(.dark, .dark *) {
+    box-shadow: none;
+  }
+}
+
+button.disabled,
+button.loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.hand-written {
+  font-family: "Rock Salt", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
