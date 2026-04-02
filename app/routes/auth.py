@@ -1,12 +1,10 @@
 from flask import Blueprint, jsonify, request, session
+from app.db import get_db
 from .route_utils import (
     bcrypt,
     auth_required,
     get_user_record,
 )
-import os
-import psycopg2
-from psycopg2.extras import RealDictCursor
 
 # Define the Blueprint
 auth_bp = Blueprint("auth", __name__)
@@ -25,7 +23,7 @@ def check_login():
 
     # Check that password matches
     if user_record:
-        hashed_password = user_record[0]
+        hashed_password = user_record["password_hash"]
 
         # Compare passwords
         match = bcrypt.check_password_hash(hashed_password, request.values["password"])
@@ -56,28 +54,15 @@ def check_pin():
     if not request.values["pin"]:
         return jsonify({"success": False, "error": "Empty body."}), 400
 
-    # Connect to an RDS database
-    conn = psycopg2.connect(
-        host=os.environ.get("RDS_HOSTNAME"),
-        database=os.environ.get("RDS_DB_NAME"),
-        user=os.environ.get("RDS_USERNAME"),
-        password=os.environ.get("RDS_PASSWORD"),
-        port=os.environ.get("RDS_PORT"),
-    )
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-
-    # Fetch a db entry based on provided PIN
-    query = """
-        SELECT id, data_owner FROM cv
-        WHERE pin_code IS NOT NULL AND pin_code = %s
-    """
-    cur.execute(query, (request.values["pin"],))
-
-    result = cur.fetchone()
-
-    # Close connection
-    cur.close()
-    conn.close()
+    db = get_db()
+    with db.cursor() as cur:
+        # Fetch a db entry based on provided PIN
+        query = """
+            SELECT id, data_owner FROM cv
+            WHERE pin_code IS NOT NULL AND pin_code = %s
+        """
+        cur.execute(query, (request.values["pin"],))
+        result = cur.fetchone()
 
     if not result:
         return jsonify({"success": False, "error": "Invalid PIN."}), 404
@@ -106,7 +91,7 @@ def update_password():
     if not user_record:
         return jsonify({"success": False, "error": "Not logged in."})
 
-    old_hashed_password = user_record[0]
+    old_hashed_password = user_record["password_hash"]
 
     # Check that old password matches
     match = bcrypt.check_password_hash(
@@ -116,17 +101,8 @@ def update_password():
     if not match:
         return jsonify({"success": False, "error": "Current password is incorrect."})
 
-    try:
-        # Connect to the RDS database
-        conn = psycopg2.connect(
-            host=os.environ.get("RDS_HOSTNAME"),
-            database=os.environ.get("RDS_DB_NAME"),
-            user=os.environ.get("RDS_USERNAME"),
-            password=os.environ.get("RDS_PASSWORD"),
-            port=os.environ.get("RDS_PORT"),
-        )
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-
+    db = get_db()
+    with db.cursor() as cur:
         query = """
             UPDATE users
             SET password_hash = %s, require_pw_update = false
@@ -141,17 +117,7 @@ def update_password():
                 session["user_id"],
             ),
         )
-        conn.commit()
+        db.commit()
 
-        # Close connection
-        cur.close()
-        conn.close()
-
-        # Send the success response
-        return jsonify({"success": True})
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        return (
-            jsonify({"success": False, "error": f"{e}"}),
-            500,
-        )
+    # Send the success response
+    return jsonify({"success": True})

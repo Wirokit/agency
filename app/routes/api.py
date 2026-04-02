@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request, session, current_app
+from app.db import get_db
 from .route_utils import (
     auth_required,
     get_cv_by_pin,
@@ -9,14 +10,9 @@ from .route_utils import (
 )
 import os
 import json
-import psycopg2
-from psycopg2.extras import RealDictCursor, register_uuid
 from werkzeug.utils import secure_filename
 from .bedrock import extract_cv, highlight_skills
 import uuid
-
-# If you move your psycopg2 helper to db.py, import it here
-# from app.db import get_db
 
 # Define the Blueprint
 api_bp = Blueprint("api", __name__)
@@ -68,39 +64,27 @@ def upload_file():
 
     # Parse PDF into raw string
     cv_data = parse_pdf(original_filepath)
+    parsed_json = extract_cv(cv_data, first_name_only=first_name_only)
 
-    try:
-        parsed_json = extract_cv(cv_data, first_name_only=first_name_only)
+    ### Highlight skills based on keywords, if provided. ###
+    if keyword_list != "":
+        highlight_json = highlight_skills(parsed_json["skills"], keyword_list)
+        parsed_json["highlightSkills"] = highlight_json["highlightSkills"]
 
-        ### Highlight skills based on keywords, if provided. ###
-        if keyword_list != "":
-            highlight_json = highlight_skills(parsed_json["skills"], keyword_list)
-            parsed_json["highlightSkills"] = highlight_json["highlightSkills"]
+        # Remove duplicate skills
+        for skill in parsed_json["highlightSkills"]:
+            if skill in parsed_json["skills"]:
+                parsed_json["skills"].remove(skill)
 
-            # Remove duplicate skills
-            for skill in parsed_json["highlightSkills"]:
-                if skill in parsed_json["skills"]:
-                    parsed_json["skills"].remove(skill)
+    # Inject custom profile text into the json object
+    if profile_text != "":
+        parsed_json["profileTexts"].append(profile_text)
 
-        # Inject custom profile text into the json object
-        if profile_text != "":
-            parsed_json["profileTexts"].append(profile_text)
+    # Generate a unique ID for the processed CV
+    file_id = str(uuid.uuid4())
 
-        # Generate a unique ID for the processed CV
-        file_id = str(uuid.uuid4())
-
-        conn = psycopg2.connect(
-            host=os.environ.get("RDS_HOSTNAME"),
-            database=os.environ.get("RDS_DB_NAME"),
-            user=os.environ.get("RDS_USERNAME"),
-            password=os.environ.get("RDS_PASSWORD"),
-            port=os.environ.get("RDS_PORT"),
-        )
-        cur = conn.cursor()
-
-        # Register the UUID format for psycopg2
-        register_uuid()
-
+    db = get_db()  # Get connection from pool
+    with db.cursor() as cur:
         # Add new CV to the database
         query = """
             INSERT INTO cv (id, data_owner, date_uploaded, cv_json, contact_id)
@@ -112,36 +96,21 @@ def upload_file():
                 file_id,
                 parsed_json["name"],
                 json.dumps(parsed_json),
-                user_data[0],
+                user_data["contact_id"],
             ),
         )
-        conn.commit()
+        db.commit()
 
-        # Build the URL for the new file
-        # This URL points to our '/view/' endpoint below
-        new_url = f"/view/{file_id}"
+    # Build the URL for the new file
+    # This URL points to our '/view/' endpoint below
+    new_url = f"/view/{file_id}"
 
-        # Send the success response
-        return jsonify({"success": True, "url": new_url})
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": "An unexpected server error occurred: {e}",
-                }
-            ),
-            500,
-        )
-    finally:
-        # Remove original file if it exists
-        if os.path.exists(original_filepath):
-            os.remove(original_filepath)
+    # Remove original file if it exists
+    if os.path.exists(original_filepath):
+        os.remove(original_filepath)
 
-        # Close the DB connection
-        cur.close()
-        conn.close()
+    # Send the success response
+    return jsonify({"success": True, "url": new_url})
 
 
 @api_bp.route("/cv", methods=["GET"])
@@ -149,28 +118,14 @@ def upload_file():
 def getCVList():
     """Returns a list of all CVs"""
 
-    # Connect to an RDS database
-    conn = psycopg2.connect(
-        host=os.environ.get("RDS_HOSTNAME"),
-        database=os.environ.get("RDS_DB_NAME"),
-        user=os.environ.get("RDS_USERNAME"),
-        password=os.environ.get("RDS_PASSWORD"),
-        port=os.environ.get("RDS_PORT"),
-    )
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-
-    # Fetch a db entry based on provided user id
-    query = """
-        SELECT id, data_owner, date_uploaded FROM cv
-        ORDER BY date_uploaded DESC
-    """
-    cur.execute(query)
-
-    result = cur.fetchall()
-
-    # Close connection
-    cur.close()
-    conn.close()
+    db = get_db()
+    with db.cursor() as cur:
+        query = """
+            SELECT id, data_owner, date_uploaded FROM cv
+            ORDER BY date_uploaded DESC
+        """
+        cur.execute(query)
+        result = cur.fetchall()
 
     return jsonify({"success": False, "data": result})
 
@@ -195,60 +150,41 @@ def update_cv():
     )
     file.save(original_filepath)
 
-    # Fetch cv settings from the DB
-    conn = psycopg2.connect(
-        host=os.environ.get("RDS_HOSTNAME"),
-        database=os.environ.get("RDS_DB_NAME"),
-        user=os.environ.get("RDS_USERNAME"),
-        password=os.environ.get("RDS_PASSWORD"),
-        port=os.environ.get("RDS_PORT"),
-    )
-    cur = conn.cursor()
+    db = get_db()
+    with db.cursor() as cur:
+        # Fetch a db entry based on provided id
+        query = """
+            SELECT id, settings_json FROM cv
+            WHERE pin_code = %s
+        """
+        cur.execute(query, (session.get("pin_code"),))
+        result = cur.fetchone()
 
-    # Register the UUID format for psycopg2
-    register_uuid()
-
-    # Fetch a db entry based on provided id
-    query = """
-        SELECT id, settings_json FROM cv
-        WHERE pin_code = %s
-    """
-    cur.execute(query, (session.get("pin_code"),))
-
-    result = cur.fetchone()
-    first_name_only = result[1]["first_name_only"] or False
-    keyword_list = result[1]["keyword_list"] or []
-    profile_text = result[1]["profile_text"] or ""
+    first_name_only = result["settings_json"]["first_name_only"] or False
+    keyword_list = result["settings_json"]["keyword_list"] or []
+    profile_text = result["settings_json"]["profile_text"] or ""
 
     # Parse PDF into raw string
     cv_data = parse_pdf(original_filepath)
 
-    try:
-        parsed_json = extract_cv(cv_data, first_name_only)
+    parsed_json = extract_cv(cv_data, first_name_only)
 
-        ### Highlight skills based on keywords, if provided. ###
-        if keyword_list != "":
-            highlight_json = highlight_skills(parsed_json["skills"], keyword_list)
-            parsed_json["highlightSkills"] = highlight_json["highlightSkills"]
+    ### Highlight skills based on keywords, if provided. ###
+    if keyword_list != "":
+        highlight_json = highlight_skills(parsed_json["skills"], keyword_list)
+        parsed_json["highlightSkills"] = highlight_json["highlightSkills"]
 
-            # Remove duplicate skills
-            for skill in parsed_json["highlightSkills"]:
-                if skill in parsed_json["skills"]:
-                    parsed_json["skills"].remove(skill)
+        # Remove duplicate skills
+        for skill in parsed_json["highlightSkills"]:
+            if skill in parsed_json["skills"]:
+                parsed_json["skills"].remove(skill)
 
-        # Inject custom profile text into the json object
-        if profile_text != "":
-            parsed_json["profileTexts"].append(profile_text)
+    # Inject custom profile text into the json object
+    if profile_text != "":
+        parsed_json["profileTexts"].append(profile_text)
 
-        conn = psycopg2.connect(
-            host=os.environ.get("RDS_HOSTNAME"),
-            database=os.environ.get("RDS_DB_NAME"),
-            user=os.environ.get("RDS_USERNAME"),
-            password=os.environ.get("RDS_PASSWORD"),
-            port=os.environ.get("RDS_PORT"),
-        )
-        cur = conn.cursor()
-
+    db = get_db()
+    with db.cursor() as cur:
         # Add new CV to the database
         query = """
             UPDATE cv
@@ -262,29 +198,14 @@ def update_cv():
                 session.get("pin_code"),
             ),
         )
-        conn.commit()
+        db.commit()
 
-        # Send the success response
-        return jsonify({"success": True})
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": "An unexpected server error occurred: {e}",
-                }
-            ),
-            500,
-        )
-    finally:
-        # Remove original file if it exists
-        if os.path.exists(original_filepath):
-            os.remove(original_filepath)
+    # Remove original file if it exists
+    if os.path.exists(original_filepath):
+        os.remove(original_filepath)
 
-        # Close the DB connection
-        cur.close()
-        conn.close()
+    # Send the success response
+    return jsonify({"success": True})
 
 
 @api_bp.route("/pin", methods=["POST"])
@@ -296,17 +217,9 @@ def create_pin():
 
     user_data = get_user_record(session.get("user_id"), "contact_id")
 
-    try:
-        # Connect to the RDS database
-        conn = psycopg2.connect(
-            host=os.environ.get("RDS_HOSTNAME"),
-            database=os.environ.get("RDS_DB_NAME"),
-            user=os.environ.get("RDS_USERNAME"),
-            password=os.environ.get("RDS_PASSWORD"),
-            port=os.environ.get("RDS_PORT"),
-        )
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-
+    db = get_db()
+    with db.cursor() as cur:
+        # Iterate to find a unique PIN code to assign
         pin = ""
         failed_attempts = 0
         while True:
@@ -335,9 +248,6 @@ def create_pin():
                     500,
                 )
 
-        # Register the UUID format for psycopg2
-        register_uuid()
-
         # Delete the rows with the provided IDs
         query = "INSERT INTO cv (id, data_owner, pin_code, contact_id, settings_json) VALUES (%s, %s, %s, %s, %s)"
         cur.execute(
@@ -346,7 +256,7 @@ def create_pin():
                 uuid.uuid4(),
                 request.values["recipientIdentifier"],
                 pin,
-                user_data[0],
+                user_data["contact_id"],
                 json.dumps(
                     {
                         "first_name_only": request.values["firstNameOnly"] == "true",
@@ -356,22 +266,10 @@ def create_pin():
                 ),
             ),
         )
-        conn.commit()
+        db.commit()
 
-        # Close connection
-        cur.close()
-        conn.close()
-
-        # Send the success response
-        return jsonify({"success": True, "pin": pin})
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        return (
-            jsonify(
-                {"success": False, "error": "An unexpected server error occurred: {e}"}
-            ),
-            500,
-        )
+    # Send the success response
+    return jsonify({"success": True, "pin": pin})
 
 
 @api_bp.route("/cv", methods=["DELETE"])
@@ -394,36 +292,15 @@ def delete_file():
         if str(cv_record["id"]) != cv_id:
             return jsonify({"success": False, "error": "Access forbidden."}), 403
 
-    try:
-        # Connect to the RDS database
-        conn = psycopg2.connect(
-            host=os.environ.get("RDS_HOSTNAME"),
-            database=os.environ.get("RDS_DB_NAME"),
-            user=os.environ.get("RDS_USERNAME"),
-            password=os.environ.get("RDS_PASSWORD"),
-            port=os.environ.get("RDS_PORT"),
-        )
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-
+    db = get_db()
+    with db.cursor() as cur:
         # Delete the rows with the provided IDs
         query = "DELETE FROM cv WHERE id IN %s"
         cur.execute(query, (tuple(cv_id_list),))
-        conn.commit()
+        db.commit()
 
-        # Close connection
-        cur.close()
-        conn.close()
-
-        # Send the success response
-        return jsonify({"success": True})
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        return (
-            jsonify(
-                {"success": False, "error": "An unexpected server error occurred."}
-            ),
-            500,
-        )
+    # Send the success response
+    return jsonify({"success": True})
 
 
 @api_bp.route("/cv-edit", methods=["UPDATE"])
@@ -436,18 +313,8 @@ def edit_cv():
     cv_id = request.values["cv_id"]
     cv_json = json.loads(request.values["cv_json"])
 
-    try:
-        # Connect to the RDS database
-        conn = psycopg2.connect(
-            host=os.environ.get("RDS_HOSTNAME"),
-            database=os.environ.get("RDS_DB_NAME"),
-            user=os.environ.get("RDS_USERNAME"),
-            password=os.environ.get("RDS_PASSWORD"),
-            port=os.environ.get("RDS_PORT"),
-        )
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-        register_uuid()
-
+    db = get_db()
+    with db.cursor() as cur:
         query = """
             UPDATE cv
             SET cv_json = %s
@@ -460,20 +327,10 @@ def edit_cv():
                 cv_id,
             ),
         )
-        conn.commit()
+        db.commit()
 
-        # Close connection
-        cur.close()
-        conn.close()
-
-        # Send the success response
-        return jsonify({"success": True})
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        return (
-            jsonify({"success": False, "error": f"{e}"}),
-            500,
-        )
+    # Send the success response
+    return jsonify({"success": True})
 
 
 @api_bp.route("/privacy-policy", methods=["GET"])

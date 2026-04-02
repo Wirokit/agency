@@ -1,5 +1,6 @@
 import os
 from flask import Flask
+from app.db import close_db, init_db
 from .routes.api import api_bp
 from .routes.auth import auth_bp
 from .routes.views import views_bp
@@ -16,11 +17,20 @@ def create_app():
 
     bcrypt.init_app(app)
 
+    app.config["DATABASE_URL"] = (
+        f"postgresql://{os.environ["RDS_USERNAME"]}:{os.environ["RDS_PASSWORD"]}@{os.environ["RDS_HOSTNAME"]}:{os.environ["RDS_PORT"]}/{os.environ["RDS_DB_NAME"]}"
+    )
     app.config["BASE_DIR"] = os.path.dirname(os.path.abspath(__file__))
     app.config["UPLOAD_FOLDER"] = os.path.join(app.config["BASE_DIR"], "static/uploads")
     app.config["PRIVACY_POLICY_PATH"] = os.path.join(
         app.config["BASE_DIR"], "static/privacy_statement.html"
     )
+
+    # Initialize the DB
+    init_db(app)
+
+    # Tell Flask to run close_db after every request
+    app.teardown_appcontext(close_db)
 
     # Ensure the upload folder exists
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
