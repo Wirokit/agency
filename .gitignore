@@ -1,10 +1,8 @@
-processed_files
-uploads
 .env
-my_cv.html
 cv-tool.zip
 generate_zip.bat
 zip_list.txt
 __pycache__
 privacy_statement.html
 node_modules
+app/static/uploads
