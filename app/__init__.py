@@ -1,10 +1,17 @@
 import os
-from flask import Flask
+from flask import Flask, jsonify
+from psycopg2 import Error
 from app.db import close_db, init_db
 from .routes.api import api_bp
 from .routes.auth import auth_bp
 from .routes.views import views_bp
 from .routes.route_utils import bcrypt
+
+
+def handle_db_error(e):
+    """Handles psycopg2 errors"""
+    print(f"Database error: {e}")
+    return jsonify({"error": "A database error occurred"}), 500
 
 
 def create_app():
@@ -25,6 +32,9 @@ def create_app():
     app.config["PRIVACY_POLICY_PATH"] = os.path.join(
         app.config["BASE_DIR"], "static/privacy_statement.html"
     )
+
+    # Listen to DB errors
+    app.register_error_handler(Error, handle_db_error)
 
     # Initialize the DB
     init_db(app)
