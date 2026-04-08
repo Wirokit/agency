@@ -6,13 +6,9 @@ from app.services.utils import (
     get_cv_by_pin,
     get_user_record,
     allowed_file,
-    parse_pdf,
     generate_pin,
 )
-import os
 import json
-from werkzeug.utils import secure_filename
-from app.services.bedrock import extract_cv, highlight_skills
 import uuid
 
 # Define the Blueprint
