@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, session
 from app.db import get_db
-from .route_utils import (
+from app.services.utils import (
     bcrypt,
     auth_required,
     get_user_record,

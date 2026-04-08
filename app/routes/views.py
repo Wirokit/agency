@@ -1,6 +1,11 @@
 from flask import Blueprint, render_template, session, request, redirect
 from app.db import get_db
-from .route_utils import auth_required, get_cv_by_pin, get_user_record, verify_pin
+from app.services.utils import (
+    auth_required,
+    get_cv_by_pin,
+    get_user_record,
+    verify_pin,
+)
 
 bp_name = "views"
 

@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, session, current_app
 from app.db import get_db
-from .route_utils import (
+from app.services.cv import CV_settings, upload_cv
+from app.services.utils import (
     auth_required,
     get_cv_by_pin,
     get_user_record,
@@ -11,7 +12,7 @@ from .route_utils import (
 import os
 import json
 from werkzeug.utils import secure_filename
-from .bedrock import extract_cv, highlight_skills
+from app.services.bedrock import extract_cv, highlight_skills
 import uuid
 
 # Define the Blueprint
@@ -29,13 +30,10 @@ def upload_file():
     if "file" not in request.files:
         return jsonify({"success": False, "error": "No file part in the request."}), 400
 
-    # Get contact data for the current user
-    user_data = get_user_record(session.get("user_id"), "contact_id")
-
     file = request.files["file"]
     first_name_only = request.values["firstNameOnly"]
-    keyword_list = request.values["keywordList"]
-    profile_text = request.values["profileText"]
+    job_description = request.values["keywordList"]
+    extra_profile_text = request.values["profileText"]
 
     # Check if the user selected a file
     if file.filename == "":
@@ -53,35 +51,12 @@ def upload_file():
             400,
         )
 
-    # Secure the filename (prevents directory traversal attacks)
-    original_filename = secure_filename(file.filename)
+    # Get contact data for the current user
+    user_data = get_user_record(session.get("user_id"), "contact_id")
 
-    # Save the original file
-    original_filepath = os.path.join(
-        current_app.config["UPLOAD_FOLDER"], original_filename
+    cv = upload_cv(
+        file, settings=CV_settings(first_name_only, job_description, extra_profile_text)
     )
-    file.save(original_filepath)
-
-    # Parse PDF into raw string
-    cv_data = parse_pdf(original_filepath)
-    parsed_json = extract_cv(cv_data, first_name_only=first_name_only)
-
-    ### Highlight skills based on keywords, if provided. ###
-    if keyword_list != "":
-        highlight_json = highlight_skills(parsed_json["skills"], keyword_list)
-        parsed_json["highlightSkills"] = highlight_json["highlightSkills"]
-
-        # Remove duplicate skills
-        for skill in parsed_json["highlightSkills"]:
-            if skill in parsed_json["skills"]:
-                parsed_json["skills"].remove(skill)
-
-    # Inject custom profile text into the json object
-    if profile_text != "":
-        parsed_json["profileTexts"].append(profile_text)
-
-    # Generate a unique ID for the processed CV
-    file_id = str(uuid.uuid4())
 
     db = get_db()  # Get connection from pool
     with db.cursor() as cur:
@@ -93,9 +68,9 @@ def upload_file():
         cur.execute(
             query,
             (
-                file_id,
-                parsed_json["name"],
-                json.dumps(parsed_json),
+                cv.id,
+                cv.data_owner,
+                cv.cv_data.toJSON(),
                 user_data["contact_id"],
             ),
         )
@@ -103,11 +78,7 @@ def upload_file():
 
     # Build the URL for the new file
     # This URL points to our '/view/' endpoint below
-    new_url = f"/view/{file_id}"
-
-    # Remove original file if it exists
-    if os.path.exists(original_filepath):
-        os.remove(original_filepath)
+    new_url = f"/view/{cv.id}"
 
     # Send the success response
     return jsonify({"success": True, "url": new_url})
@@ -139,17 +110,6 @@ def update_cv():
     if "file" not in request.files:
         return jsonify({"success": False, "error": "No file part in the request."}), 400
 
-    file = request.files["file"]
-
-    # Secure the original filename (prevents directory traversal attacks)
-    original_filename = secure_filename(file.filename)
-
-    # Save the original file
-    original_filepath = os.path.join(
-        current_app.config["UPLOAD_FOLDER"], original_filename
-    )
-    file.save(original_filepath)
-
     db = get_db()
     with db.cursor() as cur:
         # Fetch a db entry based on provided id
@@ -160,28 +120,14 @@ def update_cv():
         cur.execute(query, (session.get("pin_code"),))
         result = cur.fetchone()
 
+    file = request.files["file"]
     first_name_only = result["settings_json"]["first_name_only"] or False
-    keyword_list = result["settings_json"]["keyword_list"] or []
-    profile_text = result["settings_json"]["profile_text"] or ""
+    job_description = result["settings_json"]["keyword_list"] or []
+    extra_profile_text = result["settings_json"]["profile_text"] or ""
 
-    # Parse PDF into raw string
-    cv_data = parse_pdf(original_filepath)
-
-    parsed_json = extract_cv(cv_data, first_name_only)
-
-    ### Highlight skills based on keywords, if provided. ###
-    if keyword_list != "":
-        highlight_json = highlight_skills(parsed_json["skills"], keyword_list)
-        parsed_json["highlightSkills"] = highlight_json["highlightSkills"]
-
-        # Remove duplicate skills
-        for skill in parsed_json["highlightSkills"]:
-            if skill in parsed_json["skills"]:
-                parsed_json["skills"].remove(skill)
-
-    # Inject custom profile text into the json object
-    if profile_text != "":
-        parsed_json["profileTexts"].append(profile_text)
+    cv = upload_cv(
+        file, CV_settings(first_name_only, job_description, extra_profile_text)
+    )
 
     db = get_db()
     with db.cursor() as cur:
@@ -194,15 +140,11 @@ def update_cv():
         cur.execute(
             query,
             (
-                json.dumps(parsed_json),
+                cv.cv_data.toJSON(),
                 session.get("pin_code"),
             ),
         )
         db.commit()
-
-    # Remove original file if it exists
-    if os.path.exists(original_filepath):
-        os.remove(original_filepath)
 
     # Send the success response
     return jsonify({"success": True})

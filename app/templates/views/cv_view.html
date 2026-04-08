@@ -168,7 +168,7 @@
       <div>
         <div class="font-bold uppercase text-lg mb-4 header">Profile</div>
         <div class="space-y-4">
-          {% for profile in json.profileTexts %}
+          {% for profile in json.profile_texts %}
           <p>{{profile}}</p>
           {% endfor %}
         </div>
@@ -178,7 +178,7 @@
       <div>
         <div class="font-bold uppercase text-lg mb-4 header">Skills</div>
         <!-- Highlight -->
-        {% for skill in json.highlightSkills %}
+        {% for skill in json.highlight_skills %}
         <span class="skill-tag highlight">{{skill}}</span>
         {% endfor %}
         <!-- Normal -->
@@ -193,13 +193,13 @@
           Work Experience
         </div>
         <span class="space-y-6">
-          {% for job in json.workExperience %}
+          {% for job in json.job_experience %}
           <div>
             <div class="flex justify-between items-center">
               <b class="text-lg">{{job.title}}</b>
-              <p class="opacity-[0.5] text-sm">{{job.timePeriod}}</p>
+              <p class="opacity-[0.5] text-sm">{{job.time_period}}</p>
             </div>
-            <div class="opacity-[0.5] mb-2"><i>{{job.company}}</i></div>
+            <div class="opacity-[0.5] mb-2"><i>{{job.company_name}}</i></div>
             <p>{{job.description}}</p>
           </div>
           {% endfor %}
@@ -215,7 +215,7 @@
           <div>
             <div class="flex justify-between items-center">
               <b class="text-lg">{{education.degree}}</b>
-              <p class="opacity-[0.5] text-sm">{{education.timePeriod}}</p>
+              <p class="opacity-[0.5] text-sm">{{education.time_period}}</p>
             </div>
             <div class="opacity-[0.5] mb-2"><i>{{education.school}}</i></div>
             <p>{{education.description}}</p>

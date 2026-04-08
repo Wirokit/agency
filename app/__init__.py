@@ -5,7 +5,7 @@ from app.db import close_db, init_db
 from .routes.api import api_bp
 from .routes.auth import auth_bp
 from .routes.views import views_bp
-from .routes.route_utils import bcrypt
+from .services.utils import bcrypt
 
 
 def handle_db_error(e):
