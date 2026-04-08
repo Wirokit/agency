@@ -17,7 +17,7 @@ def handle_db_error(e):
 def create_app(config):
     app = Flask(__name__)
 
-    app.config.from_object(config)
+    app.config.from_mapping(config)
 
     app.config["BASE_DIR"] = os.path.dirname(os.path.abspath(__file__))
     app.config["UPLOAD_FOLDER"] = os.path.join(app.config["BASE_DIR"], "static/uploads")

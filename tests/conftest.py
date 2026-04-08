@@ -1,11 +1,11 @@
 import pytest
 from app import create_app
-from config import TestingConfig
+from config import getConfig
 
 
 @pytest.fixture(scope="session")
 def app():
-    app = create_app(config=TestingConfig())
+    app = create_app(config=getConfig(testing=True))
 
     with app.app_context():
         yield app
