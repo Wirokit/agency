@@ -1,11 +1,6 @@
 from flask import Blueprint, render_template, session, request, redirect
 from app.db import get_db
-from app.services.utils import (
-    auth_required,
-    get_cv_by_pin,
-    get_user_record,
-    verify_pin,
-)
+from .route_utils import auth_required, get_cv_by_pin, get_user_record, verify_pin
 
 bp_name = "views"
 
@@ -26,7 +21,7 @@ def before_request():
             "is_disabled, require_pw_update",
         )
 
-        if user_record["is_disabled"]:
+        if not user_record or user_record["is_disabled"]:
             session.clear()
             redirect_to_login = True
         elif user_record["require_pw_update"]:

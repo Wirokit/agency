@@ -2,9 +2,8 @@ from flask import Blueprint, jsonify, request, session
 from app.db import get_db
 from app.services.utils import (
     bcrypt,
-    auth_required,
-    get_user_record,
 )
+from .route_utils import auth_required, get_user_record
 
 # Define the Blueprint
 auth_bp = Blueprint("auth", __name__)

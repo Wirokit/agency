@@ -1,10 +1,8 @@
 from flask import Blueprint, jsonify, request, session, current_app
 from app.db import get_db
+from .route_utils import auth_required, get_cv_by_pin, get_user_record
 from app.services.cv import CV_settings, upload_cv
 from app.services.utils import (
-    auth_required,
-    get_cv_by_pin,
-    get_user_record,
     allowed_file,
     generate_pin,
 )

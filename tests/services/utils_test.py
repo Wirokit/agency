@@ -1,4 +1,8 @@
-from app.services.utils import ALLOWED_EXTENSIONS, allowed_file
+from app.services.utils import (
+    ALLOWED_EXTENSIONS,
+    allowed_file,
+    generate_pin,
+)
 
 
 def test_allowed_file():
@@ -19,3 +23,9 @@ def test_allowed_file():
     assert result == False
     result = allowed_file("hmm.pngg")
     assert result == False
+
+
+def test_generate_pin():
+    """Test PIN generation"""
+    pin = generate_pin()
+    assert len(pin) == 6
