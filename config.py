@@ -7,7 +7,7 @@ load_dotenv() """
 # ---
 
 
-def getConfig(testing=False):
+def getConfig(testing=False, testing_overrides={}):
     shared_config = {
         "MAX_CONTENT_LENGTH": 50 * 1024 * 1024  # Set a max file size (e.g., 50MB)
     }
@@ -16,9 +16,10 @@ def getConfig(testing=False):
         return {
             **shared_config,
             "TESTING": True,
-            "SECRET_KEY": "",
+            "SECRET_KEY": "123456789abcdefg",  # For testing only
             "DATABASE_URL": "",
             "WTF_CSRF_ENABLED": False,
+            **testing_overrides,
         }
     else:
         return {

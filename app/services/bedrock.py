@@ -1,5 +1,3 @@
-from typing import Optional
-
 import boto3
 import re
 import json
