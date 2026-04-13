@@ -26,8 +26,8 @@ def upload_file():
 
     file = request.files["file"]
     first_name_only = request.values["firstNameOnly"]
-    job_description = request.values["keywordList"]
-    extra_profile_text = request.values["profileText"]
+    job_description = request.values["job_description"]
+    extra_profile_text = request.values["extra_profile_text"]
 
     # Check if the user selected a file
     if file.filename == "":
@@ -92,12 +92,14 @@ def getCVList():
         cur.execute(query)
         result = cur.fetchall()
 
+    db.rollback()
+
     return jsonify({"success": False, "data": result})
 
 
 # Used by users that have loggen in via PIN to upload their own CV
 # Settings were previously set by admins in create_pin()
-@api_bp.route("/cv", methods=["UPDATE"])
+@api_bp.route("/cv", methods=["PATCH"])
 @auth_required(modes=["pin_user"])
 def update_cv():
     # Ensure that a file was sent
@@ -114,10 +116,12 @@ def update_cv():
         cur.execute(query, (session.get("pin_code"),))
         result = cur.fetchone()
 
+    db.rollback()
+
     file = request.files["file"]
     first_name_only = result["settings_json"]["first_name_only"] or False
-    job_description = result["settings_json"]["keyword_list"] or []
-    extra_profile_text = result["settings_json"]["profile_text"] or ""
+    job_description = result["settings_json"]["job_description"] or []
+    extra_profile_text = result["settings_json"]["extra_profile_text"] or ""
 
     cv = upload_cv(
         file, CV_settings(first_name_only, job_description, extra_profile_text)
@@ -165,6 +169,8 @@ def create_pin():
             query = "SELECT 1 FROM cv WHERE pin_code = %s"
             cur.execute(query, (pin,))
 
+            db.rollback()
+
             row = cur.fetchone()
             if row == None:
                 break
@@ -196,8 +202,8 @@ def create_pin():
                 json.dumps(
                     {
                         "first_name_only": request.values["firstNameOnly"] == "true",
-                        "keyword_list": request.values["keywordList"],
-                        "profile_text": request.values["profileText"],
+                        "job_description": request.values["job_description"],
+                        "extra_profile_text": request.values["extra_profile_text"],
                     }
                 ),
             ),

@@ -64,6 +64,25 @@ def setup_database(app):
             db.commit()
 
 
+@pytest.fixture(autouse=True)
+def clean_db(app, postgres_container):
+    import psycopg2
+
+    db = psycopg2.connect(postgres_container)
+    db.autocommit = True  # This prevents 'Idle in Transaction' state
+
+    with db.cursor() as cur:
+        # Fixes an issue where a test hangs infinitely due to unclosed connections
+        cur.execute("SET lock_timeout = '1s';")
+        tables = ["users", "cv", "contact_info"]
+        cur.execute(f"TRUNCATE {', '.join(tables)} RESTART IDENTITY CASCADE;")
+
+    db.commit()
+
+    setup_database(app)
+    db.close()
+
+
 @pytest.fixture
 def client(app):
     return app.test_client()
@@ -83,4 +102,5 @@ def pin_user(client):
     with client.session_transaction() as sess:
         sess["pin_code"] = TEST_CV.pin_code
         sess["pin_user"] = TEST_CV.data_owner
+        sess["cv_id"] = str(TEST_CV.id)
     return client

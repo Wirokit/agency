@@ -94,6 +94,8 @@ def serve_cv(cv_id):
         cur.execute(query, (cv_id,))
         result = cur.fetchone()
 
+    db.rollback()
+
     json = result["cv_json"]
     contact = {
         "name": result["name"],

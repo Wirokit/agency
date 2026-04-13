@@ -63,11 +63,14 @@ def check_pin():
         cur.execute(query, (request.values["pin"],))
         result = cur.fetchone()
 
+    db.rollback()
+
     if not result:
         return jsonify({"success": False, "error": "Invalid PIN."}), 404
 
     session["pin_user"] = result["data_owner"]
     session["pin_code"] = request.values["pin"]
+    session["cv_id"] = str(request.values["id"])
 
     return jsonify({"success": True, "data": result})
 

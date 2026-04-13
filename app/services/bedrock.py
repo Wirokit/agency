@@ -61,7 +61,7 @@ def _get_extract_prompt(cv_text, first_name_only):
     """
 
 
-def _get_highlight_prompt(skills, keyword_list):
+def _get_highlight_prompt(skills, job_description):
     return f"""
         I am going to provide a Job Description and a Master Skill List.
 
@@ -69,7 +69,7 @@ def _get_highlight_prompt(skills, keyword_list):
 
         Return the extracted skill array as "highlight_skills".
 
-        Job Description: ""\"{keyword_list}""\"
+        Job Description: ""\"{job_description}""\"
         Master Skill List: ""\"{json.dumps(skills)}""\"
     """
 

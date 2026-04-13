@@ -126,7 +126,7 @@
   all (show everything)
   first_name
   job_description
-  profile_text
+  extra_profile_text
 -->
 {% macro cv_settings(id, feature_list) %}
 <div class="space-y-4">
@@ -159,7 +159,7 @@
     </label>
     <textarea
       id="{{id}}-keyword-list"
-      name="keywordList"
+      name="job_description"
       class="w-full mb-4 border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
       placeholder="e.g. Web application built with custom web components, a Python server and a PostgreSQL database."
     ></textarea>
@@ -167,14 +167,14 @@
   {% endif %}
 
   <!-- custom profile text -->
-  {% if "all" in feature_list or "profile_text" in feature_list %}
+  {% if "all" in feature_list or "extra_profile_text" in feature_list %}
   <div>
     <label for="{{id}}-profile-text" class="text-sm font-medium text-heading">
       Custom profile text (injected at the end of the profile section)
     </label>
     <textarea
       id="{{id}}-profile-text"
-      name="profileText"
+      name="extra_profile_text"
       class="w-full mb-4 border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
       placeholder="e.g. Curious, detail-oriented, and quick to learn, Sami brings fresh perspective and solid energy to any development team!"
     ></textarea>

@@ -21,6 +21,8 @@ def verify_admin():
         )
         user_record = cur.fetchone()
 
+    db.rollback()
+
     if not user_record:
         return False
     elif user_record["is_disabled"]:
@@ -43,6 +45,8 @@ def verify_pin():
         cur.execute(query, (session.get("pin_code"),))
 
         result = cur.fetchone()
+
+    db.rollback()
 
     if not result:
         return False
@@ -84,6 +88,8 @@ def get_user_record(user, column="*"):
 
         user_record = cur.fetchone()
 
+    db.rollback()
+
     return user_record
 
 
@@ -101,5 +107,7 @@ def get_cv_by_pin(pin_code):
         )
 
         cv_record = cur.fetchone()
+
+    db.rollback()
 
     return cv_record

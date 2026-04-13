@@ -36,8 +36,8 @@ def test_cv_creation_and_deletion_by_admin(authenticated_user):
             data={
                 "file": fake_file,
                 "firstNameOnly": False,
-                "keywordList": "",
-                "profileText": "",
+                "job_description": "",
+                "extra_profile_text": "",
             },
             content_type="multipart/form-data",
         )
@@ -69,3 +69,46 @@ def test_cv_creation_and_deletion_by_admin(authenticated_user):
     list_response_data = json.loads(list_response.data)
     cv_list = list_response_data["data"]
     assert len(cv_list) == 0
+
+
+def test_cv_update_and_deletion_by_pin_user(pin_user):
+    mocked_cv_data = CV_data(
+        name="Mock Person",
+        title="Title",
+        profile_texts=["Profile"],
+        skills=["Skill_1", "Skill_2"],
+        highlight_skills=["Highlight_1", "Highlight_2"],
+        job_experience=[],
+        education=[],
+    )
+
+    # Test CV update
+    with patch("app.services.bedrock._query_bedrock_for_json") as mock_bedrock:
+        # Define what bedrock should return
+        mock_bedrock.return_value = json.loads(mocked_cv_data.toJSON())
+
+        fake_pdf_content = b"%PDF-1.1\n%%EOF"
+        fake_file = (io.BytesIO(fake_pdf_content), "test_cv.pdf")
+
+        response = pin_user.patch(
+            "/api/cv",
+            data={
+                "file": fake_file,
+            },
+            content_type="multipart/form-data",
+        )
+
+        assert response.status_code == 200
+        response_data = json.loads(response.data)
+        assert response_data["success"] == True
+
+    # Test CV deletion
+    with pin_user.session_transaction() as sess:
+        response = pin_user.delete(
+            "/api/cv",
+            data={
+                "cvListJson": json.dumps([sess["cv_id"]]),
+            },
+            content_type="multipart/form-data",
+        )
+        assert response.status_code == 200
