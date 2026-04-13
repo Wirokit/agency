@@ -70,7 +70,6 @@ def check_pin():
 
     session["pin_user"] = result["data_owner"]
     session["pin_code"] = request.values["pin"]
-    session["cv_id"] = str(result["id"])
 
     return jsonify({"success": True, "data": result})
 

@@ -1,7 +1,8 @@
 import io
 import json
 from unittest.mock import patch
-from app.services.bedrock import CV_data
+from app.services.bedrock import CV_data, CV_education, CV_experience
+from tests.test_data import TEST_CV
 
 
 def test_cv_list(authenticated_user):
@@ -71,6 +72,52 @@ def test_cv_creation_and_deletion_by_admin(authenticated_user):
     assert len(cv_list) == 0
 
 
+def test_cv_update_by_admin(authenticated_user):
+    mocked_cv_data = CV_data(
+        name="New Person",
+        title="Updated",
+        profile_texts=["Fresh profile"],
+        skills=["Skilling"],
+        highlight_skills=["Highlighting"],
+        job_experience=[
+            CV_experience(
+                title="Experiencer",
+                company_name="Provider",
+                time_period="Often",
+                description="Much was seen. More was heard.",
+            )
+        ],
+        education=[
+            CV_education(
+                degree="Student",
+                school="A place of learning",
+                time_period="Third semester",
+                description="Time of my life",
+            )
+        ],
+    )
+
+    # Update CV
+    response = authenticated_user.patch(
+        "/api/cv-edit",
+        data={
+            "cv_id": str(TEST_CV.id),
+            "cv_json": mocked_cv_data.toJSON(),
+        },
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 200
+
+    # Get the updated CV
+    response = authenticated_user.get(f"/api/cv/{str(TEST_CV.id)}")
+    assert response.status_code == 200
+    response_data = json.loads(response.data)
+    cv_data = CV_data.fromJSON(response_data["data"]["cv_json"])
+
+    # DB data should now match the mocked CV data
+    assert cv_data == mocked_cv_data
+
+
 def test_cv_update_and_deletion_by_pin_user(pin_user):
     mocked_cv_data = CV_data(
         name="Mock Person",
@@ -107,7 +154,7 @@ def test_cv_update_and_deletion_by_pin_user(pin_user):
         response = pin_user.delete(
             "/api/cv",
             data={
-                "cvListJson": json.dumps([sess["cv_id"]]),
+                "cvListJson": json.dumps([str(TEST_CV.id)]),
             },
             content_type="multipart/form-data",
         )

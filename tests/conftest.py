@@ -102,5 +102,4 @@ def pin_user(client):
     with client.session_transaction() as sess:
         sess["pin_code"] = TEST_CV.pin_code
         sess["pin_user"] = TEST_CV.data_owner
-        sess["cv_id"] = str(TEST_CV.id)
     return client

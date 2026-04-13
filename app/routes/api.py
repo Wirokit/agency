@@ -97,6 +97,29 @@ def getCVList():
     return jsonify({"success": False, "data": result})
 
 
+@api_bp.route("/cv/<id>", methods=["GET"])
+@auth_required(modes=["admin", "pin_user"])
+def getCV(id):
+    """Returns a CV based on given ID"""
+
+    db = get_db()
+    with db.cursor() as cur:
+        query = """
+            SELECT * FROM cv
+            WHERE id = %s
+        """
+        cur.execute(query, (id,))
+        result = cur.fetchone()
+
+    db.rollback()
+
+    # If called by a PIN user, ensure the CV is theirs
+    if "pin_code" in session and result["pin_code"] != session["pin_code"]:
+        return jsonify({"success": False, "error": "Access forbidden."}), 403
+
+    return jsonify({"success": False, "data": result})
+
+
 # Used by users that have loggen in via PIN to upload their own CV
 # Settings were previously set by admins in create_pin()
 @api_bp.route("/cv", methods=["PATCH"])
@@ -245,7 +268,7 @@ def delete_file():
     return jsonify({"success": True})
 
 
-@api_bp.route("/cv-edit", methods=["UPDATE"])
+@api_bp.route("/cv-edit", methods=["PATCH"])
 @auth_required(modes=["admin"])
 def edit_cv():
     """

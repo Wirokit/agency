@@ -11,6 +11,14 @@ class CV_experience:
     time_period: str
     description: str
 
+    def fromJSON(json):
+        return CV_experience(
+            title=json["title"],
+            company_name=json["company_name"],
+            time_period=json["time_period"],
+            description=json["description"],
+        )
+
 
 @dataclass
 class CV_education:
@@ -18,6 +26,14 @@ class CV_education:
     school: str
     time_period: str
     description: str
+
+    def fromJSON(json):
+        return CV_education(
+            degree=json["degree"],
+            school=json["school"],
+            time_period=json["time_period"],
+            description=json["description"],
+        )
 
 
 @dataclass
@@ -43,6 +59,22 @@ class CV_data:
                 ],
                 "education": [vars(education) for education in self.education],
             }
+        )
+
+    def fromJSON(json):
+        return CV_data(
+            name=json["name"],
+            title=json["title"],
+            profile_texts=json["profile_texts"],
+            skills=json["skills"],
+            highlight_skills=json["highlight_skills"],
+            job_experience=[
+                CV_experience.fromJSON(experience)
+                for experience in json["job_experience"]
+            ],
+            education=[
+                CV_education.fromJSON(education) for education in json["education"]
+            ],
         )
 
 

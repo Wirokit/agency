@@ -842,7 +842,7 @@
       formData.append("cv_json", JSON.stringify(jsonData));
 
       const response = await fetch("/api/cv-edit", {
-        method: "UPDATE",
+        method: "PATCH",
         body: formData,
       });
 
