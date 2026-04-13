@@ -84,7 +84,6 @@ def serve_cv(cv_id):
     """VERSION 2 - All CV data is in JSON format rather than a html file"""
 
     db = get_db()
-    # TODO - how does this look like as a dict?
     with db.cursor() as cur:
         query = """
             SELECT cv.cv_json, c.name, c.email, c.phone FROM cv
