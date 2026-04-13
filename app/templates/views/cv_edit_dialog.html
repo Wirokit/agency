@@ -87,7 +87,7 @@
       </button>
       <div id="profile-wrapper" class="hidden p-4 px-12 space-y-4">
         <div id="profile-list" class="space-y-4">
-          {% for profile in json.profileTexts %}
+          {% for profile in json.profile_texts %}
           <div id="container-profile-{{loop.index}}" class="flex gap-2">
             <!-- prettier-ignore -->
             <textarea
@@ -150,7 +150,7 @@
         </p>
         <div id="skill-list">
           <!-- Highlight -->
-          {% for skill in json.highlightSkills %}
+          {% for skill in json.highlight_skills %}
           <div class="inline-flex items-center w-fit">
             <span
               class="skill-tag highlight hover:cursor-pointer"
@@ -223,7 +223,7 @@
       </button>
       <div id="work-wrapper" class="hidden wrapper pb-4 px-12 space-y-4">
         <div id="experience-list" class="space-y-8">
-          {% for experience in json.workExperience %}
+          {% for experience in json.job_experience %}
           <div class="flex gap-2">
             <div class="w-full space-y-2">
               <div class="relative w-full pt-2">
@@ -252,7 +252,7 @@
                   id="experience-company-{{loop.index}}"
                   type="text"
                   class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-                  value="{{experience.company}}"
+                  value="{{experience.company_name}}"
                 />
               </div>
 
@@ -267,7 +267,7 @@
                   id="experience-duration-{{loop.index}}"
                   type="text"
                   class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-                  value="{{experience.timePeriod}}"
+                  value="{{experience.time_period}}"
                 />
               </div>
 
@@ -381,7 +381,7 @@
                   id="edu-duration-{{loop.index}}"
                   type="text"
                   class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-                  value="{{education.timePeriod}}"
+                  value="{{education.time_period}}"
                 />
               </div>
 
@@ -777,22 +777,22 @@
 
     // Profiles
     const profileList = document.getElementById("profile-list");
-    jsonData.profileTexts = [];
+    jsonData.profile_texts = [];
     for (const child of profileList.children) {
       const value = child.getElementsByTagName("textarea")[0].value;
-      jsonData.profileTexts.push(value);
+      jsonData.profile_texts.push(value);
     }
 
     // Skills
     const skillsList = document.getElementById("skill-list");
-    jsonData.highlightSkills = [];
+    jsonData.highlight_skills = [];
     jsonData.skills = [];
     for (const child of skillsList.children) {
       let skillNode = child.getElementsByClassName("skill-tag")[0];
       let value = skillNode.textContent.replaceAll("\n", "").trim();
 
       if (skillNode.classList.contains("highlight")) {
-        jsonData.highlightSkills.push(value);
+        jsonData.highlight_skills.push(value);
       } else {
         jsonData.skills.push(value);
       }
@@ -800,18 +800,18 @@
 
     // Work Experience
     const experienceList = document.getElementById("experience-list");
-    jsonData.workExperience = [];
+    jsonData.job_experience = [];
     for (const child of experienceList.children) {
       const experienceJson = {};
 
       const inputs = child.getElementsByTagName("input");
       experienceJson.title = inputs[0].value;
-      experienceJson.company = inputs[1].value;
-      experienceJson.timePeriod = inputs[2].value;
+      experienceJson.company_name = inputs[1].value;
+      experienceJson.time_period = inputs[2].value;
       experienceJson.description =
         child.getElementsByTagName("textarea")[0].value;
 
-      jsonData.workExperience.push(experienceJson);
+      jsonData.job_experience.push(experienceJson);
     }
 
     // Education
@@ -823,7 +823,7 @@
       const inputs = child.getElementsByTagName("input");
       eduJson.degree = inputs[0].value;
       eduJson.school = inputs[1].value;
-      eduJson.timePeriod = inputs[2].value;
+      eduJson.time_period = inputs[2].value;
       eduJson.description = child.getElementsByTagName("textarea")[0].value;
 
       jsonData.education.push(eduJson);
@@ -842,7 +842,7 @@
       formData.append("cv_json", JSON.stringify(jsonData));
 
       const response = await fetch("/api/cv-edit", {
-        method: "UPDATE",
+        method: "PATCH",
         body: formData,
       });
 

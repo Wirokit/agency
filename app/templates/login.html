@@ -238,7 +238,7 @@
         formData.append("password", enteredPassword);
 
         try {
-          const response = await fetch("/api/login", {
+          const response = await fetch("/auth/login", {
             method: "POST",
             body: formData,
           });
@@ -313,7 +313,7 @@
         const formData = new FormData();
         formData.append("pin", pin);
         try {
-          const response = await fetch("/api/pin-login", {
+          const response = await fetch("/auth/pin-login", {
             method: "POST",
             body: formData,
           });
