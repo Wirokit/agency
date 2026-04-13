@@ -51,7 +51,7 @@ def upload_cv(
     pdf_data = parse_pdf(original_filepath)
     cv_data = extract_cv(pdf_data, first_name_only=settings.first_name_only)
 
-    ### Highlight skills based on job description, if provided. ###
+    # Highlight skills based on job description, if provided.
     if settings.job_description != "":
         highlight_json = highlight_skills(cv_data.skills, settings.job_description)
         cv_data.highlight_skills = highlight_json["highlight_skills"]

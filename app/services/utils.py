@@ -28,7 +28,7 @@ def generate_pin():
         index = math.floor(random.random() * 10)
         random_str += str(digits[index])
 
-    ## displaying the random string
+    # displaying the random string
     return random_str
 
 

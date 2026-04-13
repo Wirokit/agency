@@ -14,15 +14,15 @@ def test_allowed_file():
 
     # Test for valid inputs
     result = allowed_file("super_amazing_file.pdf")
-    assert result == True
+    assert result is True
     result = allowed_file("mypic.PNG")
-    assert result == True
+    assert result is True
 
     # Test for invalid input
     result = allowed_file("secret.virus")
-    assert result == False
+    assert result is False
     result = allowed_file("hmm.pngg")
-    assert result == False
+    assert result is False
 
 
 def test_generate_pin():

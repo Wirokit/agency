@@ -45,7 +45,7 @@ def test_cv_creation_and_deletion_by_admin(authenticated_user):
 
         assert response.status_code == 200
         response_data = json.loads(response.data)
-        assert response_data["success"] == True
+        assert response_data["success"] is True
 
     # Ensure that the CV is now in the db
     list_response = authenticated_user.get("/api/cv")
@@ -147,15 +147,14 @@ def test_cv_update_and_deletion_by_pin_user(pin_user):
 
         assert response.status_code == 200
         response_data = json.loads(response.data)
-        assert response_data["success"] == True
+        assert response_data["success"] is True
 
     # Test CV deletion
-    with pin_user.session_transaction() as sess:
-        response = pin_user.delete(
-            "/api/cv",
-            data={
-                "cvListJson": json.dumps([str(TEST_CV.id)]),
-            },
-            content_type="multipart/form-data",
-        )
-        assert response.status_code == 200
+    response = pin_user.delete(
+        "/api/cv",
+        data={
+            "cvListJson": json.dumps([str(TEST_CV.id)]),
+        },
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 200

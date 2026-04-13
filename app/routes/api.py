@@ -195,7 +195,7 @@ def create_pin():
             db.rollback()
 
             row = cur.fetchone()
-            if row == None:
+            if row is None:
                 break
             else:
                 failed_attempts += 1

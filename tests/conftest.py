@@ -56,7 +56,7 @@ def setup_database(app):
                 """
             )
             cur.execute(
-                f"""
+                """
                 INSERT INTO contact_info(id, name, email, phone)
                 VALUES (1, 'Contactee', 'mail@app.com', '+123 45 678 99 10')
                 """
