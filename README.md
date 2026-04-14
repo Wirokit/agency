@@ -1,11 +1,3 @@
-## TO-DO - Versio 2
+## CV Tool
 
-✅ Uloskirjautuminen<br/>
-✅ Jaettu appbar näkymille<br/>
-✅ PIN koodin luonti<br/>
-✅ CV omistaja voi itse ladata CVn PIN koodin avulla<br/>
-✅ Privacy policy<br/>
-✅ CV muokkaus kirjautuneena käyttäjänä<br/>
-
-Suurin muutos:<br/>
-✅ Self-hosted AI mallin käyttö Geminin sijaan... Kind of. Päätös käyttää AWS Bedrock sen sijaan<br/>
+This is a tool to generate <a href="https://www.wirokit.fi/">Wirokit</a>-style CVs from individual CVs. It requires a running PostgreSQL database (we use Amazon RDS) and credentials to use Amazon Bedrock to extract and convert CV information to a JSON format.
