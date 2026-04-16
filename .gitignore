@@ -1,5 +1,5 @@
 .env
-cv-tool.zip
+*.zip
 generate_zip.bat
 zip_list.txt
 __pycache__
