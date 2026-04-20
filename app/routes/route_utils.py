@@ -14,7 +14,7 @@ def verify_admin():
 
     db = get_db()  # Get connection from pool
     with db.cursor() as cur:
-        query = "SELECT is_disabled FROM users WHERE id = %s"
+        query = "SELECT is_disabled, is_admin FROM users WHERE username = %s"
         cur.execute(
             query,
             (session["user_id"],),
@@ -26,6 +26,8 @@ def verify_admin():
     if not user_record:
         return False
     elif user_record["is_disabled"]:
+        return False
+    elif not user_record["is_admin"]:
         return False
 
     return True
@@ -77,7 +79,7 @@ def get_user_record(user, column="*"):
     db = get_db()  # Get connection from pool
     with db.cursor() as cur:
         # Fetch a db entry based on provided user id
-        query = "SELECT %s FROM users WHERE id = %s"
+        query = "SELECT %s FROM users WHERE username = %s"
         cur.execute(
             query,
             (

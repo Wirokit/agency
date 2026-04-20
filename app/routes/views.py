@@ -44,7 +44,11 @@ def serve_login():
     """Serves the login page to the frontend."""
 
     if "user_id" in session or "pin_code" in session:
-        return redirect(session["redirect_url"] if "redirect_url" in session else "/")
+        return redirect(
+            session["redirect_url"]
+            if "redirect_url" in session and session["redirect_url"] != "/login"
+            else "/"
+        )
 
     return render_template("login.html")
 
@@ -52,21 +56,28 @@ def serve_login():
 @views_bp.route("/", methods=["GET"])
 @auth_required(modes=["admin", "pin_user"])
 def serve_landing():
-    """Serves the login and upload pages to the frontend."""
-
-    html_file = "views/"
+    """Serves the login and landing pages to the frontend."""
 
     if "user_id" in session:
-        html_file += "upload_page.html"
+        return render_template(
+            "views/landing.html",
+            user_id=session["user_id"],
+            user_is_admin=session["is_admin"],
+        )
     elif "pin_code" in session:
         cv_record = get_cv_by_pin(session["pin_code"])
         if not cv_record["date_uploaded"]:
-            html_file += "pin_upload.html"
+            return render_template("views/pin_upload.html")
         else:
             return serve_cv(str(cv_record["id"]))
 
-    # Send the html file
-    return render_template(html_file)
+
+@views_bp.route("/upload", methods=["GET"])
+@auth_required(modes=["admin"])
+def serve_upload():
+    return render_template(
+        "views/upload_page.html",
+    )
 
 
 @views_bp.route("/view", methods=["GET"])
@@ -86,7 +97,7 @@ def serve_cv(cv_id):
     db = get_db()
     with db.cursor() as cur:
         query = """
-            SELECT cv.cv_json, c.name, c.email, c.phone FROM cv
+            SELECT cv.data_owner, cv.cv_json, c.name, c.email, c.phone FROM cv
             JOIN contact_info c ON cv.contact_id = c.id
             WHERE cv.id = %s
         """
@@ -111,6 +122,7 @@ def serve_cv(cv_id):
     return render_template(
         "views/cv_view.html",
         cv_id=cv_id,
+        data_owner=result["data_owner"],
         json=json,
         contact=contact,
         user_type=user_type,

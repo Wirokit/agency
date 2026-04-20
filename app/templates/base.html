@@ -84,21 +84,38 @@
       <div
         class="max-w-screen-xl h-[60px] flex flex-wrap items-center justify-between mx-auto p-2 px-4"
       >
-        <a href="/" class="flex gap-4 items-center">
-          <img
-            src="/static/images/wirokit_icon_b.png"
-            class="w-10 dark:hidden"
-            alt="Wirokit Logo"
-          />
-          <img
-            src="/static/images/wirokit_icon_w.png"
-            class="w-10 hidden dark:block dark:opacity-[87%]"
-            alt="Wirokit Logo"
-          />
-          <span class="hand-written self-center whitespace-nowrap">
-            AGENCY
-          </span>
-        </a>
+        <div class="flex gap-4">
+          <a href="/" class="flex gap-4 items-center">
+            <img
+              src="/static/images/wirokit_icon_b.png"
+              class="w-10 dark:hidden"
+              alt="Wirokit Logo"
+            />
+            <img
+              src="/static/images/wirokit_icon_w.png"
+              class="w-10 hidden dark:block dark:opacity-[87%]"
+              alt="Wirokit Logo"
+            />
+            <span class="hand-written self-center whitespace-nowrap">
+              AGENCY
+            </span>
+          </a>
+          {% if request.path != "/" %}
+          <span>-</span>
+
+          {% if request.path == "/upload" %}
+          <span class="flex gap-4 items-center">Upload CV</a>
+          {% elif request.path.startswith("/view") %}
+          <a href="/view" class="flex gap-4 items-center">CV List</a>
+          {% endif %}
+          <!---->
+          {% if request.path.startswith("/view/") %}
+          <span>-</span>
+          <span class="flex gap-4 items-center">{{data_owner}}</span>
+          {% endif %}
+          <!---->
+          {% endif %}
+        </div>
         <div>
           <button
             id="profile-icon"
@@ -106,7 +123,7 @@
             class="flex items-center justify-center text-center w-[35px] h-[35px] text-white bg-(--color-primary) rounded-[90px] hover:cursor-pointer"
             onclick="toggleMenu(event)"
           >
-            {{session['user_id'][0] if session['user_id'] else
+            {{session['user_name'][0] if session['user_name'] else
             session["pin_user"][0]}}
           </button>
         </div>
@@ -117,18 +134,18 @@
         >
           <div id="menu-content">
             <div class="hand-written text-sm text-center mb-2">
-              {{"ADMIN" if session['user_id'] else "GUEST"}}
+              {{"ADMIN" if session['user_name'] else "GUEST"}}
             </div>
             <div class="flex items-center px-4 gap-2 mb-3">
               <span
                 id="menu-profile-icon"
                 class="flex items-center justify-center text-center w-[40px] h-[40px] text-white bg-(--color-primary) rounded-[90px]"
               >
-                {{session['user_id'][0] if session['user_id'] else
+                {{session['user_name'][0] if session['user_name'] else
                 session["pin_user"][0]}}
               </span>
               <span id="logged-in-user"
-                >{{session['user_id'] if session['user_id'] else
+                >{{session['user_name'] if session['user_name'] else
                 session["pin_user"]}}</span
               >
             </div>

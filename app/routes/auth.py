@@ -18,7 +18,9 @@ def check_login():
         return jsonify({"success": False, "error": "Empty body."}), 400
 
     # Get db entry based on given user id
-    user_record = get_user_record(request.values["user"], "password_hash")
+    user_record = get_user_record(
+        request.values["user"], "password_hash, full_name, is_admin"
+    )
 
     # Check that password matches
     if user_record:
@@ -29,6 +31,8 @@ def check_login():
 
         if match:
             session["user_id"] = request.values["user"]
+            session["user_name"] = user_record["full_name"]
+            session["is_admin"] = user_record["is_admin"]
             return jsonify({"success": True, "data": {"user": request.values["user"]}})
         else:
             return jsonify({"success": False})
@@ -107,7 +111,7 @@ def update_password():
         query = """
             UPDATE users
             SET password_hash = %s, require_pw_update = false
-            WHERE id = %s
+            WHERE username = %s
         """
         cur.execute(
             query,

@@ -1,0 +1,217 @@
+<!doctype html>
+{% extends 'base.html' %}
+
+<!-- Main Container -->
+{% block content %}
+<style></style>
+
+<meta id="user_id" data-other="{{user_id}}" />
+<meta id="user_is_admin" data-other="{{user_is_admin}}" />
+
+<div class="w-full px-4 max-w-screen-xl space-y-4">
+  <div>
+    <p class="text-xl mb-2">Me</p>
+
+    <div
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full"
+    >
+      <div
+        id="me-container"
+        class="card bg-(--bg-paper) p-4 flex flex-col items-center gap-4 w-full"
+      ></div>
+    </div>
+  </div>
+
+  {% if user_is_admin %}
+  <div>
+    <p class="text-xl mb-2">External Talent</p>
+
+    <div
+      id="external-list"
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full"
+    >
+      <a
+        href="/upload"
+        id="add-external-link"
+        class="card bg-(--bg-paper-green) hover:bg-(--bg-paper-green-highlight) p-4 flex flex-col items-center justify-center gap-4 w-full min-h-[226px]"
+      >
+        <div class="text-xl">Upload CV</div>
+        <span
+          class="flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
+        >
+          <i data-lucide="file-plus-corner" class="w-12 h-12"></i>
+        </span>
+      </a>
+      <a
+        href="/view"
+        id="cv-list-link"
+        class="card bg-(--bg-paper-green) hover:bg-(--bg-paper-green-highlight) p-4 flex flex-col items-center justify-center gap-4 w-full min-h-[226px]"
+      >
+        <div class="text-xl">Manage CVs</div>
+        <span
+          class="flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
+        >
+          <i data-lucide="table-of-contents" class="w-12 h-12"></i>
+        </span>
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+  <div>
+    <p class="text-xl mb-2">Team Wirokit</p>
+
+    <div
+      id="team-list"
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full"
+    >
+      {% if user_is_admin %}
+      <button
+        id="add-external-btn"
+        class="card bg-(--bg-paper-green) hover:bg-(--bg-paper-green-highlight) p-4 flex flex-col items-center justify-center gap-4 w-full"
+      >
+        <div class="text-xl">Add New</div>
+        <span
+          class="flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
+        >
+          <i data-lucide="plus" class="w-10 h-10"></i>
+        </span>
+      </button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+  // Initialize Icons
+  lucide.createIcons();
+
+  const externalList = document.getElementById("external-list");
+  const teamList = document.getElementById("team-list");
+  const userID = document.getElementById("user_id").getAttribute("data-other");
+  const userIsAdmin =
+    document.getElementById("user_is_admin").getAttribute("data-other") ==
+    "True";
+
+  // Helper function for HTML strings
+  const html = (strings, ...values) => String.raw({ raw: strings }, ...values);
+
+  (async () => {
+    try {
+      // Fetch the User list from the backend
+      const response = await fetch("/api/users", {
+        method: "GET",
+      });
+      const json = await response.json();
+      users = json["data"];
+
+      for (user of users) {
+        let node = null;
+
+        if (user["username"] == userID) {
+          node = document.getElementById("me-container");
+        } else {
+          node = document.createElement("div");
+          node.classList.add(
+            ...[
+              "card",
+              "bg-(--bg-paper)",
+              "p-4",
+              "flex",
+              "flex-col",
+              "items-center",
+              "gap-4",
+              "w-full",
+            ],
+          );
+        }
+
+        node.innerHTML = html`
+          <div class="hand-written text-xs">
+            ${user["is_admin"] ? "ADMIN" : "INTERNAL"}
+          </div>
+          <span
+            class="color-icon flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
+          >
+            ${user["full_name"][0]}
+          </span>
+          <div class="text-center">
+            <p>${user["full_name"]}</p>
+            <div class="text-sm opacity-[0.8]">
+              <p>${user["title"]}</p>
+              <p>${user["office"]}</p>
+            </div>
+          </div>
+        `;
+
+        if (user["username"] != userID) {
+          teamList.appendChild(node);
+        }
+      }
+
+      setIconColors();
+    } catch (e) {
+      console.error(e);
+    }
+  })();
+
+  async function getExternalTalent() {
+    try {
+      // Fetch the User list from the backend
+      const response = await fetch("/api/cv", {
+        method: "GET",
+      });
+      const json = await response.json();
+      cvList = json["data"];
+
+      for (cv of cvList) {
+        const node = document.createElement("a");
+        node.setAttribute("href", `/view/${cv["id"]}`);
+        node.classList.add(
+          ...[
+            "card",
+            "bg-(--bg-paper)",
+            "p-4",
+            "flex",
+            "flex-col",
+            "items-center",
+            "justify-center",
+            "gap-4",
+            "w-full",
+          ],
+        );
+
+        node.innerHTML = html`
+          <div class="hand-written text-xs">EXTERNAL</div>
+          <span
+            class="color-icon flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
+          >
+            ${cv["data_owner"][0]}
+          </span>
+          <div class="text-center">
+            <p>${cv["data_owner"]}</p>
+          </div>
+        `;
+        externalList.appendChild(node);
+      }
+
+      setIconColors();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  if (userIsAdmin) getExternalTalent();
+
+  function setIconColors() {
+    const icons = document.getElementsByClassName("color-icon");
+
+    let i = 1;
+    for (icon of icons) {
+      icon.classList.add(`profile-icon-${i}`);
+      i++;
+
+      if (i > 8) i = 1;
+    }
+  }
+</script>
+{% endblock %}

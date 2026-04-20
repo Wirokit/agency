@@ -23,160 +23,151 @@
 </style>
 
 <div class="flex items-center justify-center p-4 my-4">
-  <div class="flex flex-col items-end">
-    <a
-      href="/view"
-      class="flex justify-center items-center mb-4 text-xl text-(--color-primary)"
-    >
-      <b>CV List</b> <i data-lucide="chevron-right" class="w-8 h-8"></i>
-    </a>
+  <!-- Card -->
+  <div
+    class="w-full max-w-md card border-t-2 border-default rounded-xl bg-(--bg-paper) dark:rounded-none"
+  >
+    <div>
+      <ul class="w-full flex flex-wrap text-sm font-medium text-center">
+        <li class="tab-btn w-1/2 rounded-tl-xl dark:rounded-none">
+          <a
+            id="tab-upload"
+            href="#"
+            class="active w-full inline-flex items-center justify-center p-4 group"
+          >
+            <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>
+            <b>UPLOAD PDF</b>
+          </a>
+        </li>
+        <li class="tab-btn w-1/2 rounded-tr-xl dark:rounded-none">
+          <a
+            id="tab-pin"
+            href="#"
+            class="w-full inline-flex items-center justify-center p-4 group"
+          >
+            <i data-lucide="lock" class="w-5 h-5 mr-2"></i>
+            <b>SEND PIN</b>
+          </a>
+        </li>
+      </ul>
+    </div>
 
-    <!-- Card -->
-    <div
-      class="w-full max-w-md card border-t-2 border-default rounded-xl bg-(--bg-paper) dark:rounded-none"
-    >
-      <div>
-        <ul class="w-full flex flex-wrap text-sm font-medium text-center">
-          <li class="tab-btn w-1/2 rounded-tl-xl dark:rounded-none">
-            <a
-              id="tab-upload"
-              href="#"
-              class="active w-full inline-flex items-center justify-center p-4 group"
+    <div class="card-content p-8 space-y-4">
+      <div id="upload-content">
+        <!-- Header -->
+        <p class="text-center mb-6 opacity-[0.5] mt-2">
+          Turn a PDF CV into a new Wirokit CV
+        </p>
+
+        <form id="upload-form" class="space-y-6">
+          <div
+            class="consent-container w-full p-4 border border-default-medium rounded-xs text-center warn-border"
+          >
+            <h3 class="mb-4 font-semibold">
+              The data owner must give their consent for us to store and process
+              their data!
+            </h3>
+            <label
+              for="consent-check"
+              class="flex p-2 justify-center items-center select-none text-md font-medium hover:cursor-pointer"
             >
-              <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>
-              <b>UPLOAD PDF</b>
-            </a>
-          </li>
-          <li class="tab-btn w-1/2 rounded-tr-xl dark:rounded-none">
-            <a
-              id="tab-pin"
-              href="#"
-              class="w-full inline-flex items-center justify-center p-4 group"
-            >
-              <i data-lucide="lock" class="w-5 h-5 mr-2"></i>
-              <b>SEND PIN</b>
-            </a>
-          </li>
-        </ul>
-      </div>
-
-      <div class="card-content p-8 space-y-4">
-        <div id="upload-content">
-          <!-- Header -->
-          <p class="text-center mb-6 opacity-[0.5] mt-2">
-            Turn a PDF CV into a new Wirokit CV
-          </p>
-
-          <form id="upload-form" class="space-y-6">
-            <div
-              class="consent-container w-full p-4 border border-default-medium rounded-xs text-center warn-border"
-            >
-              <h3 class="mb-4 font-semibold">
-                The data owner must give their consent for us to store and
-                process their data!
-              </h3>
-              <label
-                for="consent-check"
-                class="flex p-2 justify-center items-center select-none text-md font-medium hover:cursor-pointer"
-              >
-                <input
-                  id="consent-check"
-                  type="checkbox"
-                  value=""
-                  class="w-5 h-5 mr-2 border border-default-medium rounded-xs accent-(--color-funky) focus:ring-2 focus:ring-brand-soft hover:cursor-pointer"
-                />
-                Consent granted
-              </label>
-            </div>
-
-            <div id="consent-block" class="space-y-6 blocked">
-              <!-- File Input Area -->
-              {{ ui.pdf_upload() }}
-
-              <!-- CV Settings -->
-              {{ ui.cv_settings("upload", ["all"]) }}
-
-              <!-- Submit Button -->
-              <button
-                type="submit"
-                id="submit-button"
-                class="w-full bg-(--color-primary) text-white dark:text-inherit font-bold py-3 px-4 rounded-lg hover:bg-(--color-primary-hover) focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200"
-              >
-                Upload and Process
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <div id="pin-content" class="hidden">
-          <!-- Header -->
-          <p class="text-center mb-6 text-gray-500">
-            Get a PIN code with which a user can upload their own CV to be
-            processed
-          </p>
-
-          <form id="pin-form" class="space-y-6">
-            <!-- PIN recipient name -->
-            <label for="recipient-identifier">
-              <p class="text-sm font-medium">
-                Recipient identifier (email, full name etc.)
-              </p>
               <input
-                autocomplete="off"
-                data-form-type="other"
-                type="text"
-                id="recipient-identifier"
-                name="recipientIdentifier"
-                class="w-full mb-4 border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+                id="consent-check"
+                type="checkbox"
+                value=""
+                class="w-5 h-5 mr-2 border border-default-medium rounded-xs accent-(--color-funky) focus:ring-2 focus:ring-brand-soft hover:cursor-pointer"
               />
+              Consent granted
             </label>
+          </div>
+
+          <div id="consent-block" class="space-y-6 blocked">
+            <!-- File Input Area -->
+            {{ ui.pdf_upload() }}
 
             <!-- CV Settings -->
-            {{ ui.cv_settings("pin", ["all"]) }}
+            {{ ui.cv_settings("upload", ["all"]) }}
 
             <!-- Submit Button -->
             <button
               type="submit"
-              id="pin-submit-button"
+              id="submit-button"
               class="w-full bg-(--color-primary) text-white dark:text-inherit font-bold py-3 px-4 rounded-lg hover:bg-(--color-primary-hover) focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200"
             >
-              Get PIN
+              Upload and Process
             </button>
-          </form>
-        </div>
-
-        <!-- Result Area (for loading, success, or error) -->
-        <div id="result-container" class="text-center pt-2">
-          <!-- Loading Spinner -->
-          <div id="loading-spinner" class="hidden">
-            <svg
-              class="animate-spin h-8 w-8 text-(--color-primary) mx-auto"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              ></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            <p id="loading-message" class="mt-2">
-              Processing your file, please wait...
-            </p>
           </div>
+        </form>
+      </div>
 
-          <!-- Result Message -->
-          <div id="result-message"></div>
+      <div id="pin-content" class="hidden">
+        <!-- Header -->
+        <p class="text-center mb-6 text-gray-500">
+          Get a PIN code with which a user can upload their own CV to be
+          processed
+        </p>
+
+        <form id="pin-form" class="space-y-6">
+          <!-- PIN recipient name -->
+          <label for="recipient-identifier">
+            <p class="text-sm font-medium">
+              Recipient identifier (email, full name etc.)
+            </p>
+            <input
+              autocomplete="off"
+              data-form-type="other"
+              type="text"
+              id="recipient-identifier"
+              name="recipientIdentifier"
+              class="w-full mb-4 border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+            />
+          </label>
+
+          <!-- CV Settings -->
+          {{ ui.cv_settings("pin", ["all"]) }}
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            id="pin-submit-button"
+            class="w-full bg-(--color-primary) text-white dark:text-inherit font-bold py-3 px-4 rounded-lg hover:bg-(--color-primary-hover) focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200"
+          >
+            Get PIN
+          </button>
+        </form>
+      </div>
+
+      <!-- Result Area (for loading, success, or error) -->
+      <div id="result-container" class="text-center pt-2">
+        <!-- Loading Spinner -->
+        <div id="loading-spinner" class="hidden">
+          <svg
+            class="animate-spin h-8 w-8 text-(--color-primary) mx-auto"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <p id="loading-message" class="mt-2">
+            Processing your file, please wait...
+          </p>
         </div>
+
+        <!-- Result Message -->
+        <div id="result-message"></div>
       </div>
     </div>
   </div>

@@ -16,6 +16,8 @@ html {
 
   &:where(.dark, .dark *) {
     --bg-paper: #4a4e8d60;
+    --bg-paper-green: #386b4160;
+    --bg-paper-green-highlight: #1e5f2a60;
     --bg-dialog: #2b2c34;
     --bg-dialog-actions: #15151b;
     --color-primary: #c323b0;
@@ -67,4 +69,30 @@ button.loading {
   font-family: "Rock Salt", cursive;
   font-weight: 400;
   font-style: normal;
+}
+
+/* Profile icon colors */
+.profile-icon-1 {
+  background-color: #c323b0;
+}
+.profile-icon-2 {
+  background-color: #146b31;
+}
+.profile-icon-3 {
+  background-color: #9c3911;
+}
+.profile-icon-4 {
+  background-color: #0c6fc0;
+}
+.profile-icon-5 {
+  background-color: #07838b;
+}
+.profile-icon-6 {
+  background-color: #a11337;
+}
+.profile-icon-7 {
+  background-color: #6a428b;
+}
+.profile-icon-8 {
+  background-color: #806939;
 }

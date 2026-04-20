@@ -35,7 +35,7 @@ def setup_database(app):
         db = get_db()
         with db, db.cursor() as cur:
             cur.execute(
-                "CREATE TABLE IF NOT EXISTS users (id VARCHAR(12) PRIMARY KEY, is_disabled bool, contact_id INT, password_hash text, require_pw_update bool DEFAULT true);"
+                "CREATE TABLE IF NOT EXISTS users (username VARCHAR(255) PRIMARY KEY, is_disabled bool, contact_id INT, password_hash text, require_pw_update bool DEFAULT true);"
             )
             cur.execute(
                 "CREATE TABLE IF NOT EXISTS cv (id UUID PRIMARY KEY, data_owner VARCHAR(300), date_uploaded TIMESTAMP, pin_code VARCHAR(6), contact_id INT, settings_json json DEFAULT '{}', cv_json json);"
@@ -45,7 +45,7 @@ def setup_database(app):
             )
             cur.execute(
                 """
-                INSERT INTO users (id, is_disabled, contact_id, password_hash, require_pw_update)
+                INSERT INTO users (username, is_disabled, contact_id, password_hash, require_pw_update)
                 VALUES ('tester', false, 1, 'pass', false)
                 """
             )

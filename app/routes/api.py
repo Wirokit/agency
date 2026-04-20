@@ -307,3 +307,22 @@ def get_privacy_policy():
     privacy_policy = open(current_app.config["PRIVACY_POLICY_PATH"], "r").read()
 
     return privacy_policy
+
+
+@api_bp.route("/users", methods=["GET"])
+@auth_required(modes=["admin"])
+def getUserList():
+    """Returns a list of all Users"""
+
+    db = get_db()
+    with db.cursor() as cur:
+        query = """
+            SELECT username, is_admin, full_name, title, office FROM users
+            WHERE is_disabled is false
+        """
+        cur.execute(query)
+        result = cur.fetchall()
+
+    db.rollback()
+
+    return jsonify({"success": False, "data": result})
