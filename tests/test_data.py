@@ -54,3 +54,15 @@ TEST_CV = CV(
     cv_data=TEST_CV_DATA,
     pin_code="012345",
 )
+
+TEST_ADMIN = {
+    "username": "admin",
+    "is_disabled": False,
+    "contact_id": 1,
+    "password_hash": "",
+    "require_pw_update": False,
+    "is_admin": True,
+    "full_name": "Admin User",
+    "title": "Arbitrator of Authority",
+    "office": "The Matrix",
+}
