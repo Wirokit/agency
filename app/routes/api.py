@@ -1,301 +1,31 @@
+import json
 from flask import Blueprint, jsonify, request, session, current_app
 from app.db import get_db
-from .route_utils import auth_required, get_cv_by_pin, get_user_record
-from app.services.cv import CV_settings, upload_cv
+from app.services.bedrock import (
+    CV_data,
+    CV_education,
+    CV_experience,
+    highlight_skills,
+    translate_cv,
+)
+from app.types.user import UserType
+from .route_utils import auth_required, get_user_by_id
+from app.services.cv import extract_data_from_cv
 from app.services.utils import (
-    allowed_file,
     generate_pin,
 )
-import json
 import uuid
+import secrets
+import string
+from app.services.utils import (
+    bcrypt,
+)
+
+# Set of characters for generating random passwords
+alphabet = string.ascii_letters + string.digits
 
 # Define the Blueprint
 api_bp = Blueprint("api", __name__)
-
-
-@api_bp.route("/cv", methods=["POST"])
-@auth_required(modes=["admin"])
-def upload_file():
-    """
-    Handles file upload, processing, and returns a link to the new file.
-    """
-
-    # Check if a file was sent
-    if "file" not in request.files:
-        return jsonify({"success": False, "error": "No file part in the request."}), 400
-
-    file = request.files["file"]
-    first_name_only = request.values["firstNameOnly"]
-    job_description = request.values["job_description"]
-    extra_profile_text = request.values["extra_profile_text"]
-
-    # Check if the user selected a file
-    if file.filename == "":
-        return jsonify({"success": False, "error": "No file selected."}), 400
-
-    # Check if the file is an allowed type (PDF)
-    if not allowed_file(file.filename):
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": "File type not allowed. Please upload a PDF.",
-                }
-            ),
-            400,
-        )
-
-    # Get contact data for the current user
-    user_data = get_user_record(session.get("user_id"), "contact_id")
-
-    cv = upload_cv(
-        file, settings=CV_settings(first_name_only, job_description, extra_profile_text)
-    )
-
-    db = get_db()  # Get connection from pool
-    with db.cursor() as cur:
-        # Add new CV to the database
-        query = """
-            INSERT INTO cv (id, data_owner, date_uploaded, cv_json, contact_id)
-            VALUES (%s, %s, now(), %s, %s)
-        """
-        cur.execute(
-            query,
-            (
-                cv.id,
-                cv.data_owner,
-                cv.cv_data.toJSON(),
-                user_data["contact_id"],
-            ),
-        )
-        db.commit()
-
-    # Build the URL for the new file
-    # This URL points to our '/view/' endpoint below
-    new_url = f"/view/{cv.id}"
-
-    # Send the success response
-    return jsonify({"success": True, "url": new_url})
-
-
-@api_bp.route("/cv", methods=["GET"])
-@auth_required(modes=["admin"])
-def getCVList():
-    """Returns a list of all CVs"""
-
-    db = get_db()
-    with db.cursor() as cur:
-        query = """
-            SELECT id, data_owner, date_uploaded FROM cv
-            ORDER BY date_uploaded DESC
-        """
-        cur.execute(query)
-        result = cur.fetchall()
-
-    db.rollback()
-
-    return jsonify({"success": False, "data": result})
-
-
-@api_bp.route("/cv/<id>", methods=["GET"])
-@auth_required(modes=["admin", "pin_user"])
-def getCV(id):
-    """Returns a CV based on given ID"""
-
-    db = get_db()
-    with db.cursor() as cur:
-        query = """
-            SELECT * FROM cv
-            WHERE id = %s
-        """
-        cur.execute(query, (id,))
-        result = cur.fetchone()
-
-    db.rollback()
-
-    # If called by a PIN user, ensure the CV is theirs
-    if "pin_code" in session and result["pin_code"] != session["pin_code"]:
-        return jsonify({"success": False, "error": "Access forbidden."}), 403
-
-    return jsonify({"success": False, "data": result})
-
-
-# Used by users that have loggen in via PIN to upload their own CV
-# Settings were previously set by admins in create_pin()
-@api_bp.route("/cv", methods=["PATCH"])
-@auth_required(modes=["pin_user"])
-def update_cv():
-    # Ensure that a file was sent
-    if "file" not in request.files:
-        return jsonify({"success": False, "error": "No file part in the request."}), 400
-
-    db = get_db()
-    with db.cursor() as cur:
-        # Fetch a db entry based on provided id
-        query = """
-            SELECT id, settings_json FROM cv
-            WHERE pin_code = %s
-        """
-        cur.execute(query, (session.get("pin_code"),))
-        result = cur.fetchone()
-
-    db.rollback()
-
-    file = request.files["file"]
-    first_name_only = result["settings_json"]["first_name_only"] or False
-    job_description = result["settings_json"]["job_description"] or []
-    extra_profile_text = result["settings_json"]["extra_profile_text"] or ""
-
-    cv = upload_cv(
-        file, CV_settings(first_name_only, job_description, extra_profile_text)
-    )
-
-    db = get_db()
-    with db.cursor() as cur:
-        # Add new CV to the database
-        query = """
-            UPDATE cv
-            SET date_uploaded = now(), cv_json = %s
-            WHERE pin_code = %s
-        """
-        cur.execute(
-            query,
-            (
-                cv.cv_data.toJSON(),
-                session.get("pin_code"),
-            ),
-        )
-        db.commit()
-
-    # Send the success response
-    return jsonify({"success": True})
-
-
-@api_bp.route("/pin", methods=["POST"])
-@auth_required(modes=["admin"])
-def create_pin():
-    """
-    Creates an empty CV entry with a PIN so a CV can be uploaded by them at a later date
-    """
-
-    user_data = get_user_record(session.get("user_id"), "contact_id")
-
-    db = get_db()
-    with db.cursor() as cur:
-        # Iterate to find a unique PIN code to assign
-        pin = ""
-        failed_attempts = 0
-        while True:
-            pin = generate_pin()
-
-            # Ensure PIN is unique
-            query = "SELECT 1 FROM cv WHERE pin_code = %s"
-            cur.execute(query, (pin,))
-
-            db.rollback()
-
-            row = cur.fetchone()
-            if row is None:
-                break
-            else:
-                failed_attempts += 1
-
-            if failed_attempts == 3:
-                message = "Generating a unique PIN failed 3 times. This shouldn't happen, so something is likely wrong."
-                print(message)
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "error": message,
-                        }
-                    ),
-                    500,
-                )
-
-        # Delete the rows with the provided IDs
-        query = "INSERT INTO cv (id, data_owner, pin_code, contact_id, settings_json) VALUES (%s, %s, %s, %s, %s)"
-        cur.execute(
-            query,
-            (
-                uuid.uuid4(),
-                request.values["recipientIdentifier"],
-                pin,
-                user_data["contact_id"],
-                json.dumps(
-                    {
-                        "first_name_only": request.values["firstNameOnly"] == "true",
-                        "job_description": request.values["job_description"],
-                        "extra_profile_text": request.values["extra_profile_text"],
-                    }
-                ),
-            ),
-        )
-        db.commit()
-
-    # Send the success response
-    return jsonify({"success": True, "pin": pin})
-
-
-@api_bp.route("/cv", methods=["DELETE"])
-@auth_required(modes=["admin", "pin_user"])
-def delete_file():
-    """
-    Handles file deletion.
-    """
-
-    cv_id_list = json.loads(request.values["cvListJson"])
-
-    # If logged in by PIN, ensure the CV being deleted corresponds to the PIN used
-    # assumes first CV if somehow multiple were sent
-    if "pin_code" in session:
-        if len(cv_id_list) > 1:
-            return jsonify({"success": False, "error": "Access forbidden."}), 403
-
-        cv_record = get_cv_by_pin(session["pin_code"])
-        cv_id = cv_id_list[0]
-        if str(cv_record["id"]) != cv_id:
-            return jsonify({"success": False, "error": "Access forbidden."}), 403
-
-    db = get_db()
-    with db.cursor() as cur:
-        # Delete the rows with the provided IDs
-        query = "DELETE FROM cv WHERE id IN %s"
-        cur.execute(query, (tuple(cv_id_list),))
-        db.commit()
-
-    # Send the success response
-    return jsonify({"success": True})
-
-
-@api_bp.route("/cv-edit", methods=["PATCH"])
-@auth_required(modes=["admin"])
-def edit_cv():
-    """
-    Handles json updates when admin edits the cv
-    """
-
-    cv_id = request.values["cv_id"]
-    cv_json = json.loads(request.values["cv_json"])
-
-    db = get_db()
-    with db.cursor() as cur:
-        query = """
-            UPDATE cv
-            SET cv_json = %s
-            WHERE id = %s
-        """
-        cur.execute(
-            query,
-            (
-                json.dumps(cv_json),
-                cv_id,
-            ),
-        )
-        db.commit()
-
-    # Send the success response
-    return jsonify({"success": True})
 
 
 @api_bp.route("/privacy-policy", methods=["GET"])
@@ -309,20 +39,375 @@ def get_privacy_policy():
     return privacy_policy
 
 
-@api_bp.route("/users", methods=["GET"])
+@api_bp.route("/user", methods=["POST"])
 @auth_required(modes=["admin"])
-def getUserList():
-    """Returns a list of all Users"""
+def createUser():
+    """Create a new user"""
+
+    file = None
+    if request.files:
+        file = request.files["file"]
+
+    is_admin = request.values["is_admin"] == "true"
+    username = request.values["username"]
+    full_name = request.values["full_name"]
+    title = request.values["title"]
+    location = request.values["location"]
+    email = request.values["email"]
+    phone = request.values["phone"]
+
+    cv = None
+    if file and file.filename != "":
+        cv = extract_data_from_cv(file)
+
+    user_uuid = uuid.uuid4()
+    password = "".join(secrets.choice(alphabet) for i in range(20))
+    hashed_password = bcrypt.generate_password_hash(password).decode("utf-8")
+
+    db = get_db()
+    with db.cursor() as cur:
+        # Insert the new user into the DB
+        query = """
+            INSERT INTO users (
+                id,
+                username,
+                full_name,
+                title,
+                office,
+                email,
+                phone_num,
+                cv_data,
+                user_type_id,
+                password_hash
+            ) VALUES (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s
+            );
+        """
+        cur.execute(
+            query,
+            (
+                user_uuid,
+                username,
+                full_name,
+                title,
+                location,
+                email,
+                phone,
+                "{}" if cv is None else cv.cv_data.toJSON(),
+                1 if is_admin else 2,
+                hashed_password,
+            ),
+        )
+        db.commit()
+
+    return jsonify({"success": True, "user_uuid": user_uuid, "password": password})
+
+
+@api_bp.route("/external", methods=["POST"])
+@auth_required(modes=["admin"])
+def createTempUser():
+    """Create a temporary user as an external talent"""
+
+    file = request.files["file"]
+    full_name = request.values["full_name"]
+    email = request.values["email"]
+    location = request.values["location"]
+
+    cv = None
+    if file.filename != "":
+        cv = extract_data_from_cv(file)
+
+    user_uuid = uuid.uuid4()
+
+    db = get_db()
+    with db.cursor() as cur:
+        # Iterate to find a unique PIN code to assign
+        pin = ""
+        failed_attempts = 0
+        while True:
+            pin = generate_pin()
+
+            # Ensure PIN is unique
+            query = "SELECT 1 FROM users WHERE pin_code = %s"
+            cur.execute(query, (pin,))
+
+            row = cur.fetchone()
+            if row is None:
+                break
+            else:
+                failed_attempts += 1
+
+            if failed_attempts == 3:
+                db.rollback()
+                message = "Generating a unique PIN failed 3 times. This shouldn't happen, so something is likely wrong."
+                print(message)
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": message,
+                        }
+                    ),
+                    500,
+                )
+
+        db.rollback()
+
+        # Insert the new temp user into the DB
+        query = """
+            INSERT INTO users (
+                id,
+                full_name,
+                email,
+                office,
+                pin_code,
+                cv_data,
+                user_type_id
+            ) VALUES (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                3
+            );
+        """
+        cur.execute(
+            query,
+            (
+                user_uuid,
+                full_name,
+                email,
+                location,
+                pin,
+                "{}" if cv is None else cv.cv_data.toJSON(),
+            ),
+        )
+        db.commit()
+
+    return jsonify({"success": True, "pin": pin, "user_uuid": user_uuid})
+
+
+@api_bp.route("/source-cv/<id>", methods=["PUT"])
+@auth_required(modes=["all"])
+def upload_source_cv(id):
+    # Ensure that a file was sent
+    if "file" not in request.files:
+        return jsonify({"success": False, "error": "No file part in the request."}), 400
+
+    # Ensure that either the user is an admin, or the profile being edited belongs
+    # to the logged in user
+    if (
+        UserType(session["user_type"]) != UserType.ADMIN
+        and str(session["user_id"]) != id
+    ):
+        return jsonify({"success": False, "error": "Access forbidden."}), 403
+
+    cv = extract_data_from_cv(request.files["file"])
 
     db = get_db()
     with db.cursor() as cur:
         query = """
-            SELECT username, is_admin, full_name, title, office FROM users
-            WHERE is_disabled is false
+            UPDATE users
+            SET cv_data = %s
+            WHERE id = %s
         """
-        cur.execute(query)
-        result = cur.fetchall()
+        cur.execute(
+            query,
+            (
+                cv.cv_data.toJSON(),
+                id,
+            ),
+        )
 
-    db.rollback()
+    db.commit()
 
-    return jsonify({"success": False, "data": result})
+    # Send the success response
+    return jsonify({"success": True})
+
+
+@api_bp.route("/source-cv/<id>", methods=["PATCH"])
+@auth_required(modes=["all"])
+def edit_source_cv(id):
+    """Used to edit a user's source CV"""
+
+    # Ensure that either the user is an admin, or the profile being edited belongs
+    # to the logged in user
+    if (
+        UserType(session["user_type"]) != UserType.ADMIN
+        and str(session["user_id"]) != id
+    ):
+        return jsonify({"success": False, "error": "Access forbidden."}), 403
+
+    cv_data = request.values["cv_json"]
+
+    db = get_db()
+    with db.cursor() as cur:
+        query = """
+            UPDATE users
+            SET cv_data = %s
+            WHERE id = %s
+        """
+        cur.execute(
+            query,
+            (
+                cv_data,
+                id,
+            ),
+        )
+
+    db.commit()
+
+    # Send the success response
+    return jsonify({"success": True})
+
+
+@api_bp.route("/profile/<id>", methods=["DELETE"])
+@auth_required(modes=["admin", "external"])
+def delete_user_profile_by_id(id):
+    """Used by external users to delete their own profile"""
+    """Used by admins to delete any profile"""
+
+    if UserType(session["user_type"]) is UserType.EXTERNAL and id != str(
+        session["user_id"]
+    ):
+        return jsonify({"success": False, "error": "Access forbidden."}), 403
+
+    db = get_db()
+    with db.cursor() as cur:
+        query = """
+            DELETE FROM users
+            WHERE id = %s
+        """
+        cur.execute(query, (id,))
+
+    db.commit()
+
+    return jsonify({"success": True})
+
+
+@api_bp.route("/targeted-cv/<source_user_id>", methods=["POST"])
+@auth_required(modes=["admin"])
+def post_targeted_cv(source_user_id):
+    source_user_data = get_user_by_id(source_user_id, "cv_data")
+
+    if not source_user_data["cv_data"]:
+        return jsonify({"success": False, "error": "No source CV exists"}), 424
+
+    cv_data = CV_data.fromJSON(source_user_data["cv_data"])
+
+    job_id = request.values["job_id"]
+    language = request.values["language"]
+    job_description = request.values["job_description"]
+    extra_profile_text = request.values["extra_profile_text"]
+
+    if language:
+        translated_json = translate_cv(language, cv_data)
+        cv_data.profile_texts = translated_json["profile_texts"]
+        cv_data.job_experience = [
+            CV_experience.fromJSON(experience)
+            for experience in translated_json["job_experience"]
+        ]
+        cv_data.education = [
+            CV_education.fromJSON(education)
+            for education in translated_json["education"]
+        ]
+
+    if job_description:
+        skills_json = highlight_skills(cv_data.skills, job_description)
+        cv_data.highlight_skills = skills_json["highlight_skills"]
+
+        for skill in cv_data.highlight_skills:
+            if skill in cv_data.skills:
+                cv_data.skills.remove(skill)
+
+    if extra_profile_text:
+        cv_data.profile_texts.append(extra_profile_text)
+
+    # Create a unique ID for the targeted CV
+    targeted_cv_uuid = uuid.uuid4()
+
+    db = get_db()
+    with db.cursor() as cur:
+        query = """
+            INSERT INTO targeted_cv (id, cv_json, job_identifier, owner_id, handler_id)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+
+        cur.execute(
+            query,
+            (
+                targeted_cv_uuid,
+                cv_data.toJSON(),
+                job_id,
+                source_user_id,
+                session["user_id"],
+            ),
+        )
+
+    db.commit()
+
+    # Send the success response
+    return jsonify({"success": True})
+
+
+@api_bp.route("/targeted-cv/<id>", methods=["PATCH"])
+@auth_required(modes=["admin"])
+def edit_targeted_cv(id):
+    """Used by admins to edit targeted CVs"""
+
+    cv_data = CV_data.fromJSON(json.loads(request.values["cv_json"]))
+
+    db = get_db()
+    with db.cursor() as cur:
+        query = """
+            UPDATE targeted_cv
+            SET cv_json = %s
+            WHERE id = %s
+        """
+
+        cur.execute(
+            query,
+            (
+                cv_data.toJSON(),
+                id,
+            ),
+        )
+
+    db.commit()
+
+    # Send the success response
+    return jsonify({"success": True})
+
+
+@api_bp.route("/targeted-cv/<id>", methods=["DELETE"])
+@auth_required(modes=["admin"])
+def delete_targeted_cv(id):
+    """Used by admins to delete a targeted CV"""
+
+    db = get_db()
+    with db.cursor() as cur:
+        query = """
+            DELETE FROM targeted_cv
+            WHERE id = %s
+        """
+
+        cur.execute(
+            query,
+            (id,),
+        )
+
+    db.commit()
+
+    # Send the success response
+    return jsonify({"success": True})

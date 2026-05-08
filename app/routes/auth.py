@@ -3,7 +3,8 @@ from app.db import get_db
 from app.services.utils import (
     bcrypt,
 )
-from .route_utils import auth_required, get_user_record
+from app.types.user import UserType, get_user_type_by_id
+from .route_utils import auth_required, get_user_by_id, get_user_by_username
 
 # Define the Blueprint
 auth_bp = Blueprint("auth", __name__)
@@ -18,8 +19,8 @@ def check_login():
         return jsonify({"success": False, "error": "Empty body."}), 400
 
     # Get db entry based on given user id
-    user_record = get_user_record(
-        request.values["user"], "password_hash, full_name, is_admin"
+    user_record = get_user_by_username(
+        request.values["user"], "id, password_hash, full_name, user_type_id"
     )
 
     # Check that password matches
@@ -30,9 +31,11 @@ def check_login():
         match = bcrypt.check_password_hash(hashed_password, request.values["password"])
 
         if match:
-            session["user_id"] = request.values["user"]
+            session["user_id"] = user_record["id"]
             session["user_name"] = user_record["full_name"]
-            session["is_admin"] = user_record["is_admin"]
+            session["user_type"] = get_user_type_by_id(
+                user_record["user_type_id"]
+            ).value
             return jsonify({"success": True, "data": {"user": request.values["user"]}})
         else:
             return jsonify({"success": False})
@@ -61,7 +64,7 @@ def check_pin():
     with db.cursor() as cur:
         # Fetch a db entry based on provided PIN
         query = """
-            SELECT id, data_owner FROM cv
+            SELECT id, full_name FROM users
             WHERE pin_code IS NOT NULL AND pin_code = %s
         """
         cur.execute(query, (request.values["pin"],))
@@ -72,10 +75,11 @@ def check_pin():
     if not result:
         return jsonify({"success": False, "error": "Invalid PIN."}), 404
 
-    session["pin_user"] = result["data_owner"]
-    session["pin_code"] = request.values["pin"]
+    session["user_id"] = result["id"]
+    session["user_name"] = result["full_name"]
+    session["user_type"] = UserType.EXTERNAL.value
 
-    return jsonify({"success": True, "data": result})
+    return jsonify({"success": True})
 
 
 @auth_bp.route("/password", methods=["UPDATE"])
@@ -90,7 +94,7 @@ def update_password():
         return jsonify({"success": False, "error": "Empty body."}), 400
 
     # Get db entry based on logged in user
-    user_record = get_user_record(session["user_id"], "password_hash")
+    user_record = get_user_by_id(session["user_id"], "password_hash")
 
     # Check that user exists
     if not user_record:
@@ -111,7 +115,7 @@ def update_password():
         query = """
             UPDATE users
             SET password_hash = %s, require_pw_update = false
-            WHERE username = %s
+            WHERE id = %s
         """
         cur.execute(
             query,

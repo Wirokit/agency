@@ -7,13 +7,13 @@ from dataclasses import dataclass
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
-from .bedrock import CV_data, extract_cv, highlight_skills
+from .bedrock import CV_data, extract_cv
 from .utils import parse_pdf
 
 
 @dataclass
 class CV_settings:
-    first_name_only: bool
+    language: str
     job_description: str
     extra_profile_text: str
 
@@ -25,17 +25,14 @@ class CV_settings:
 class CV:
     id: UUID
     data_owner: str
-    settings: CV_settings
     cv_data: Optional[CV_data] = None
-    pin_code: Optional[str] = None
 
 
-def upload_cv(
+def extract_data_from_cv(
     file: FileStorage,
-    settings: CV_settings,
 ):
     """
-    Handles file upload, processes it into a CV and returns it.
+    Reads a PDF file, processes it into a CV object and returns it.
     """
 
     # Secure the filename (prevents directory traversal attacks)
@@ -49,21 +46,7 @@ def upload_cv(
 
     # Parse PDF into raw string
     pdf_data = parse_pdf(original_filepath)
-    cv_data = extract_cv(pdf_data, first_name_only=settings.first_name_only)
-
-    # Highlight skills based on job description, if provided.
-    if settings.job_description != "":
-        highlight_json = highlight_skills(cv_data.skills, settings.job_description)
-        cv_data.highlight_skills = highlight_json["highlight_skills"]
-
-        # Remove duplicate skills
-        for skill in cv_data.highlight_skills:
-            if skill in cv_data.skills:
-                cv_data.skills.remove(skill)
-
-    # Inject custom profile text into the json object
-    if settings.extra_profile_text != "":
-        cv_data.profile_texts.append(settings.extra_profile_text)
+    cv_data = extract_cv(pdf_data)
 
     # Generate a unique ID for the processed CV
     cv_id = uuid4()
@@ -72,4 +55,4 @@ def upload_cv(
     if os.path.exists(original_filepath):
         os.remove(original_filepath)
 
-    return CV(id=cv_id, data_owner=cv_data.name, settings=settings, cv_data=cv_data)
+    return CV(id=cv_id, data_owner=cv_data.name, cv_data=cv_data)

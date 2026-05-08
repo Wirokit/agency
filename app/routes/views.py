@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, session, request, redirect
+from flask import Blueprint, jsonify, render_template, session, request, redirect
 from app.db import get_db
-from .route_utils import auth_required, get_cv_by_pin, get_user_record, verify_pin
+from app.types.user import UserType, get_user_type_by_id
+from .route_utils import auth_required, get_targeted_cvs_by_id, get_user_by_id
 
 bp_name = "views"
 
@@ -16,7 +17,7 @@ def before_request():
     redirect_to_login = False
 
     if "user_id" in session:
-        user_record = get_user_record(
+        user_record = get_user_by_id(
             session["user_id"],
             "is_disabled, require_pw_update",
         )
@@ -24,13 +25,11 @@ def before_request():
         if not user_record or user_record["is_disabled"]:
             session.clear()
             redirect_to_login = True
-        elif user_record["require_pw_update"]:
+        elif (
+            UserType(session["user_type"]) is not UserType.EXTERNAL
+            and user_record["require_pw_update"]
+        ):
             return render_template("views/update_pw.html", forced=True)
-    elif "pin_code" in session:
-        valid_pin = verify_pin()
-        if not valid_pin:
-            session.clear()
-            redirect_to_login = True
     elif request.endpoint not in ignored_endpoints:
         redirect_to_login = True
 
@@ -54,51 +53,72 @@ def serve_login():
 
 
 @views_bp.route("/", methods=["GET"])
-@auth_required(modes=["admin", "pin_user"])
+@auth_required(modes=["all"])
 def serve_landing():
     """Serves the login and landing pages to the frontend."""
 
-    if "user_id" in session:
+    if UserType(session["user_type"]) in [UserType.ADMIN, UserType.INTERNAL]:
+        db = get_db()
+        with db.cursor() as cur:
+            me_query = """
+                SELECT u.id, u.full_name, u.title, u.office, t.user_type_name
+                FROM users u
+                JOIN user_types t USING (user_type_id)
+                WHERE u.id = %s
+            """
+            cur.execute(me_query, (session["user_id"],))
+            me_result = cur.fetchone()
+
+            internal_query = """
+                SELECT u.id, u.full_name, u.title, u.office, t.user_type_name
+                FROM users u
+                JOIN user_types t USING (user_type_id)
+                WHERE u.id != %s AND u.is_disabled is false AND user_type_id != 3
+                ORDER BY u.full_name ASC
+            """
+            cur.execute(internal_query, (session["user_id"],))
+            internal_result = cur.fetchall()
+
+            if UserType(session["user_type"]) is UserType.ADMIN:
+                external_query = """
+                    SELECT u.id, u.full_name, u.title, u.office, t.user_type_name
+                    FROM users u
+                    JOIN user_types t USING (user_type_id)
+                    WHERE user_type_id = 3
+                """
+                cur.execute(external_query)
+                external_result = cur.fetchall()
+
+        db.rollback()
+
         return render_template(
             "views/landing.html",
-            user_id=session["user_id"],
-            user_is_admin=session["is_admin"],
+            my_profile=me_result,
+            internal_users=internal_result,
+            external_users=external_result or [],
         )
-    elif "pin_code" in session:
-        cv_record = get_cv_by_pin(session["pin_code"])
-        if not cv_record["date_uploaded"]:
-            return render_template("views/pin_upload.html")
-        else:
-            return serve_cv(str(cv_record["id"]))
+    else:
+        return serve_profile()
 
 
-@views_bp.route("/upload", methods=["GET"])
-@auth_required(modes=["admin"])
-def serve_upload():
-    return render_template(
-        "views/upload_page.html",
-    )
-
-
-@views_bp.route("/view", methods=["GET"])
-@auth_required(modes=["admin"])
-def serve_cv_list():
-    """Serves the CV list page to the frontend."""
-
-    return render_template("views/cv_list.html")
-
-
-@views_bp.route("/view/<cv_id>", methods=["GET"])
-@auth_required(modes=["admin", "pin_user"])
-def serve_cv(cv_id):
-    """Serves the CV to the frontend."""
-    """VERSION 2 - All CV data is in JSON format rather than a html file"""
+@views_bp.route("/cv/<cv_id>", methods=["GET"])
+@auth_required(modes=["all"])
+def serve_targeted_cv(cv_id):
+    """Serves a targeted CV to the frontend."""
 
     db = get_db()
     with db.cursor() as cur:
         query = """
-            SELECT cv.data_owner, cv.cv_json, c.name, c.email, c.phone FROM cv
-            JOIN contact_info c ON cv.contact_id = c.id
+            SELECT
+                cv.owner_id,
+                owner.full_name AS owner_name,
+                cv.cv_json,
+                handler.full_name AS handler_name,
+                handler.email AS handler_email,
+                handler.phone_num AS handler_phone
+            FROM targeted_cv cv
+            JOIN users handler ON cv.handler_id = handler.id
+            JOIN users owner ON cv.owner_id = owner.id
             WHERE cv.id = %s
         """
         cur.execute(query, (cv_id,))
@@ -108,22 +128,84 @@ def serve_cv(cv_id):
 
     json = result["cv_json"]
     contact = {
-        "name": result["name"],
-        "email": result["email"],
-        "phone": result["phone"],
+        "name": result["handler_name"],
+        "email": result["handler_email"],
+        "phone": result["handler_phone"],
     }
 
-    user_type = "viewer"
-    if "pin_code" in session:
-        user_type = "pin"
-    elif "user_id" in session:
-        user_type = "admin"
+    return render_template(
+        "views/targeted_cv_view.html",
+        is_users_cv=session["user_id"] == result["owner_id"],
+        owner_name=result["owner_name"],
+        owner_id=result["owner_id"],
+        cv_id=cv_id,
+        cv_data=json,
+        contact=contact,
+    )
+
+
+@views_bp.route("/profile", methods=["GET"])
+@auth_required(modes=["all"])
+def serve_profile():
+    """Serves the user's profile page."""
+
+    return serve_profile_by_id(session["user_id"])
+
+
+@views_bp.route("/profile/<user_id>", methods=["GET"])
+@auth_required(modes=["all"])
+def serve_profile_by_id(user_id):
+    """Serves a specific user's profile page."""
+
+    # If user is external, ensure the profile is theirs
+    if (
+        UserType(session["user_type"]) is UserType.EXTERNAL
+        and user_id != session["user_id"]
+    ):
+        return jsonify({"success": False, "error": "Access forbidden."}), 403
+
+    # Get target user's info
+    user_data = get_user_by_id(
+        user_id,
+        "full_name, title, office, cv_data, user_type_id, pin_code, created_at",
+    )
+    user_type = get_user_type_by_id(user_data["user_type_id"])
+
+    # Internal non-admin users can not view external users
+    if (
+        UserType(session["user_type"]) is UserType.INTERNAL
+        and user_type is UserType.EXTERNAL
+    ):
+        return jsonify({"success": False, "error": "Access forbidden."}), 403
+
+    # Get targeted CVs for the target user
+    targeted_cv_list = get_targeted_cvs_by_id(user_id)
 
     return render_template(
-        "views/cv_view.html",
-        cv_id=cv_id,
-        data_owner=result["data_owner"],
-        json=json,
-        contact=contact,
-        user_type=user_type,
+        "views/user_profile.html",
+        user_type=user_type.value,
+        user_id=user_id,
+        user_name=user_data["full_name"],
+        user_title=user_data["title"] or "",
+        user_office=user_data.get("office", ""),
+        cv_data=user_data.get("cv_data", "{}"),
+        pin_code=user_data.get("pin_code", ""),
+        created_at=user_data["created_at"],
+        targeted_cv_list=targeted_cv_list or [],
     )
+
+
+@views_bp.route("/new-user", methods=["GET"])
+@auth_required(modes=["admin"])
+def serve_user_creation():
+    """Serves the user creation page"""
+
+    return render_template("views/create_user.html")
+
+
+@views_bp.route("/new-external", methods=["GET"])
+@auth_required(modes=["admin"])
+def serve_extarnal_creation():
+    """Serves the external talent creation page"""
+
+    return render_template("views/create_external.html")

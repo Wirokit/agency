@@ -1,0 +1,263 @@
+<style></style>
+
+<!-- Card -->
+{% call ui.modal("upload_dialog", "Upload Source CV", "md") %}
+<div id="upload-body" class="w-full p-4 md:p-6 space-y-4">
+  <form id="upload-form" class="space-y-6">
+    <!-- File Input Area -->
+    {{ ui.pdf_upload() }}
+
+    <!---->
+    {% if user_id == session["user_id"] %}
+    <div
+      id="consent-box"
+      class="consent-check rounded-xs warn-border p-2 text-center"
+    >
+      <p>
+        By submitting your CV and clicking "I Agree," you acknowledge and
+        consent to the terms laid out in our
+        <a
+          id="policy-link"
+          href="#"
+          class="underline primary-color"
+          onclick="openModal('privacy_policy_dialog', event)"
+        >
+          Privacy Policy
+        </a>
+      </p>
+
+      <div class="flex items-center justify-center mt-4">
+        <label
+          for="consent-checkbox"
+          class="flex justify-center items-center justify-center"
+        >
+          <input
+            id="consent-checkbox"
+            type="checkbox"
+            class="w-4 h-4 mr-2 border border-default-medium rounded-xs bg-neutral-secondary-medium focus:ring-2 focus:ring-brand-soft"
+          />
+          I Agree
+        </label>
+      </div>
+    </div>
+    {% else %}
+    <div
+      id="consent-box"
+      class="consent-check rounded-xs warn-border p-2 text-center"
+    >
+      <p>
+        The data owner must give their consent for us to store and process their
+        data!
+      </p>
+
+      <div class="flex items-center justify-center mt-4">
+        <label
+          for="consent-checkbox"
+          class="flex justify-center items-center justify-center"
+        >
+          <input
+            id="consent-checkbox"
+            type="checkbox"
+            class="w-4 h-4 mr-2 border border-default-medium rounded-xs bg-neutral-secondary-medium focus:ring-2 focus:ring-brand-soft"
+          />
+          Consent granted
+        </label>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Submit Button -->
+    <button
+      disabled
+      type="submit"
+      id="submit-button"
+      class="disabled w-full bg-(--color-primary) hover:bg-(--color-primary-hover) text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200"
+    >
+      Upload and Process
+    </button>
+  </form>
+
+  <!-- Result Area (for loading, success, or error) -->
+  <div id="result-container" class="text-center hidden">
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="hidden">
+      <svg
+        class="animate-spin h-8 w-8 text-(--color-primary) mx-auto"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+      <p class="mt-2">Processing your file, please wait...</p>
+    </div>
+
+    <!-- Result Message -->
+    <div id="result-message"></div>
+  </div>
+</div>
+{% endcall %}
+
+<!---->
+{% call ui.modal("privacy_policy_dialog", "Privacy Policy", "3xl") %}
+<div id="privacy-modal-body" class="w-full p-4 md:p-6">
+  <svg
+    class="animate-spin h-8 w-8 text-blue-600 mx-auto"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+  >
+    <circle
+      class="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      stroke-width="4"
+    ></circle>
+    <path
+      class="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+    ></path>
+  </svg>
+</div>
+{% endcall %}
+
+<!-- JavaScript Logic -->
+<script type="module">
+  // Initialize Icons
+  lucide.createIcons();
+
+  const userID = document
+    .getElementById("profile_user_id")
+    .getAttribute("data-other");
+
+  const uploadForm = document.getElementById("upload-form");
+  const resultContainer = document.getElementById("result-container");
+  const consentBox = document.getElementById("consent-box");
+  const consentCheckbox = document.getElementById("consent-checkbox");
+
+  const loadingSpinner = document.getElementById("loading-spinner");
+  const resultMessage = document.getElementById("result-message");
+  const submitButton = document.getElementById("submit-button");
+
+  (async () => {
+    const response = await fetch("/api/privacy-policy", {
+      method: "GET",
+    });
+    const privacyContent = await response.text();
+
+    const privacyPolicyBody = document.getElementById("privacy-modal-body");
+    privacyPolicyBody.innerHTML = privacyContent;
+  })();
+
+  consentCheckbox.addEventListener("change", (e) => {
+    if (e.target.checked) {
+      consentBox.classList.remove("warn-border");
+      submitButton.classList.remove("disabled");
+      submitButton.disabled = false;
+    } else {
+      consentBox.classList.add("warn-border");
+      submitButton.classList.add("disabled");
+      submitButton.disabled = true;
+    }
+  });
+
+  // Handle form submission
+  uploadForm.addEventListener("submit", async (e) => {
+    e.preventDefault(); // Prevent default form submission
+
+    const formData = new FormData(uploadForm);
+    const formObject = Object.fromEntries(formData);
+
+    const file = formObject["file"];
+    if (!file || file["name"] == "") {
+      displayMessage("Please select a PDF file to upload.", "error");
+      return;
+    }
+
+    hideMessage();
+
+    submitButton.textContent = "Uploading...";
+    setLoading(true);
+
+    try {
+      const response = await fetch(`/api/source-cv/${userID}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        // Success! Display the new URL
+        const successHtml = html`
+          <p class="text-green-700 font-medium">File processed successfully!</p>
+          <p class="mt-2 opacity-[0.6]">Loading your new CV...</p>
+        `;
+        displayMessage(successHtml, "success");
+        window.location.reload();
+      } else {
+        // Handle backend error
+        displayMessage(
+          "Error processing your PDF. Please ensure that the PDF is not an image (you can select and copy text from it). If the issue persists, please inform your Wirokit contact.",
+          "error",
+        );
+      }
+    } catch (error) {
+      // Handle network or fetch error
+      console.error("Upload Error:", error);
+      displayMessage(
+        "Failed to connect to the server. Please try again.",
+        "error",
+      );
+    } finally {
+      submitButton.textContent = "Upload and Process";
+      setLoading(false);
+    }
+  });
+
+  // Helper function to display messages
+  function displayMessage(message, type) {
+    resultContainer.classList.remove("hidden");
+
+    if (type === "error") {
+      resultMessage.innerHTML = html`<p class="text-red-400 font-medium">
+        ${message}
+      </p>`;
+    } else {
+      resultMessage.innerHTML = message; // Assumes HTML for success
+    }
+  }
+
+  function setLoading(loading) {
+    submitButton.disabled = loading;
+
+    if (loading) {
+      submitButton.classList.add("disabled");
+      loadingSpinner.classList.remove("hidden");
+      resultContainer.classList.remove("hidden");
+    } else {
+      submitButton.classList.remove("disabled");
+      loadingSpinner.classList.add("hidden");
+    }
+  }
+
+  function hideMessage() {
+    resultContainer.classList.add("hidden");
+    resultMessage.innerHTML = "";
+  }
+</script>

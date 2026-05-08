@@ -1,0 +1,59 @@
+<style></style>
+
+<!-- Card -->
+{% call ui.modal("delete_dialog", "Are you sure?", "md") %}
+<div id="upload-body" class="w-full p-4 md:p-6 space-y-4">
+  <p>
+    This profile and all assosiated data will be <b>permanently</b> deleted and
+    cannot be recovered.
+  </p>
+  <form method="dialog" class="flex gap-2 items-center mb-2">
+    {{ ui.loading_button("delete-confirm-btn", "Delete", "bg-red-700 text-white
+    font-bold hover:bg-red-800 focus:ring-red-300 rounded-sm") }}
+    <button
+      class="py-3 px-4 rounded-lg focus:outline-none focus:ring-4 transition duration-200"
+      onclick="closeModal('delete_dialog', event)"
+    >
+      Cancel
+    </button>
+  </form>
+</div>
+{% endcall %}
+
+<!-- JavaScript Logic -->
+<script type="module">
+  // Initialize Icons
+  lucide.createIcons();
+
+  const userID = document
+    .getElementById("profile_user_id")
+    .getAttribute("data-other");
+
+  const deleteButton = document.getElementById("delete-confirm-btn");
+  deleteButton.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    deleteButton.classList.add("loading");
+
+    try {
+      const response = await fetch(`/api/profile/${userID}`, {
+        method: "DELETE",
+      });
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        if (window.location.pathname == "/profile") {
+          logOut();
+        } else {
+          window.location.href = "/";
+        }
+      }
+    } catch (error) {
+      // Handle network or fetch error
+      console.error("Upload Error:", error);
+      alert(error);
+    } finally {
+      deleteButton.classList.remove("loading");
+    }
+  });
+</script>

@@ -1,0 +1,257 @@
+<!doctype html>
+{% extends 'base.html' %}
+
+<!-- Main Container -->
+{% block content %}
+<style>
+  section {
+    &:not(.dark, .dark *) {
+      background: #f0f0ff;
+      background: linear-gradient(
+        180deg,
+        rgba(240, 240, 255, 1) 0%,
+        rgba(237, 237, 255, 1) 5%,
+        rgba(227, 227, 255, 1) 17%,
+        rgba(222, 222, 255, 1) 32%
+      );
+    }
+  }
+  .consent-container {
+    &:where(.dark, .dark *) {
+      background-color: rgba(9, 5, 45, 0.4);
+    }
+  }
+  .blocked {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+</style>
+
+<div
+  class="w-full p-8 max-w-md card border-t-2 border-default rounded-xl dark:rounded-none"
+>
+  <form id="create-external-form" class="flex flex-col gap-4">
+    <!-- Header -->
+    <p class="text-center opacity-[0.6]">
+      Create a temporary user and a PIN code they can use to log in with. This
+      user will be deleted after 14 days, or once all of their created CVs have
+      expired.
+    </p>
+
+    <label for="full-name">
+      <p class="text-sm font-medium">Full Name</p>
+      <input
+        required
+        type="text"
+        id="full-name"
+        name="full_name"
+        class="w-full border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+      />
+    </label>
+
+    <label for="email">
+      <p class="text-sm font-medium">Email</p>
+      <input
+        required
+        type="text"
+        id="email"
+        name="email"
+        class="w-full border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+      />
+    </label>
+
+    <label for="full-name">
+      <p class="text-sm font-medium">Location (City, Office etc.)</p>
+      <input
+        required
+        autocomplete="off"
+        data-form-type="other"
+        type="text"
+        id="location"
+        name="location"
+        class="w-full border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+      />
+    </label>
+
+    <div
+      class="consent-container w-full p-4 border border-default-medium rounded-xs text-center warn-border"
+    >
+      <h3 class="mb-4 font-medium dark:opacity-[0.9]">
+        Pre-upload the user's CV? If you don't, the user is prompted to upload
+        their CV when they first log in. The user MUST have granted their
+        consent for their data to be processed if you choose to upload!
+      </h3>
+      <label
+        for="consent-check"
+        class="flex p-2 justify-center items-center select-none text-md font-medium hover:cursor-pointer"
+      >
+        <input
+          id="consent-check"
+          type="checkbox"
+          value=""
+          class="w-5 h-5 mr-2 border border-default-medium rounded-xs accent-(--color-funky) focus:ring-2 focus:ring-brand-soft hover:cursor-pointer"
+        />
+        I want to upload
+      </label>
+    </div>
+
+    <div id="consent-block" class="blocked">
+      <!-- File Input Area -->
+      {{ ui.pdf_upload() }}
+    </div>
+
+    <!-- Submit Button -->
+    <button
+      type="submit"
+      id="submit-button"
+      class="w-full bg-(--color-primary) text-white dark:text-inherit font-bold py-3 px-4 rounded-lg hover:bg-(--color-primary-hover) focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200"
+    >
+      Create User
+    </button>
+
+    <div id="result-container" class="hidden text-center pt-2">
+      <!-- Loading Spinner -->
+      <div id="loading-spinner" class="hidden">
+        <svg
+          class="animate-spin h-8 w-8 text-(--color-primary) mx-auto"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        <p class="mt-2">Creating User...</p>
+      </div>
+
+      <!-- Result Message -->
+      <div id="result-message"></div>
+    </div>
+  </form>
+</div>
+
+<script type="module">
+  // Initialize Icons
+  lucide.createIcons();
+
+  let uploadCV = false;
+  const consentBlock = document.getElementById("consent-block");
+  const submitButton = document.getElementById("submit-button");
+
+  const resultContainer = document.getElementById("result-container");
+  const loadingSpinner = document.getElementById("loading-spinner");
+  const resultMessage = document.getElementById("result-message");
+
+  document.getElementById("consent-check").addEventListener("change", (e) => {
+    uploadCV = e.target.checked;
+
+    if (uploadCV) {
+      consentBlock.classList.remove("blocked");
+    } else {
+      consentBlock.classList.add("blocked");
+    }
+  });
+
+  const externalCreationForm = document.getElementById("create-external-form");
+  externalCreationForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    hideMessage();
+
+    const formData = new FormData(e.target);
+    const formObject = Object.fromEntries(formData);
+
+    const file = formObject["file"];
+    if (uploadCV && (!file || file["name"] == "")) {
+      displayMessage("Please select a PDF file to upload.", "error");
+      return;
+    }
+
+    setLoading(true, "Creating PIN...");
+
+    try {
+      // Post the file to the backend's /cv endpoint
+      const response = await fetch("/api/external", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success && result.pin && result.user_uuid) {
+        // Success! Display the new URL
+        const successHtml = html`
+          <p class="text-green-700 dark:text-green-400 font-medium">
+            User created!
+          </p>
+          <p class="opacity-[0.8] mt-2">
+            The user can use this pin code to log in:
+          </p>
+          <p class="block font-mono break-words p-3 rounded-md mt-2 text-3xl">
+            ${result.pin}
+          </p>
+          <a href="/profile/${result.user_uuid}" class="underline">
+            Click here to open their profile
+          </a>
+        `;
+        displayMessage(successHtml, "success");
+      } else {
+        // Handle backend error
+        displayMessage(
+          result.error || "An unknown error occurred on the server.",
+          "error",
+        );
+      }
+    } catch (error) {
+      // Handle network or fetch error
+      console.error("Upload Error:", error);
+      displayMessage(
+        "Failed to connect to the server. Please try again.",
+        "error",
+      );
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  function displayMessage(message, type) {
+    resultContainer.classList.remove("hidden");
+
+    if (type === "error") {
+      resultMessage.innerHTML = html`<p class="text-red-600 font-medium">
+        ${message}
+      </p>`;
+    } else {
+      resultMessage.innerHTML = message; // Assumes HTML for success
+    }
+  }
+
+  function hideMessage() {
+    resultContainer.classList.add("hidden");
+    resultMessage.innerHTML = "";
+  }
+
+  function setLoading(loading) {
+    submitButton.disabled = loading;
+
+    if (loading) {
+      submitButton.classList.add("disabled");
+      loadingSpinner.classList.remove("hidden");
+      resultContainer.classList.remove("hidden");
+    } else {
+      submitButton.classList.remove("disabled");
+      loadingSpinner.classList.add("hidden");
+    }
+  }
+</script>
+{% endblock %}

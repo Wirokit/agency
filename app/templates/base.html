@@ -32,15 +32,6 @@
           margin: auto;
         }
       }
-      body {
-        background-color: var(--color-slate-100);
-        &:where(.dark, .dark *) {
-          background-color: unset;
-          background-image: url("{{url_for('static',filename='images/bg.jpg')}}");
-          background-repeat: no-repeat;
-          background-size: 100% auto;
-        }
-      }
       section {
         padding: 2rem 0;
       }
@@ -66,18 +57,7 @@
       }
     </style>
   </head>
-  <body
-    class="font-sans antialiased dark:text-white"
-    onscroll="handleScroll(event)"
-  >
-    <img
-      class="fixed top-[20%] left-[-10%] w-[50%] z-[-100]"
-      src="{{url_for('static',filename='images/w-bg.png')}}"
-    />
-    <img
-      class="fixed bottom-[20%] right-[-10%] w-[50%] z-[-100]"
-      src="{{url_for('static',filename='images/w-bg.png')}}"
-    />
+  <body class="font-sans antialiased dark:text-white">
     {% import "macros.html" as ui %}
 
     <nav id="top-nav" class="bg-inherit fixed w-full z-20 top-0 start-0">
@@ -100,33 +80,16 @@
               AGENCY
             </span>
           </a>
-          {% if request.path != "/" %}
-          <span>-</span>
+        </div>
 
-          {% if request.path == "/upload" %}
-          <span class="flex gap-4 items-center">Upload CV</a>
-          {% elif request.path.startswith("/view") %}
-          <a href="/view" class="flex gap-4 items-center">CV List</a>
-          {% endif %}
-          <!---->
-          {% if request.path.startswith("/view/") %}
-          <span>-</span>
-          <span class="flex gap-4 items-center">{{data_owner}}</span>
-          {% endif %}
-          <!---->
-          {% endif %}
-        </div>
-        <div>
-          <button
-            id="profile-icon"
-            type="button"
-            class="flex items-center justify-center text-center w-[35px] h-[35px] text-white bg-(--color-primary) rounded-[90px] hover:cursor-pointer"
-            onclick="toggleMenu(event)"
-          >
-            {{session['user_name'][0] if session['user_name'] else
-            session["pin_user"][0]}}
-          </button>
-        </div>
+        <button
+          id="profile-icon"
+          type="button"
+          class="flex items-center justify-center font-sans font-normal text-center w-[35px] h-[35px] text-white bg-(--color-primary) rounded-[90px] hover:cursor-pointer"
+        >
+          {{session['user_name'][0] if session['user_name'] else
+          session["pin_user"][0]}}
+        </button>
 
         <div
           id="user-menu"
@@ -134,12 +97,12 @@
         >
           <div id="menu-content">
             <div class="hand-written text-sm text-center mb-2">
-              {{"ADMIN" if session['user_name'] else "GUEST"}}
+              {{session["user_type"].upper()}}
             </div>
             <div class="flex items-center px-4 gap-2 mb-3">
               <span
                 id="menu-profile-icon"
-                class="flex items-center justify-center text-center w-[40px] h-[40px] text-white bg-(--color-primary) rounded-[90px]"
+                class="flex items-center justify-center font-sans font-normal text-center w-[40px] h-[40px] text-white bg-(--color-primary) rounded-[90px]"
               >
                 {{session['user_name'][0] if session['user_name'] else
                 session["pin_user"][0]}}
@@ -153,9 +116,9 @@
             <hr class="border-gray-300" />
 
             <button
+              id="open-theme-selection-btn"
               type="button"
               class="flex items-center py-3 px-4 w-full text-start gap-3 justify-between"
-              onclick="toggleThemeSelector(event)"
             >
               <div class="flex dark:hidden items-center gap-3">
                 <i data-lucide="sun"></i>
@@ -179,9 +142,9 @@
 
           <div id="theme-selector" class="hidden">
             <button
+              id="close-theme-selector-btn"
               type="button"
               class="flex items-center py-3 px-4 w-full text-start gap-3 font-medium"
-              onclick="toggleThemeSelector(event)"
             >
               <i data-lucide="arrow-left"></i>
               Theme
@@ -193,7 +156,6 @@
               id="btn-theme-default"
               type="button"
               class="flex items-center py-3 px-4 w-full text-start gap-3"
-              onclick="changeTheme(event, 'system')"
             >
               <i data-lucide="check" class="invisible"></i>
               <p>
@@ -205,7 +167,6 @@
               id="btn-theme-dark"
               type="button"
               class="flex items-center py-3 px-4 w-full text-start gap-3"
-              onclick="changeTheme(event, 'dark')"
             >
               <i data-lucide="check" class="invisible"></i>
               Dark theme
@@ -215,7 +176,6 @@
               id="btn-theme-light"
               type="button"
               class="flex items-center py-3 px-4 w-full text-start gap-3"
-              onclick="changeTheme(event, 'light')"
             >
               <i data-lucide="check" class="invisible"></i>
               Light theme
@@ -224,7 +184,7 @@
         </div>
       </div>
     </nav>
-    <section class="base-height flex justify-center p-0 mt-[60px]">
+    <section class="base-height flex justify-center mt-[60px]">
       <header>{% block header %}{% endblock %}</header>
       {% for message in get_flashed_messages() %}
       <div class="flash">{{ message }}</div>
@@ -232,9 +192,14 @@
     </section>
 
     <script src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
-    <script>
+    <script type="module">
       // Initialize Icons
       lucide.createIcons();
+
+      // Helper function for HTML strings
+      const html = (strings, ...values) =>
+        String.raw({ raw: strings }, ...values);
+      window.html = html;
 
       const prefersDarkMode = window.matchMedia(
         "(prefers-color-scheme: dark)",
@@ -264,14 +229,15 @@
       const menuDefaultContent = document.getElementById("menu-content");
       const menuThemeSelector = document.getElementById("theme-selector");
 
-      function handleScroll(event) {
+      document.addEventListener("scroll", (e) => {
         if (window.scrollY > 5) {
           nav.classList.add("scrolled");
         } else {
           nav.classList.remove("scrolled");
         }
-      }
+      });
 
+      // Toggle menu with the top-right icon
       function toggleMenu(e) {
         e.preventDefault();
 
@@ -286,6 +252,9 @@
           menuDefaultContent.classList.remove("hidden");
         }
       }
+      document
+        .getElementById("profile-icon")
+        .addEventListener("click", toggleMenu);
 
       function toggleThemeSelector(e) {
         e.preventDefault();
@@ -298,6 +267,12 @@
           menuDefaultContent.classList.remove("hidden");
         }
       }
+      document
+        .getElementById("open-theme-selection-btn")
+        .addEventListener("click", toggleThemeSelector);
+      document
+        .getElementById("close-theme-selector-btn")
+        .addEventListener("click", toggleThemeSelector);
 
       function changeTheme(e, mode) {
         e.preventDefault();
@@ -319,6 +294,15 @@
 
         window.location.reload();
       }
+      document
+        .getElementById("btn-theme-default")
+        .addEventListener("click", (e) => changeTheme(e, "system"));
+      document
+        .getElementById("btn-theme-dark")
+        .addEventListener("click", (e) => changeTheme(e, "dark"));
+      document
+        .getElementById("btn-theme-light")
+        .addEventListener("click", (e) => changeTheme(e, "light"));
 
       // If menu is open, close the menu when user clicks somewhere else
       window.addEventListener("mouseup", (e) => {
@@ -347,6 +331,41 @@
           console.error("Logout error:", e);
         }
       }
+      window.logOut = logOut; // Set logOut as a global function
+
+      /*
+        Modal handlers
+      */
+      let initialDialogContent;
+      let modalOpen = false;
+
+      function openModal(id, e) {
+        e?.preventDefault();
+
+        modalOpen = true;
+        document.body.classList.add("modal-open");
+
+        const modal = document.getElementById(id);
+        initialDialogContent = modal.innerHTML;
+
+        modal.showModal();
+        modal.classList.remove("hidden");
+      }
+      window.openModal = openModal;
+
+      function closeModal(id, e) {
+        e?.preventDefault();
+
+        modalOpen = false;
+        document.body.classList.remove("modal-open");
+
+        const modal = document.getElementById(id);
+        modal.innerHTML = initialDialogContent;
+
+        modal.close();
+        modal.classList.add("hidden");
+      }
+      window.closeModal = closeModal;
     </script>
   </body>
 </html>

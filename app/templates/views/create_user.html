@@ -1,0 +1,331 @@
+<!doctype html>
+{% extends 'base.html' %}
+
+<!-- Main Container -->
+{% block content %}
+<style>
+  section {
+    &:not(.dark, .dark *) {
+      background: #f0f0ff;
+      background: linear-gradient(
+        180deg,
+        rgba(240, 240, 255, 1) 0%,
+        rgba(237, 237, 255, 1) 5%,
+        rgba(227, 227, 255, 1) 17%,
+        rgba(222, 222, 255, 1) 32%
+      );
+    }
+  }
+  .consent-container {
+    &:where(.dark, .dark *) {
+      background-color: rgba(9, 5, 45, 0.4);
+    }
+  }
+  .blocked {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+</style>
+
+<div
+  class="w-full p-8 max-w-md card border-t-2 border-default rounded-xl dark:rounded-none space-y-4"
+>
+  <!-- Header -->
+  <p class="text-center opacity-[0.6]">
+    Create an admin user or an internal user that can see the entire Wirokit
+    team.
+  </p>
+
+  <div class="relative flex flex-col">
+    <label for="user-type" class="select-none text-sm font-medium">
+      User Type
+    </label>
+    <select name="user_type" id="user-type">
+      <option value="internal">Internal</option>
+      <option value="admin">Admin</option>
+    </select>
+  </div>
+
+  <form id="form" class="flex flex-col gap-4">
+    <label for="username">
+      <p class="text-sm font-medium">Username (Used to login)</p>
+      <input
+        required
+        autocomplete="off"
+        data-form-type="other"
+        type="text"
+        id="username"
+        name="username"
+        class="w-full border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+      />
+    </label>
+
+    <label for="full-name">
+      <p class="text-sm font-medium">Full Name</p>
+      <input
+        required
+        type="text"
+        id="full-name"
+        name="full_name"
+        class="w-full border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+      />
+    </label>
+
+    <label for="title">
+      <p class="text-sm font-medium">Title</p>
+      <input
+        required
+        type="text"
+        id="title"
+        name="title"
+        class="w-full border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+      />
+    </label>
+
+    <label for="full-name">
+      <p class="text-sm font-medium">Location (City, Office etc.)</p>
+      <input
+        required
+        autocomplete="off"
+        data-form-type="other"
+        type="text"
+        id="location"
+        name="location"
+        class="w-full border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+      />
+    </label>
+
+    <div id="admin-block" class="hidden flex flex-col gap-4">
+      <label for="email" class="text-sm font-medium">
+        Email
+        <input
+          type="text"
+          id="email"
+          name="email"
+          class="w-full border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+        />
+      </label>
+
+      <label for="phone" class="text-sm font-medium">
+        Phone Number
+        <input
+          type="text"
+          id="phone"
+          name="phone"
+          class="w-full border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+        />
+      </label>
+    </div>
+
+    <div class="mt-2">
+      <label
+        for="upload-check"
+        class="flex justify-start items-center select-none text-md font-medium hover:cursor-pointer w-fit"
+      >
+        <input
+          id="upload-check"
+          type="checkbox"
+          value=""
+          class="w-5 h-5 mr-2 border border-default-medium rounded-xs accent-(--color-funky) focus:ring-2 focus:ring-brand-soft hover:cursor-pointer"
+        />
+        Pre-upload the user's CV?
+      </label>
+    </div>
+
+    <div id="upload-block" class="blocked">
+      <!-- File Input Area -->
+      {{ ui.pdf_upload() }}
+    </div>
+
+    <!-- Submit Button -->
+    <button
+      type="submit"
+      id="submit-button"
+      class="w-full bg-(--color-primary) text-white dark:text-inherit font-bold py-3 px-4 rounded-lg hover:bg-(--color-primary-hover) focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200"
+    >
+      Create User
+    </button>
+
+    <div id="result-container" class="hidden text-center pt-2">
+      <!-- Loading Spinner -->
+      <div id="loading-spinner" class="hidden">
+        <svg
+          class="animate-spin h-8 w-8 text-(--color-primary) mx-auto"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        <p class="mt-2">Creating User...</p>
+      </div>
+
+      <!-- Result Message -->
+      <div id="result-message"></div>
+    </div>
+  </form>
+</div>
+
+<script type="module">
+  // Initialize Icons
+  lucide.createIcons();
+
+  let createAdmin = false;
+  let uploadCV = false;
+
+  const adminBlock = document.getElementById("admin-block");
+  const uploadBlock = document.getElementById("upload-block");
+  const submitButton = document.getElementById("submit-button");
+
+  const resultContainer = document.getElementById("result-container");
+  const loadingSpinner = document.getElementById("loading-spinner");
+  const resultMessage = document.getElementById("result-message");
+
+  document.getElementById("user-type").addEventListener("change", (e) => {
+    createAdmin = e.target.value == "admin";
+
+    if (createAdmin) {
+      adminBlock.classList.remove("hidden");
+    } else {
+      adminBlock.classList.add("hidden");
+    }
+  });
+
+  document.getElementById("upload-check").addEventListener("change", (e) => {
+    uploadCV = e.target.checked;
+
+    if (uploadCV) {
+      uploadBlock.classList.remove("blocked");
+    } else {
+      uploadBlock.classList.add("blocked");
+    }
+  });
+
+  const form = document.getElementById("form");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    hideMessage();
+
+    const formData = new FormData(e.target);
+    const formObject = Object.fromEntries(formData);
+    formData.append("is_admin", createAdmin);
+
+    if (
+      !formObject["username"] ||
+      !formObject["full_name"] ||
+      !formObject["title"] ||
+      !formObject["location"]
+    ) {
+      displayMessage("Please fill all required fields.", "error");
+    }
+
+    if (createAdmin && (!formObject["email"] || !formObject["phone"])) {
+      displayMessage(
+        "Email and phone number are required for admins.",
+        "error",
+      );
+    }
+
+    const file = formObject["file"];
+    if (uploadCV && (!file || file["name"] == "")) {
+      displayMessage("Please select a PDF file to upload.", "error");
+      return;
+    } else if (!uploadCV) {
+      formData.delete("file");
+    }
+
+    setLoading(true, "Creating PIN...");
+
+    try {
+      // Post the file to the backend's /cv endpoint
+      const response = await fetch("/api/user", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (
+        response.ok &&
+        result.success &&
+        result.user_uuid &&
+        result.password
+      ) {
+        // Success! Display the new URL
+        const successHtml = html`
+          <p class="text-green-700 dark:text-green-400 font-medium">
+            User created!
+          </p>
+          <p class="opacity-[0.8] mt-2">
+            First-time login password<br />(Will not be shown again):
+          </p>
+          <p class="block font-mono break-words p-3 rounded-md mt-2 text-3xl">
+            ${result.password}
+          </p>
+          <a href="/profile/${result.user_uuid}" class="underline">
+            Click here to open their profile
+          </a>
+        `;
+        displayMessage(successHtml, "success");
+      } else {
+        // Handle backend error
+        displayMessage(
+          result.error || "An unknown error occurred on the server.",
+          "error",
+        );
+      }
+    } catch (error) {
+      // Handle network or fetch error
+      console.error("Upload Error:", error);
+      displayMessage(
+        "Failed to connect to the server. Please try again.",
+        "error",
+      );
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  function displayMessage(message, type) {
+    resultContainer.classList.remove("hidden");
+
+    if (type === "error") {
+      resultMessage.innerHTML = html`<p class="text-red-600 font-medium">
+        ${message}
+      </p>`;
+    } else {
+      resultMessage.innerHTML = message; // Assumes HTML for success
+    }
+  }
+
+  function hideMessage() {
+    resultContainer.classList.add("hidden");
+    resultMessage.innerHTML = "";
+  }
+
+  function setLoading(loading) {
+    submitButton.disabled = loading;
+
+    if (loading) {
+      submitButton.classList.add("disabled");
+      loadingSpinner.classList.remove("hidden");
+      resultContainer.classList.remove("hidden");
+    } else {
+      submitButton.classList.remove("disabled");
+      loadingSpinner.classList.add("hidden");
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,185 @@
+<style></style>
+
+{% call ui.modal("new_targeted_cv_dialog", "New Targeted CV", "md") %}
+<div id="targeted-cv-dialog-body" class="w-full p-4 md:p-6 space-y-4">
+  <form id="targeted-cv-form" class="space-y-6">
+    <!-- Job ID -->
+    <div>
+      <label for="job-id" class="text-sm font-medium text-heading">
+        Job ID*
+      </label>
+      <input
+        id="job-id"
+        name="job_id"
+        required
+        class="w-full mb-4 border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+        placeholder="e.g. Tester for Company Y"
+      />
+    </div>
+
+    <!-- Language selector -->
+    <div class="space-y-4">
+      <div class="relative flex flex-col gap-2">
+        <label for="language-selector" class="select-none text-sm font-medium">
+          Language
+        </label>
+        <select name="language" id="language-selector">
+          <option value="">Original (do not translate)</option>
+          <option value="finnish">Finnish</option>
+          <option value="english">English</option>
+        </select>
+      </div>
+
+      <!-- Keywords / Job description -->
+      <div>
+        <label for="keyword-list" class="text-sm font-medium text-heading">
+          Keywords / Job description
+        </label>
+        <textarea
+          id="keyword-list"
+          name="job_description"
+          class="w-full mb-4 border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+          placeholder="e.g. Web application built with custom web components, a Python server and a PostgreSQL database."
+        ></textarea>
+      </div>
+
+      <!-- custom profile text -->
+      <div>
+        <label for="profile-text" class="text-sm font-medium text-heading">
+          Custom profile text (injected at the end of the profile section - NOT
+          translated)
+        </label>
+        <textarea
+          id="profile-text"
+          name="extra_profile_text"
+          class="w-full mb-4 border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+          placeholder="e.g. Curious, detail-oriented, and quick to learn, Sami brings fresh perspective and solid energy to any development team!"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button
+      type="submit"
+      id="targeted-submit-button"
+      class="w-full bg-(--color-primary) hover:bg-(--color-primary-hover) text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-200"
+    >
+      Create Targeted CV
+    </button>
+  </form>
+
+  <!-- Result Area (for loading, success, or error) -->
+  <div id="targeted-result-container" class="text-center hidden">
+    <!-- Loading Spinner -->
+    <div id="targeted-loading-spinner" class="hidden">
+      <svg
+        class="animate-spin h-8 w-8 text-(--color-primary) mx-auto"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+      <p class="mt-2">Processing targeted CV...</p>
+    </div>
+
+    <!-- Result Message -->
+    <div id="targeted-result-message"></div>
+  </div>
+</div>
+{% endcall %}
+
+<!-- JavaScript Logic -->
+<script type="module">
+  // Initialize Icons
+  lucide.createIcons();
+
+  const sourceUserID = document
+    .getElementById("profile_user_id")
+    .getAttribute("data-other");
+  const form = document.getElementById("targeted-cv-form");
+  const submitButton = document.getElementById("targeted-submit-button");
+  const resultContainer = document.getElementById("targeted-result-container");
+  const loadingSpinner = document.getElementById("targeted-loading-spinner");
+  const resultMessage = document.getElementById("targeted-result-message");
+
+  // Handle form submission
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault(); // Prevent default form submission
+
+    const formData = new FormData(form);
+    const formObject = Object.fromEntries(formData);
+
+    hideMessage();
+    setLoading(true);
+
+    try {
+      const response = await fetch(`/api/targeted-cv/${sourceUserID}`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        closeModal("new_targeted_cv_dialog");
+        window.location.reload();
+      } else {
+        // Handle backend error
+        displayMessage(
+          `Error creating targeted CV${result.error ? `: ${error}` : ""}`,
+          "error",
+        );
+      }
+    } catch (error) {
+      // Handle network or fetch error
+      console.error("Upload Error:", error);
+      displayMessage(`Error creating targeted CV: ${error}`, "error");
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  // Helper function to display messages
+  function displayMessage(message, type) {
+    resultContainer.classList.remove("hidden");
+
+    if (type === "error") {
+      resultMessage.innerHTML = html`<p class="text-red-400 font-medium">
+        ${message}
+      </p>`;
+    } else {
+      resultMessage.innerHTML = message; // Assumes HTML for success
+    }
+  }
+
+  function setLoading(loading) {
+    submitButton.disabled = loading;
+
+    if (loading) {
+      submitButton.classList.add("disabled");
+      loadingSpinner.classList.remove("hidden");
+      resultContainer.classList.remove("hidden");
+    } else {
+      submitButton.classList.remove("disabled");
+      loadingSpinner.classList.add("hidden");
+    }
+  }
+
+  function hideMessage() {
+    resultContainer.classList.add("hidden");
+    resultMessage.innerHTML = "";
+  }
+</script>

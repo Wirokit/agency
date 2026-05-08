@@ -58,7 +58,8 @@ class CV_data:
                     vars(experience) for experience in self.job_experience
                 ],
                 "education": [vars(education) for education in self.education],
-            }
+            },
+            ensure_ascii=False,
         )
 
     def fromJSON(json):
@@ -78,10 +79,10 @@ class CV_data:
         )
 
 
-def _get_extract_prompt(cv_text, first_name_only):
+def _get_extract_prompt(cv_text):
     return f"""
         Task: Extract the following CV information from the text:
-        - "name": The {"first" if first_name_only else "full"} name of the CV owner.
+        - "name": The full name of the CV owner.
         - "title": The job title of the CV owner.
         - "profile_texts": An array of profile paragraphs.
         - "skills": Array of skills as discrete, one-to-two-word Sentence Case 'tags.' Remove redundant words like 'knowledge of,' 'processes,' or 'experience in.'
@@ -103,6 +104,21 @@ def _get_highlight_prompt(skills, job_description):
 
         Job Description: ""\"{job_description}""\"
         Master Skill List: ""\"{json.dumps(skills)}""\"
+    """
+
+
+def _get_translation_prompt(language: str, json_str: str):
+    return f"""
+        I am going to provide a JSON object containing the following:
+        - "profile_texts": An array of profile paragraphs.
+        - "job_experience": Array of objects containing a job title (as title), company name (as company_name), time period (as time_period) and description of a listed work experience.
+        - "education": Array of objects containing a degree, school, time period (as time_period) and description of a listed education.
+
+        Your task is to translate them to {language}. Do not translate technical terms such as "frontend" and "backend", and make necessary changes to keep the translations appropriate for a CV.
+
+        Return the translated values in an identical JSON object.
+
+        JSON object: ""\"{json_str}""\"
     """
 
 
@@ -148,8 +164,8 @@ def _query_bedrock_for_json(prompt):
         return None
 
 
-def extract_cv(cv_data, first_name_only=True):
-    prompt = _get_extract_prompt(cv_data, first_name_only)
+def extract_cv(cv_data):
+    prompt = _get_extract_prompt(cv_data)
     json = _query_bedrock_for_json(prompt)
 
     return CV_data(
@@ -181,4 +197,15 @@ def extract_cv(cv_data, first_name_only=True):
 
 def highlight_skills(skills, job_description):
     prompt = _get_highlight_prompt(skills, job_description)
+    return _query_bedrock_for_json(prompt)
+
+
+def translate_cv(language: str, cv_data: CV_data):
+    json_obj = {
+        "profile_texts": cv_data.profile_texts,
+        "job_experience": [vars(experience) for experience in cv_data.job_experience],
+        "education": [vars(education) for education in cv_data.education],
+    }
+
+    prompt = _get_translation_prompt(language, json.dumps(json_obj, ensure_ascii=False))
     return _query_bedrock_for_json(prompt)

@@ -38,7 +38,7 @@
       <button
         type="button"
         class="accordion-button flex items-center w-full p-5 gap-3"
-        onclick="toggleAccordion(event, 'info-wrapper')"
+        onclick="toggleCvAccordion(event, 'info-wrapper')"
       >
         <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
         <span>Basic Info</span>
@@ -56,7 +56,7 @@
             name="name"
             type="text"
             class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full max-w-[300px]"
-            value="{{json.name}}"
+            value="{{cv_data.name}}"
           />
         </div>
 
@@ -71,7 +71,7 @@
             id="info_title"
             type="text"
             class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full max-w-[300px]"
-            value="{{json.title}}"
+            value="{{cv_data.title}}"
           />
         </div>
       </div>
@@ -80,14 +80,14 @@
       <button
         type="button"
         class="accordion-button flex items-center w-full p-5 gap-3"
-        onclick="toggleAccordion(event, 'profile-wrapper')"
+        onclick="toggleCvAccordion(event, 'profile-wrapper')"
       >
         <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
         <span>Profile Paragraphs</span>
       </button>
       <div id="profile-wrapper" class="hidden p-4 px-12 space-y-4">
         <div id="profile-list" class="space-y-4">
-          {% for profile in json.profile_texts %}
+          {% for profile in cv_data.get("profile_texts", []) %}
           <div id="container-profile-{{loop.index}}" class="flex gap-2">
             <!-- prettier-ignore -->
             <textarea
@@ -105,7 +105,7 @@
               type="button"
               id="delete-experience-{{loop.index}}"
               class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
-              onclick="handleDeleteEvent(event, 'profile-list')"
+              onclick="deleteCvElement(event, 'profile-list')"
             >
               <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
             </button>
@@ -116,7 +116,6 @@
           <button
             type="button"
             id="add-profile-btn"
-            onclick="handleAddProfile(event)"
             class="flex w-full items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-3"
           >
             <i data-lucide="plus" class="text-green-600 w-5 h-5"></i>
@@ -137,7 +136,7 @@
       <button
         type="button"
         class="accordion-button flex items-center w-full p-5 gap-3"
-        onclick="toggleAccordion(event, 'skills-wrapper')"
+        onclick="toggleCvAccordion(event, 'skills-wrapper')"
       >
         <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
         <span>Skills</span>
@@ -150,11 +149,11 @@
         </p>
         <div id="skill-list">
           <!-- Highlight -->
-          {% for skill in json.highlight_skills %}
+          {% for skill in cv_data.get("highlight_skills", []) %}
           <div class="inline-flex items-center w-fit">
             <span
               class="skill-tag highlight hover:cursor-pointer"
-              onclick="toggleSkillHighlight(this)"
+              onclick="toggleCvSkillHighlight(this)"
               unselectable="on"
               onselectstart="return false;"
               onmousedown="return false;"
@@ -164,18 +163,18 @@
             <button
               type="button"
               class="ml-[-15px] rounded-xl bg-red-600"
-              onclick="handleDeleteEvent(event)"
+              onclick="deleteCvElement(event)"
             >
               <i data-lucide="x" class="text-white w-4 h-4"></i>
             </button>
           </div>
           {% endfor %}
           <!-- Normal -->
-          {% for skill in json.skills %}
+          {% for skill in cv_data.get("skills", []) %}
           <div class="inline-flex items-center w-fit">
             <span
               class="skill-tag hover:cursor-pointer"
-              onclick="toggleSkillHighlight(this)"
+              onclick="toggleCvSkillHighlight(this)"
               unselectable="on"
               onselectstart="return false;"
               onmousedown="return false;"
@@ -185,7 +184,7 @@
             <button
               type="button"
               class="ml-[-15px] rounded-lg bg-red-600"
-              onclick="handleDeleteEvent(event)"
+              onclick="deleteCvElement(event)"
             >
               <i data-lucide="x" class="text-white w-4 h-4"></i>
             </button>
@@ -199,12 +198,12 @@
               id="skill-input"
               type="text"
               class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm"
-              onchange="handleSkillAddEvent(event)"
+              onchange="addCvSkill(event)"
             />
             <button
               type="button"
               id="add-skill-btn"
-              onclick="handleSkillAddEvent(event)"
+              onclick="addCvSkill(event)"
             >
               <i data-lucide="plus" class="text-green-600 w-5 h-5"></i>
             </button>
@@ -216,14 +215,14 @@
       <button
         type="button"
         class="accordion-button flex items-center w-full p-5 gap-3"
-        onclick="toggleAccordion(event, 'work-wrapper')"
+        onclick="toggleCvAccordion(event, 'work-wrapper')"
       >
         <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
         <span>Work Experience</span>
       </button>
       <div id="work-wrapper" class="hidden wrapper pb-4 px-12 space-y-4">
         <div id="experience-list" class="space-y-8">
-          {% for experience in json.job_experience %}
+          {% for experience in cv_data.get("job_experience", []) %}
           <div class="flex gap-2">
             <div class="w-full space-y-2">
               <div class="relative w-full pt-2">
@@ -297,7 +296,7 @@
               type="button"
               id="delete-experience-1"
               class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
-              onclick="handleDeleteEvent(event, 'experience-list')"
+              onclick="deleteCvElement(event, 'experience-list')"
             >
               <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
             </button>
@@ -308,8 +307,7 @@
         <div class="flex w-full gap-2">
           <button
             type="button"
-            id="add-profile-btn"
-            onclick="experienceAddEvent(event)"
+            id="add-experience-btn"
             class="flex w-full items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-2 text-green-600"
           >
             <i data-lucide="plus" class="w-5 h-5"></i>
@@ -330,14 +328,14 @@
       <button
         type="button"
         class="accordion-button flex items-center w-full p-5 gap-3"
-        onclick="toggleAccordion(event, 'edu-wrapper')"
+        onclick="toggleCvAccordion(event, 'edu-wrapper')"
       >
         <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
         <span>Education</span>
       </button>
       <div id="edu-wrapper" class="hidden wrapper pb-4 px-12 space-y-4">
         <div id="edu-list" class="space-y-8">
-          {% for education in json.education %}
+          {% for education in cv_data.get("education", []) %}
           <div class="flex gap-2">
             <div class="w-full space-y-2">
               <div class="relative w-full pt-2">
@@ -411,7 +409,7 @@
               type="button"
               id="delete-edu-1"
               class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
-              onclick="handleDeleteEvent(event, 'edu-list')"
+              onclick="deleteCvElement(event, 'edu-list')"
             >
               <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
             </button>
@@ -422,8 +420,7 @@
         <div class="flex w-full gap-2">
           <button
             type="button"
-            id="add-profile-btn"
-            onclick="educationAddEvent(event)"
+            id="add-education-btn"
             class="flex w-full items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-2 text-green-600"
           >
             <i data-lucide="plus" class="w-5 h-5"></i>
@@ -446,9 +443,8 @@
     <div
       class="flex items-center gap-2 modal-action p-6 border-default border-t-2 dark:bg-(--bg-dialog-actions)"
     >
-      {{ ui.loading_button("edit-confirm-btn", "submitChanges(event)", "Save",
-      "bg-green-600 text-white font-bold hover:bg-green-800 focus:ring-green-300
-      rounded-sm") }}
+      {{ ui.loading_button("edit-confirm-btn", "Save", "bg-green-600 text-white
+      font-bold hover:bg-green-800 focus:ring-green-300 rounded-sm") }}
       <button
         type="button"
         class="py-3 px-4 rounded-sm focus:outline-none focus:ring-4 transition duration-200"
@@ -461,7 +457,7 @@
   </div>
 </dialog>
 
-<script>
+<script type="module">
   // Initialize Icons
   lucide.createIcons();
 
@@ -480,7 +476,7 @@
     }
   });
 
-  function toggleAccordion(e, target) {
+  function toggleCvAccordion(e, target) {
     e.preventDefault();
 
     const buttonEl = e.currentTarget;
@@ -500,14 +496,15 @@
     }
     lucide.createIcons();
   }
+  window.toggleCvAccordion = toggleCvAccordion;
 
-  function handleAddProfile(e) {
+  document.getElementById("add-profile-btn").addEventListener("click", (e) => {
     e.preventDefault();
 
     const newParagraph = document.createElement("div");
     newParagraph.id = `container-profile-${nextProfileIndex}`;
     newParagraph.classList.add("flex", "gap-2");
-    newParagraph.innerHTML = `
+    newParagraph.innerHTML = html`
       <textarea
         id="profile-${nextProfileIndex}"
         class="border border-[rgba(0,0,0,0.2)] rounded-sm p-4 w-full min-w-100"
@@ -523,7 +520,7 @@
         type="button"
         id="delete-experience-${nextProfileIndex}"
         class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
-        onclick="handleDeleteEvent(event, 'profile-list')"
+        onclick="deleteCvElement(event, 'profile-list')"
       >
         <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
       </button>
@@ -533,17 +530,18 @@
 
     // Initialize new icon
     lucide.createIcons();
-  }
+  });
 
-  function toggleSkillHighlight(skillNode) {
+  function toggleCvSkillHighlight(skillNode) {
     if (skillNode.classList.contains("highlight")) {
       skillNode.classList.remove("highlight");
     } else {
       skillNode.classList.add("highlight");
     }
   }
+  window.toggleCvSkillHighlight = toggleCvSkillHighlight;
 
-  function handleDeleteEvent(e, listId) {
+  function deleteCvElement(e, listId) {
     e.preventDefault();
 
     e.currentTarget.parentElement.remove();
@@ -556,25 +554,26 @@
       }
     }
   }
+  window.deleteCvElement = deleteCvElement;
 
-  function handleSkillAddEvent(e) {
+  function addCvSkill(e) {
     e.preventDefault();
 
     const skillInput = document.getElementById("skill-input");
 
     const skillEl = document.createElement("div");
     skillEl.classList.add("inline-flex", "items-center", "w-fit");
-    skillEl.innerHTML = `
+    skillEl.innerHTML = html`
       <span
         class="skill-tag hover:cursor-pointer"
-        onclick="toggleSkillHighlight(this)"
+        onclick="toggleCvSkillHighlight(this)"
       >
         ${skillInput.value}
       </span>
       <button
         type="button"
         class="ml-[-15px] rounded-lg bg-red-600"
-        onclick="handleDeleteEvent(event)"
+        onclick="deleteCvElement(event)"
       >
         <i data-lucide="x" class="text-white w-4 h-4"></i>
       </button>
@@ -586,14 +585,16 @@
     // Initialize new icon
     lucide.createIcons();
   }
+  window.addCvSkill = addCvSkill;
 
-  function experienceAddEvent(e) {
+  const addExperienceButton = document.getElementById("add-experience-btn");
+  addExperienceButton.addEventListener("click", (e) => {
     e.preventDefault();
 
     const experienceEl = document.createElement("div");
     experienceEl.classList.add("flex", "gap-2");
 
-    experienceEl.innerHTML = `
+    experienceEl.innerHTML = html`
       <div class="w-full space-y-2">
         <div class="relative w-full pt-2">
           <label
@@ -662,7 +663,7 @@
         type="button"
         id="delete-experience-${nextExperienceIndex}"
         class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
-        onclick="handleDeleteEvent(event, 'experience-list')"
+        onclick="deleteCvElement(event, 'experience-list')"
       >
         <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
       </button>
@@ -671,15 +672,16 @@
     document.getElementById("experience-list").appendChild(experienceEl);
     nextExperienceIndex += 1;
     lucide.createIcons();
-  }
+  });
 
-  function educationAddEvent(e) {
+  const addEducationButton = document.getElementById("add-education-btn");
+  addEducationButton.addEventListener("click", (e) => {
     e.preventDefault();
 
     const eduEl = document.createElement("div");
     eduEl.classList.add("flex", "gap-2");
 
-    eduEl.innerHTML = `
+    eduEl.innerHTML = html`
       <div class="w-full space-y-2">
         <div class="relative w-full pt-2">
           <label
@@ -749,7 +751,7 @@
         type="button"
         id="delete-edu-${nextEduIndex}"
         class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
-        onclick="handleDeleteEvent(event, 'edu-list')"
+        onclick="deleteCvElement(event, 'edu-list')"
       >
         <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
       </button>
@@ -758,12 +760,11 @@
     document.getElementById("edu-list").appendChild(eduEl);
     nextEduIndex += 1;
     lucide.createIcons();
-  }
+  });
 
-  async function submitChanges(e) {
+  const confirmButton = document.getElementById("edit-confirm-btn");
+  confirmButton.addEventListener("click", async (e) => {
     e.preventDefault();
-
-    const confirmButton = document.getElementById("edit-confirm-btn");
 
     // Loading state
     confirmButton.classList.add("loading");
@@ -833,15 +834,23 @@
     const editMessage = document.getElementById("edit-message");
     editMessage.setAttribute("class", "hidden text-sm");
 
+    let apiURL = "";
+
+    const cv_id_el = document.getElementById("cv_id");
+    if (cv_id_el) {
+      apiURL = `/api/targeted-cv/${cv_id_el.getAttribute("data-other")}`;
+    } else {
+      const targetUserID = document
+        .getElementById("profile_user_id")
+        .getAttribute("data-other");
+      apiURL = `/api/source-cv/${targetUserID}`;
+    }
+
     try {
       const formData = new FormData();
-      formData.append(
-        "cv_id",
-        document.getElementById("cv_id").getAttribute("data-other"),
-      );
       formData.append("cv_json", JSON.stringify(jsonData));
 
-      const response = await fetch("/api/cv-edit", {
+      const response = await fetch(apiURL, {
         method: "PATCH",
         body: formData,
       });
@@ -868,5 +877,5 @@
       confirmButton.classList.remove("loading");
       confirmButton.removeAttribute("disabled");
     }
-  }
+  });
 </script>

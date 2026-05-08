@@ -84,7 +84,7 @@
   />
 </div>
 
-<script>
+<script type="module">
   const pdfFile = document.getElementById("pdf-file");
   const fileNameDisplay = document.getElementById("file-name");
   const fileWrapper = document.getElementById("file-wrapper");
@@ -119,68 +119,6 @@
     }
   });
 </script>
-{% endmacro %}
-
-<!-- 
-  Show CV Settings by codes given in feature_list, feature codes:
-  all (show everything)
-  first_name
-  job_description
-  extra_profile_text
--->
-{% macro cv_settings(id, feature_list) %}
-<div class="space-y-4">
-  <p class="w-full p-2 text-center font-bold text-lg">CV Settings</p>
-
-  <!-- First name check -->
-  {% if "all" in feature_list or "first_name" in feature_list %}
-  <div class="flex items-center gap-2">
-    <input
-      checked
-      id="{{id}}-first-name-check"
-      type="checkbox"
-      name="firstNameOnly"
-      class="first-name-check w-4 h-4 border border-default-medium rounded-xs accent-(--color-funky) focus:ring-2 focus:ring-brand-soft hover:cursor-pointer"
-    />
-    <label
-      for="{{id}}-first-name-check"
-      class="select-none text-sm font-medium hover:cursor-pointer"
-    >
-      Only display first name
-    </label>
-  </div>
-  {% endif %}
-
-  <!-- Keywords / Job description -->
-  {% if "all" in feature_list or "job_description" in feature_list %}
-  <div>
-    <label for="{{id}}-keyword-list" class="text-sm font-medium text-heading">
-      Keywords / Job description
-    </label>
-    <textarea
-      id="{{id}}-keyword-list"
-      name="job_description"
-      class="w-full mb-4 border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
-      placeholder="e.g. Web application built with custom web components, a Python server and a PostgreSQL database."
-    ></textarea>
-  </div>
-  {% endif %}
-
-  <!-- custom profile text -->
-  {% if "all" in feature_list or "extra_profile_text" in feature_list %}
-  <div>
-    <label for="{{id}}-profile-text" class="text-sm font-medium text-heading">
-      Custom profile text (injected at the end of the profile section)
-    </label>
-    <textarea
-      id="{{id}}-profile-text"
-      name="extra_profile_text"
-      class="w-full mb-4 border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
-      placeholder="e.g. Curious, detail-oriented, and quick to learn, Sami brings fresh perspective and solid energy to any development team!"
-    ></textarea>
-  </div>
-  {% endif %}
-</div>
 {% endmacro %}
 
 <!-- PIN input field -->
@@ -241,7 +179,8 @@
     required
   />
 </div>
-<script>
+
+<script type="module">
   const pinArray = [
     document.getElementById("pin-1"),
     document.getElementById("pin-2"),
@@ -351,16 +290,14 @@
 {% endmacro %}
 
 <!-- Modal -->
-{% macro modal(title, contentHtml, footerHtml) %}
-<div
-  id="modal"
-  tabindex="-1"
-  aria-hidden="true"
-  class="hidden flex items-center justify-center modal absolute top-0 z-50 w-full h-screen"
+{% macro modal(id, title, max_width) %}
+<dialog
+  id="{{id}}"
+  class="hidden modal card bg-(--bg-dialog) rounded-2xl overflow-hidden flex relative z-50"
 >
   <!-- Modal content -->
   <div
-    class="flex max-w-2xl max-h-[70%] bg-(--bg-dialog) border border-default rounded-xl shadow-md overflow-hidden"
+    class="flex max-w-{{max_width}} max-h-[70%] w-full bg-(--bg-dialog) border border-default rounded-xl shadow-md overflow-hidden"
   >
     <div class="relative h-full overflow-y-auto" style="height: inherit">
       <!-- Modal header -->
@@ -373,6 +310,7 @@
           id="modal-close-btn"
           type="button"
           class="text-body bg-transparent hover:bg-neutral-tertiary hover:rounded-base text-sm w-9 h-9 ms-auto inline-flex justify-center items-center"
+          onclick="closeModal('{{id}}', event)"
         >
           <svg
             class="w-5 h-5"
@@ -394,20 +332,18 @@
           <span class="sr-only">Close modal</span>
         </button>
       </div>
-      <!-- Modal body -->
-      <div id="modal-body" class="p-4 md:p-6">{{contentHtml|safe}}</div>
-      <!-- Modal footer -->
-      {% if footerHtml %}
-      <div
-        id="modal-footer"
-        class="flex items-center border-t border-default space-x-4 pt-4 md:pt-5"
-      >
-        {{footerHtml|safe}}
-      </div>
-      {% endif %}
+      {{ caller() }}
     </div>
   </div>
-</div>
+</dialog>
+
+<script type="module">
+  document.body.addEventListener("keydown", (e) => {
+    if (e.key == "Escape") {
+      e.preventDefault();
+    }
+  });
+</script>
 {% endmacro %}
 
 <!-- Loading spinner -->
@@ -439,12 +375,11 @@
 {% endmacro %}
 
 <!-- Button with a spinner to indicate loading -->
-{% macro loading_button(id, onclick, button_text, button_class) %}
+{% macro loading_button(id, button_text, button_class) %}
 <button
   type="submit"
   id="{{id}}"
   class="loading-button relative flex justify-center items-center py-3 px-4 rounded-lg focus:outline-none focus:ring-4 transition duration-200 {{button_class}}"
-  onclick="{{onclick}}"
 >
   <p>{{button_text}}</p>
   {{spinner( True, "absolute left-0 right-0 mx-auto", "w-6 h-6 text-blue-200"

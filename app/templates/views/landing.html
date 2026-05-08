@@ -3,57 +3,100 @@
 
 <!-- Main Container -->
 {% block content %}
-<style></style>
+<style>
+  section {
+    &:not(.dark, .dark *) {
+      background: #f0f0ff;
+      background: linear-gradient(
+        180deg,
+        rgba(240, 240, 255, 1) 0%,
+        rgba(237, 237, 255, 1) 5%,
+        rgba(227, 227, 255, 1) 17%,
+        rgba(222, 222, 255, 1) 32%
+      );
+    }
+  }
+</style>
 
-<meta id="user_id" data-other="{{user_id}}" />
-<meta id="user_is_admin" data-other="{{user_is_admin}}" />
+<img
+  class="fixed top-[15%] right-[-10%] w-[50%] z-[1]"
+  src="{{url_for('static',filename='images/w-bg.png')}}"
+/>
 
-<div class="w-full px-4 max-w-screen-xl space-y-4">
+<div class="w-full profile-list px-4 max-w-screen-xl space-y-4 z-[2]">
   <div>
     <p class="text-xl mb-2">Me</p>
 
     <div
       class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full"
     >
-      <div
+      <a
         id="me-container"
-        class="card bg-(--bg-paper) p-4 flex flex-col items-center gap-4 w-full"
-      ></div>
+        href="/profile"
+        class="card action p-4 flex flex-col items-center gap-4 w-full"
+      >
+        <div class="hand-written text-xs uppercase">
+          {{ my_profile["user_type_name"] }}
+        </div>
+        <span
+          class="color-icon flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
+        >
+          {{ my_profile["full_name"][0] }}
+        </span>
+        <div class="text-center">
+          <p>{{my_profile["full_name"]}}</p>
+          <div class="text-sm opacity-[0.8]">
+            <p>{{my_profile.get("title", "")}}</p>
+            <p>{{my_profile.get("office", "")}}</p>
+          </div>
+        </div>
+      </a>
     </div>
   </div>
 
-  {% if user_is_admin %}
+  {% if session["user_type"] == "admin" %}
   <div>
     <p class="text-xl mb-2">External Talent</p>
 
     <div
       id="external-list"
-      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full"
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full text-center"
     >
       <a
-        href="/upload"
+        href="/new-external"
         id="add-external-link"
-        class="card bg-(--bg-paper-green) hover:bg-(--bg-paper-green-highlight) p-4 flex flex-col items-center justify-center gap-4 w-full min-h-[226px]"
+        class="card card-green p-4 flex flex-col items-center justify-center gap-4 w-full min-h-[226px]"
       >
-        <div class="text-xl">Upload CV</div>
+        <div class="text-xl">Add External</div>
         <span
-          class="flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
+          class="flex items-center justify-center text-center w-[80px] h-[80px] dark:text-white rounded-[90px] text-3xl"
         >
-          <i data-lucide="file-plus-corner" class="w-12 h-12"></i>
+          <i data-lucide="plus" class="w-10 h-10"></i>
         </span>
       </a>
+
+      {% for user in external_users %}
       <a
-        href="/view"
-        id="cv-list-link"
-        class="card bg-(--bg-paper-green) hover:bg-(--bg-paper-green-highlight) p-4 flex flex-col items-center justify-center gap-4 w-full min-h-[226px]"
+        href="/profile/{{user['id']}}"
+        class="card action p-4 flex flex-col items-center gap-4 w-full"
       >
-        <div class="text-xl">Manage CVs</div>
+        <div class="hand-written text-xs uppercase">
+          {{ user["user_type_name"] }}
+        </div>
         <span
-          class="flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
+          class="color-icon flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
         >
-          <i data-lucide="table-of-contents" class="w-12 h-12"></i>
+          {{ user["full_name"][0] }}
         </span>
+        <div class="text-center">
+          <p>{{user["full_name"]}}</p>
+          <div class="text-sm opacity-[0.8]">
+            <p>{{user.get("title", "")}}</p>
+            <p>{{user.get("office", "")}}</p>
+          </div>
+        </div>
       </a>
+      {% endfor %}
     </div>
   </div>
   {% endif %}
@@ -65,19 +108,43 @@
       id="team-list"
       class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full"
     >
-      {% if user_is_admin %}
-      <button
-        id="add-external-btn"
-        class="card bg-(--bg-paper-green) hover:bg-(--bg-paper-green-highlight) p-4 flex flex-col items-center justify-center gap-4 w-full"
+      {% if session["user_type"] == "admin" %}
+      <a
+        href="/new-user"
+        class="card card-green p-4 flex flex-col items-center justify-center gap-4 w-full min-h-[226px]"
       >
-        <div class="text-xl">Add New</div>
+        <div class="text-xl">Add User</div>
         <span
-          class="flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
+          class="flex items-center justify-center text-center w-[80px] h-[80px] dark:text-white rounded-[90px] text-3xl"
         >
           <i data-lucide="plus" class="w-10 h-10"></i>
         </span>
-      </button>
+      </a>
       {% endif %}
+
+      <!---->
+      {% for user in internal_users %}
+      <a
+        href="/profile/{{user['id']}}"
+        class="card action p-4 flex flex-col items-center gap-4 w-full"
+      >
+        <div class="hand-written text-xs uppercase">
+          {{ user["user_type_name"] }}
+        </div>
+        <span
+          class="color-icon flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
+        >
+          {{ user["full_name"][0] }}
+        </span>
+        <div class="text-center">
+          <p>{{user["full_name"]}}</p>
+          <div class="text-sm opacity-[0.8]">
+            <p>{{user.get("title", "")}}</p>
+            <p>{{user.get("office", "")}}</p>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
     </div>
   </div>
 </div>
@@ -86,123 +153,7 @@
   // Initialize Icons
   lucide.createIcons();
 
-  const externalList = document.getElementById("external-list");
-  const teamList = document.getElementById("team-list");
-  const userID = document.getElementById("user_id").getAttribute("data-other");
-  const userIsAdmin =
-    document.getElementById("user_is_admin").getAttribute("data-other") ==
-    "True";
-
-  // Helper function for HTML strings
-  const html = (strings, ...values) => String.raw({ raw: strings }, ...values);
-
-  (async () => {
-    try {
-      // Fetch the User list from the backend
-      const response = await fetch("/api/users", {
-        method: "GET",
-      });
-      const json = await response.json();
-      users = json["data"];
-
-      for (user of users) {
-        let node = null;
-
-        if (user["username"] == userID) {
-          node = document.getElementById("me-container");
-        } else {
-          node = document.createElement("div");
-          node.classList.add(
-            ...[
-              "card",
-              "bg-(--bg-paper)",
-              "p-4",
-              "flex",
-              "flex-col",
-              "items-center",
-              "gap-4",
-              "w-full",
-            ],
-          );
-        }
-
-        node.innerHTML = html`
-          <div class="hand-written text-xs">
-            ${user["is_admin"] ? "ADMIN" : "INTERNAL"}
-          </div>
-          <span
-            class="color-icon flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
-          >
-            ${user["full_name"][0]}
-          </span>
-          <div class="text-center">
-            <p>${user["full_name"]}</p>
-            <div class="text-sm opacity-[0.8]">
-              <p>${user["title"]}</p>
-              <p>${user["office"]}</p>
-            </div>
-          </div>
-        `;
-
-        if (user["username"] != userID) {
-          teamList.appendChild(node);
-        }
-      }
-
-      setIconColors();
-    } catch (e) {
-      console.error(e);
-    }
-  })();
-
-  async function getExternalTalent() {
-    try {
-      // Fetch the User list from the backend
-      const response = await fetch("/api/cv", {
-        method: "GET",
-      });
-      const json = await response.json();
-      cvList = json["data"];
-
-      for (cv of cvList) {
-        const node = document.createElement("a");
-        node.setAttribute("href", `/view/${cv["id"]}`);
-        node.classList.add(
-          ...[
-            "card",
-            "bg-(--bg-paper)",
-            "p-4",
-            "flex",
-            "flex-col",
-            "items-center",
-            "justify-center",
-            "gap-4",
-            "w-full",
-          ],
-        );
-
-        node.innerHTML = html`
-          <div class="hand-written text-xs">EXTERNAL</div>
-          <span
-            class="color-icon flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
-          >
-            ${cv["data_owner"][0]}
-          </span>
-          <div class="text-center">
-            <p>${cv["data_owner"]}</p>
-          </div>
-        `;
-        externalList.appendChild(node);
-      }
-
-      setIconColors();
-    } catch (e) {
-      console.error(e);
-    }
-  }
-  if (userIsAdmin) getExternalTalent();
-
-  function setIconColors() {
+  (() => {
     const icons = document.getElementsByClassName("color-icon");
 
     let i = 1;
@@ -212,6 +163,6 @@
 
       if (i > 8) i = 1;
     }
-  }
+  })();
 </script>
 {% endblock %}
