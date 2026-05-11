@@ -32,11 +32,18 @@
           margin: auto;
         }
       }
+      body {
+        &:where(.dark, .dark *) {
+          background-image: url("{{url_for('static',filename='images/bg.jpg')}}");
+          background-repeat: no-repeat;
+          background-size: 100% auto;
+        }
+      }
       section {
         padding: 2rem 0;
       }
       .base-height {
-        min-height: calc(100vh - 60px);
+        min-height: calc(100vh - 70px);
       }
       nav.scrolled {
         transition: all 0.1s;
@@ -62,21 +69,21 @@
 
     <nav id="top-nav" class="bg-inherit fixed w-full z-20 top-0 start-0">
       <div
-        class="max-w-screen-xl h-[60px] flex flex-wrap items-center justify-between mx-auto p-2 px-4"
+        class="max-w-screen-xl h-[70px] flex flex-wrap items-center justify-between mx-auto p-2 px-4"
       >
         <div class="flex gap-4">
           <a href="/" class="flex gap-4 items-center">
             <img
               src="/static/images/wirokit_icon_b.png"
-              class="w-10 dark:hidden"
+              class="w-12 dark:hidden"
               alt="Wirokit Logo"
             />
             <img
               src="/static/images/wirokit_icon_w.png"
-              class="w-10 hidden dark:block dark:opacity-[87%]"
+              class="w-12 hidden dark:block dark:opacity-[87%]"
               alt="Wirokit Logo"
             />
-            <span class="hand-written self-center whitespace-nowrap">
+            <span class="hand-written self-center whitespace-nowrap text-lg">
               AGENCY
             </span>
           </a>
@@ -85,7 +92,7 @@
         <button
           id="profile-icon"
           type="button"
-          class="flex items-center justify-center font-sans font-normal text-center w-[35px] h-[35px] text-white bg-(--color-primary) rounded-[90px] hover:cursor-pointer"
+          class="flex items-center justify-center font-light text-lg text-center w-[40px] h-[40px] text-white bg-(--color-primary) rounded-[90px] hover:cursor-pointer"
         >
           {{session['user_name'][0] if session['user_name'] else
           session["pin_user"][0]}}
@@ -93,7 +100,7 @@
 
         <div
           id="user-menu"
-          class="user-menu card hidden absolute top-[55px] w-[250px] rounded-xl bg-white py-2 border border-default dark:bg-[#4a4e8d]"
+          class="user-menu card hidden absolute top-[60px] w-[250px] rounded-xl bg-white py-2 border border-default dark:bg-[#4a4e8d]"
         >
           <div id="menu-content">
             <div class="hand-written text-sm text-center mb-2">
@@ -184,7 +191,7 @@
         </div>
       </div>
     </nav>
-    <section class="base-height flex justify-center mt-[60px]">
+    <section class="base-height flex justify-center mt-[70px]">
       <header>{% block header %}{% endblock %}</header>
       {% for message in get_flashed_messages() %}
       <div class="flash">{{ message }}</div>

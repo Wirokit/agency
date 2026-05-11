@@ -11,7 +11,6 @@
     --color-red-600: oklch(57.7% 0.245 27.325);
     --color-red-700: oklch(50.5% 0.213 27.518);
     --color-red-800: oklch(44.4% 0.177 26.899);
-    --color-red-900: oklch(39.6% 0.141 25.723);
     --color-orange-50: oklch(98% 0.016 73.684);
     --color-orange-100: oklch(95.4% 0.038 75.164);
     --color-orange-200: oklch(90.1% 0.076 70.697);
@@ -101,7 +100,6 @@
     --container-2xl: 42rem;
     --container-3xl: 48rem;
     --container-4xl: 56rem;
-    --container-5xl: 64rem;
     --text-xs: 0.75rem;
     --text-xs--line-height: calc(1 / 0.75);
     --text-sm: 0.875rem;
@@ -116,6 +114,7 @@
     --text-3xl--line-height: calc(2.25 / 1.875);
     --text-4xl: 2.25rem;
     --text-4xl--line-height: calc(2.5 / 2.25);
+    --font-weight-light: 300;
     --font-weight-normal: 400;
     --font-weight-medium: 500;
     --font-weight-semibold: 600;
@@ -418,8 +417,8 @@
   .top-\[15\%\] {
     top: 15%;
   }
-  .top-\[55px\] {
-    top: 55px;
+  .top-\[60px\] {
+    top: 60px;
   }
   .right-0 {
     right: calc(var(--spacing) * 0);
@@ -481,8 +480,8 @@
   .mt-\[-60px\] {
     margin-top: -60px;
   }
-  .mt-\[60px\] {
-    margin-top: 60px;
+  .mt-\[70px\] {
+    margin-top: 70px;
   }
   .mr-2 {
     margin-right: calc(var(--spacing) * 2);
@@ -554,14 +553,11 @@
   .h-12 {
     height: calc(var(--spacing) * 12);
   }
-  .h-\[35px\] {
-    height: 35px;
-  }
   .h-\[40px\] {
     height: 40px;
   }
-  .h-\[60px\] {
-    height: 60px;
+  .h-\[70px\] {
+    height: 70px;
   }
   .h-\[80px\] {
     height: 80px;
@@ -616,9 +612,6 @@
   }
   .w-12 {
     width: calc(var(--spacing) * 12);
-  }
-  .w-\[35px\] {
-    width: 35px;
   }
   .w-\[40px\] {
     width: 40px;
@@ -915,9 +908,6 @@
   .px-4 {
     padding-inline: calc(var(--spacing) * 4);
   }
-  .px-6 {
-    padding-inline: calc(var(--spacing) * 6);
-  }
   .px-8 {
     padding-inline: calc(var(--spacing) * 8);
   }
@@ -930,9 +920,6 @@
   .py-3 {
     padding-block: calc(var(--spacing) * 3);
   }
-  .py-4 {
-    padding-block: calc(var(--spacing) * 4);
-  }
   .py-6 {
     padding-block: calc(var(--spacing) * 6);
   }
@@ -941,9 +928,6 @@
   }
   .pt-4 {
     padding-top: calc(var(--spacing) * 4);
-  }
-  .pt-6 {
-    padding-top: calc(var(--spacing) * 6);
   }
   .pb-4 {
     padding-bottom: calc(var(--spacing) * 4);
@@ -997,6 +981,10 @@
   .font-bold {
     --tw-font-weight: var(--font-weight-bold);
     font-weight: var(--font-weight-bold);
+  }
+  .font-light {
+    --tw-font-weight: var(--font-weight-light);
+    font-weight: var(--font-weight-light);
   }
   .font-medium {
     --tw-font-weight: var(--font-weight-medium);
@@ -1317,6 +1305,11 @@
       border-radius: 0;
     }
   }
+  .dark\:rounded-xs {
+    &:where(.dark, .dark *) {
+      border-radius: var(--radius-xs);
+    }
+  }
   .dark\:border-slate-600 {
     &:where(.dark, .dark *) {
       border-color: var(--color-slate-600);
@@ -1325,6 +1318,11 @@
   .dark\:bg-\(--bg-dialog-actions\) {
     &:where(.dark, .dark *) {
       background-color: var(--bg-dialog-actions);
+    }
+  }
+  .dark\:bg-\(--bg-paper\) {
+    &:where(.dark, .dark *) {
+      background-color: var(--bg-paper);
     }
   }
   .dark\:bg-\[\#4a4e8d\] {
@@ -1450,7 +1448,7 @@ html {
   --bg-paper: #ffffff;
   --bg-paper-hover: #eeeeee;
   --bg-paper-green: #e2fde8;
-  --bg-paper-green-hover: #c9e9d0;
+  --bg-paper-green-hover: #d9ebdd;
   --bg-dialog: #ffffff;
   --bg-dialog-actions: #ffffff;
   --color-funky: #c323b0;
@@ -1461,7 +1459,7 @@ html {
   --color-secondary: #c323b0;
   &:where(.dark, .dark *) {
     --bg-paper: #4a4e8d60;
-    --bg-paper-hover: #4a4e8d60;
+    --bg-paper-hover: #45487960;
     --bg-paper-green: #386b4160;
     --bg-paper-green-hover: #1e5f2a60;
     --bg-dialog: #2b2c34;
@@ -1477,11 +1475,6 @@ body {
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
-  &:where(.dark, .dark *) {
-    background-image: url("{{url_for('static',filename='images/bg.jpg')}}");
-    background-repeat: no-repeat;
-    background-size: 100% auto;
-  }
 }
 table {
   font-family: "Roboto", sans-serif !important;
@@ -1554,7 +1547,7 @@ select {
 }
 .hand-written {
   font-family: "Rock Salt", cursive;
-  font-weight: 500;
+  font-weight: 400;
   font-style: normal;
 }
 .profile-icon-1 {

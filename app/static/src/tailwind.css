@@ -7,7 +7,7 @@ html {
   --bg-paper: #ffffff;
   --bg-paper-hover: #eeeeee;
   --bg-paper-green: #e2fde8;
-  --bg-paper-green-hover: #c9e9d0;
+  --bg-paper-green-hover: #d9ebdd;
   --bg-dialog: #ffffff;
   --bg-dialog-actions: #ffffff;
 
@@ -21,7 +21,7 @@ html {
 
   &:where(.dark, .dark *) {
     --bg-paper: #4a4e8d60;
-    --bg-paper-hover: #4a4e8d60;
+    --bg-paper-hover: #45487960;
     --bg-paper-green: #386b4160;
     --bg-paper-green-hover: #1e5f2a60;
     --bg-dialog: #2b2c34;
@@ -38,11 +38,6 @@ body {
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
-  &:where(.dark, .dark *) {
-    background-image: url("{{url_for('static',filename='images/bg.jpg')}}");
-    background-repeat: no-repeat;
-    background-size: 100% auto;
-  }
 }
 
 table {
@@ -168,7 +163,7 @@ select {
 
 .hand-written {
   font-family: "Rock Salt", cursive;
-  font-weight: 500;
+  font-weight: 400;
   font-style: normal;
 }
 
