@@ -24,36 +24,6 @@
 />
 
 <div class="w-full profile-list px-4 max-w-screen-xl space-y-4 z-[2]">
-  <div>
-    <p class="text-xl mb-2">Me</p>
-
-    <div
-      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full"
-    >
-      <a
-        id="me-container"
-        href="/profile"
-        class="card action p-4 flex flex-col items-center gap-4 w-full"
-      >
-        <div class="hand-written text-xs uppercase">
-          {{ my_profile["user_type_name"] }}
-        </div>
-        <span
-          class="color-icon flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
-        >
-          {{ my_profile["full_name"][0] }}
-        </span>
-        <div class="text-center">
-          <p>{{my_profile["full_name"]}}</p>
-          <div class="text-sm opacity-[0.8]">
-            <p>{{my_profile.get("title", "")}}</p>
-            <p>{{my_profile.get("office", "")}}</p>
-          </div>
-        </div>
-      </a>
-    </div>
-  </div>
-
   {% if session["user_type"] == "admin" %}
   <div>
     <p class="text-xl mb-2">External Talent</p>
@@ -131,11 +101,8 @@
         <div class="hand-written text-xs uppercase">
           {{ user["user_type_name"] }}
         </div>
-        <span
-          class="color-icon flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
-        >
-          {{ user["full_name"][0] }}
-        </span>
+        {{ ui.profile_icon(user["profile_img_url"], user["full_name"], width=80,
+        height=80) }}
         <div class="text-center">
           <p>{{user["full_name"]}}</p>
           <div class="text-sm opacity-[0.8]">

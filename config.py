@@ -1,9 +1,9 @@
 import os
 
 # --- Environment - Only needed when running locally ---
-from dotenv import load_dotenv
+""" from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv() """
 # ---
 
 

@@ -297,13 +297,13 @@
 >
   <!-- Modal content -->
   <div
-    class="flex max-w-{{max_width}} max-h-[70%] w-full bg-(--bg-dialog) border border-default rounded-xl shadow-md overflow-hidden"
+    class="flex max-w-{{max_width}} w-full max-h-[70%] bg-(--bg-dialog) rounded-xl shadow-md overflow-hidden"
   >
-    <div class="relative h-full overflow-y-auto" style="height: inherit">
+    <div class="relative h-full overflow-y-auto">
       <!-- Modal header -->
       <div
         id="modal-header"
-        class="sticky w-full top-0 bg-(--bg-dialog-actions) w-full flex items-center justify-between border-b border-default p-4 md:p-6"
+        class="sticky w-full top-0 bg-(--bg-dialog-actions) flex items-center justify-between border-b border-default p-4 md:p-6"
       >
         <h3 class="text-lg font-medium text-heading">{{title}}</h3>
         <button
@@ -394,4 +394,30 @@
     display: block;
   }
 </style>
+{% endmacro %}
+
+<!-- Profile icon (image if exists, otherwise default letter icon) -->
+{% macro profile_icon(image_url, user_name, width=300, height=300) %}
+<div>
+  <span
+    class="hidden color-icon bg-(--color-primary) flex items-center justify-center text-center text-white rounded-[50%] text-3xl"
+    style="width: {{width}}px; height: {{height}}px;"
+  >
+    {{ user_name[0] }}
+  </span>
+
+  <img
+    class="rounded-[50%]"
+    src="{{image_url}}"
+    style="width: {{width}}px; height: {{height}}px;"
+    onerror="handleProfileIconError(event)"
+  />
+</div>
+
+<script>
+  function handleProfileIconError(e) {
+    e.target.classList.add("hidden");
+    e.target.previousElementSibling.classList.remove("hidden");
+  }
+</script>
 {% endmacro %}

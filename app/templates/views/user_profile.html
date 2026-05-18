@@ -84,21 +84,16 @@
 <meta id="profile_user_id" data-other="{{user_id}}" />
 
 <div class="p-8 w-full max-w-4xl space-y-6 dark:bg-(--bg-paper)">
-  <div class="flex justify-between">
-    <div class="flex gap-4 items-center">
-      <span
-        class="color-icon profile-icon-1 flex items-center justify-center text-center w-[80px] h-[80px] text-white rounded-[90px] text-3xl"
-      >
-        {{ user_name[0] }}
-      </span>
-      <div class="flex flex-col">
-        <span>{{user_name}}</span>
-        <span class="text-sm opacity-[0.8]">{{user_title}}</span>
-        <span class="text-sm opacity-[0.8]">{{user_office}}</span>
-      </div>
+  <div class="flex gap-4 items-center">
+    <div class="flex-none">
+      {{ ui.profile_icon(profile_img_url, user_name, width=120, height=120) }}
     </div>
-
-    <div class="hand-written p-2 uppercase">{{user_type}}</div>
+    <div class="flex flex-col">
+      <span class="hand-written uppercase text-sm mb-2">{{user_type}}</span>
+      <span>{{user_name}}</span>
+      <span class="text-sm opacity-[0.8]">{{user_title}}</span>
+      <span class="text-sm opacity-[0.8]">{{user_office}}</span>
+    </div>
   </div>
 
   <div class="flex items-center gap-4">
@@ -131,6 +126,16 @@
   <div
     class="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-2"
   >
+    {% if user_id == session["user_id"] or user_type == "admin" %}
+    <button
+      class="contained flex items-center gap-2"
+      onclick="openModal('profile_edit_dialog', event)"
+    >
+      <i data-lucide="user-pen" class="w-5 h-5"></i>
+      Edit Profile
+    </button>
+    {% endif %}
+    <!---->
     {% if cv_data %}
     <!---->
     {% if session["user_type"] == "admin" %}
@@ -288,6 +293,8 @@
 {% include 'views/modals/profile_delete_dialog.html' %}
 <!---->
 {% include 'views/modals/new_targeted_cv_dialog.html' %}
+<!---->
+{% include 'views/modals/profile_edit_dialog.html' %}
 
 <script type="module">
   // Initialize Icons

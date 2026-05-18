@@ -8,6 +8,7 @@ from app.services.bedrock import (
     highlight_skills,
     translate_cv,
 )
+from app.services.s3 import S3_PROFILE_IMG_BUCKET, get_s3_client
 from app.types.user import UserType
 from .route_utils import auth_required, get_user_by_id
 from app.services.cv import extract_data_from_cv
@@ -293,6 +294,55 @@ def delete_user_profile_by_id(id):
 
     db.commit()
 
+    return jsonify({"success": True})
+
+
+@api_bp.route("/profile/<id>", methods=["PATCH"])
+@auth_required(modes=["all"])
+def edit_profile(id):
+    if "profile_image" in request.files:
+        file = request.files["profile_image"]
+
+        if file:
+            file_name = f"profile-img/{id}.png"
+            s3_client = get_s3_client()
+
+            try:
+                s3_client.upload_fileobj(
+                    file,
+                    S3_PROFILE_IMG_BUCKET,
+                    file_name,
+                    ExtraArgs={"ContentType": file.content_type},
+                )
+
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
+
+    full_name = request.values["full_name"]
+    title = request.values["title"]
+    location = request.values["location"]
+
+    db = get_db()
+    with db.cursor() as cur:
+        query = """
+            UPDATE users
+            SET full_name = %s, title = %s, office = %s
+            WHERE id = %s
+        """
+
+        cur.execute(
+            query,
+            (
+                full_name,
+                title,
+                location,
+                id,
+            ),
+        )
+
+    db.commit()
+
+    # Send the success response
     return jsonify({"success": True})
 
 

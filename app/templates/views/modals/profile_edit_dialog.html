@@ -1,0 +1,283 @@
+<head>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"
+  />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+</head>
+
+<style>
+  .profile-img-button:hover .edit-icon {
+    opacity: 1;
+  }
+</style>
+
+<!-- Card -->
+{% call ui.modal("profile_edit_dialog", "Edit Profile", "lg") %}
+<form
+  id="profile_edit_form"
+  method="dialog"
+  class="min-w-lg w-fill p-4 space-y-6"
+>
+  <div class="flex gap-4 items-center">
+    <button
+      id="image_input_button"
+      class="profile-img-button relative flex-none flex items-center justify-center"
+    >
+      <span
+        class="edit-icon opacity-0 absolute flex items-center justify-center w-full h-full text-white bg-[#000000c0] rounded-[90px] transition-opacity"
+      >
+        <i data-lucide="pen" class="w-10 h-10"></i>
+      </span>
+      <span
+        id="default_profile_icon"
+        class="{{'hidden' if profile_img_url else ''}} color-icon bg-(--color-primary) flex items-center justify-center text-center w-[120px] h-[120px] text-white rounded-[90px] text-3xl"
+      >
+        {{ user_name[0] }}
+      </span>
+      <img
+        id="profile_img"
+        class="{{'' if profile_img_url else 'hidden'}} w-[120px] h-[120px] rounded-[90px]"
+        src="{{profile_img_url}}"
+      />
+    </button>
+
+    <input type="file" id="image_input" accept="image/*" hidden />
+
+    <div class="flex-auto space-y-2">
+      <div class="relative w-full">
+        <label
+          for="profile_name"
+          class="absolute top-[-6px] left-1 px-1 text-xs font-semibold"
+        >
+          Full Name
+        </label>
+
+        <input
+          required
+          id="profile_name"
+          name="full_name"
+          autocomplete="off"
+          data-form-type="other"
+          type="text"
+          class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+          value="{{user_name}}"
+        />
+      </div>
+
+      <div class="relative w-full">
+        <label
+          for="profile_title"
+          class="absolute top-[-6px] left-1 px-1 text-xs font-semibold"
+        >
+          Title
+        </label>
+
+        <input
+          required
+          id="profile_title"
+          name="title"
+          autocomplete="off"
+          data-form-type="other"
+          type="text"
+          class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+          value="{{user_title}}"
+        />
+      </div>
+
+      <div class="relative w-full">
+        <label
+          for="profile_location"
+          class="absolute top-[-6px] left-1 px-1 text-xs font-semibold"
+        >
+          Location
+        </label>
+
+        <input
+          required
+          id="profile_location"
+          name="location"
+          autocomplete="off"
+          data-form-type="other"
+          type="text"
+          class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+          value="{{user_office}}"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="flex gap-2 items-center">
+    <button
+      type="submit"
+      class="py-3 px-4 font-bold bg-green-600 text-white font-bold hover:bg-green-800 focus:ring-green-300 rounded-sm"
+    >
+      Save
+    </button>
+    <button
+      id="profile_dialog_close_btn"
+      class="py-3 px-4 rounded-sm hover:bg-[#dddddd] transition duration-200"
+    >
+      Cancel
+    </button>
+  </div>
+</form>
+{% endcall %}
+
+<!---->
+{% call ui.modal("image_crop_dialog", "Crop Profile Image", "xl") %}
+<div class="p-4 space-y-6">
+  <div class="flex gap-2">
+    <div class="flex-1 flex flex-col items-center">
+      <div
+        class="img-preview w-[120px] h-[120px] overflow-hidden rounded-[50%]"
+      ></div>
+      <p>Live Preview</p>
+    </div>
+
+    <div class="flex-2 h-max-[300px]">
+      <img id="image_to_crop" class="max-w-full" />
+    </div>
+  </div>
+
+  <div class="flex gap-2 items-center">
+    <button
+      id="crop_confirm_btn"
+      type="submit"
+      class="py-3 px-4 font-bold bg-green-600 text-white font-bold hover:bg-green-800 focus:ring-green-300 rounded-sm"
+    >
+      Confirm
+    </button>
+    <button
+      class="py-3 px-4 rounded-sm hover:bg-[#dddddd] transition duration-200"
+      onclick="closeModal('image_crop_dialog', event)"
+    >
+      Cancel
+    </button>
+  </div>
+</div>
+{% endcall %}
+
+<!-- JavaScript Logic -->
+<script type="module">
+  // Initialize Icons
+  lucide.createIcons();
+
+  const form = document.getElementById("profile_edit_form");
+  const userID = document
+    .getElementById("profile_user_id")
+    .getAttribute("data-other");
+
+  let cropper;
+  const imageInput = document.getElementById("image_input");
+  const confirmCropBtn = document.getElementById("crop_confirm_btn");
+
+  const profileIcon = document.getElementById("default_profile_icon");
+  const profileImage = document.getElementById("profile_img");
+  const initialProfileImage = profileImage.src;
+
+  const profileModal = document.getElementById("profile_edit_dialog");
+  const modalCloseBtn = profileModal.querySelector("#modal-close-btn");
+
+  function handleDialogClose(e) {
+    e.preventDefault();
+    profileImage.src = initialProfileImage;
+
+    if (!initialProfileImage) {
+      profileImage.classList.add("hidden");
+      profileIcon.classList.remove("hidden");
+    }
+
+    closeModal("profile_edit_dialog");
+  }
+  modalCloseBtn.addEventListener("click", handleDialogClose);
+  document
+    .getElementById("profile_dialog_close_btn")
+    .addEventListener("click", handleDialogClose);
+
+  document.getElementById("image_input_button").onclick = (e) => {
+    e.preventDefault();
+    imageInput.click();
+  };
+
+  imageInput.onchange = (e) => {
+    openModal("image_crop_dialog");
+
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        if (cropper) {
+          cropper.destroy();
+        }
+
+        const imageToCrop = document.getElementById("image_to_crop");
+        imageToCrop.src = event.target.result;
+
+        imageToCrop.onload = () => {
+          cropper = new Cropper(imageToCrop, {
+            aspectRatio: 1,
+            viewMode: 1,
+            preview: ".img-preview",
+          });
+        };
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  confirmCropBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    const canvas = cropper.getCroppedCanvas({
+      width: 300,
+      height: 300,
+      imageSmoothingQuality: "high",
+    });
+    const resultDataURL = canvas.toDataURL("image/png");
+    profileImage.src = resultDataURL;
+
+    profileIcon.classList.add("hidden");
+    profileImage.classList.remove("hidden");
+
+    closeModal("image_crop_dialog");
+  });
+
+  async function submitData(formData) {
+    try {
+      const response = await fetch(`/api/profile/${userID}`, {
+        method: "PATCH",
+        body: formData,
+      });
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        closeModal("profile_edit_dialog");
+        window.location.reload();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+
+    if (cropper) {
+      const canvas = cropper.getCroppedCanvas({
+        width: 300,
+        height: 300,
+        imageSmoothingQuality: "high",
+      });
+      canvas.toBlob((blob) => {
+        formData.append("profile_image", blob, "profile_img.png");
+        submitData(formData);
+      }, "image/png");
+    } else {
+      submitData(formData);
+    }
+  });
+</script>

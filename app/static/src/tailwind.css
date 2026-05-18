@@ -21,6 +21,7 @@ html {
 
   &:where(.dark, .dark *) {
     --bg-paper: #4a4e8d60;
+    --bg-paper-popup: #4a4e8d;
     --bg-paper-hover: #45487960;
     --bg-paper-green: #386b4160;
     --bg-paper-green-hover: #1e5f2a60;
@@ -65,6 +66,16 @@ textarea {
   background-color: var(--bg-paper);
   &:where(.dark, .dark *) {
     box-shadow: none;
+  }
+}
+.card.popup {
+  &:where(.dark, .dark *) {
+    background-color: var(--bg-dialog);
+  }
+}
+dialog.card {
+  &:where(.dark, .dark *) {
+    background-color: var(--bg-dialog);
   }
 }
 .card.action:hover {
@@ -119,7 +130,6 @@ button.outlined {
     var(--default-transition-timing-function)
   );
   transition-duration: var(--tw-duration, var(--default-transition-duration));
-  border: 1px solid var(--color-primary);
   border-radius: var(--radius-xs);
 }
 
@@ -144,6 +154,7 @@ button.contained.dangerous:hover {
 a.outlined,
 button.outlined {
   color: var(--color-primary);
+  border: 1px solid var(--color-primary);
 }
 a.outlined.dangerous,
 button.outlined.dangerous {
@@ -159,6 +170,11 @@ select {
   border: 1px solid var(--color-slate-300);
   cursor: pointer;
   padding: calc(var(--spacing) * 3.5);
+}
+select option {
+  &:where(.dark, .dark *) {
+    background-color: var(--bg-dialog);
+  }
 }
 
 .hand-written {

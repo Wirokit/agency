@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, render_template, session, request, redirect
 from app.db import get_db
+from app.services.s3 import get_profile_img_url
 from app.types.user import UserType, get_user_type_by_id
 from .route_utils import auth_required, get_targeted_cvs_by_id, get_user_by_id
 
@@ -21,6 +22,8 @@ def before_request():
             session["user_id"],
             "is_disabled, require_pw_update",
         )
+
+        session["profile_img_url"] = get_profile_img_url(session["user_id"])
 
         if not user_record or user_record["is_disabled"]:
             session.clear()
@@ -60,23 +63,14 @@ def serve_landing():
     if UserType(session["user_type"]) in [UserType.ADMIN, UserType.INTERNAL]:
         db = get_db()
         with db.cursor() as cur:
-            me_query = """
-                SELECT u.id, u.full_name, u.title, u.office, t.user_type_name
-                FROM users u
-                JOIN user_types t USING (user_type_id)
-                WHERE u.id = %s
-            """
-            cur.execute(me_query, (session["user_id"],))
-            me_result = cur.fetchone()
-
             internal_query = """
                 SELECT u.id, u.full_name, u.title, u.office, t.user_type_name
                 FROM users u
                 JOIN user_types t USING (user_type_id)
-                WHERE u.id != %s AND u.is_disabled is false AND user_type_id != 3
+                WHERE u.is_disabled is false AND user_type_id != 3
                 ORDER BY u.full_name ASC
             """
-            cur.execute(internal_query, (session["user_id"],))
+            cur.execute(internal_query)
             internal_result = cur.fetchall()
 
             if UserType(session["user_type"]) is UserType.ADMIN:
@@ -91,9 +85,11 @@ def serve_landing():
 
         db.rollback()
 
+        for user in internal_result:
+            user["profile_img_url"] = get_profile_img_url(user["id"])
+
         return render_template(
             "views/landing.html",
-            my_profile=me_result,
             internal_users=internal_result,
             external_users=external_result or [],
         )
@@ -185,6 +181,7 @@ def serve_profile_by_id(user_id):
         "views/user_profile.html",
         user_type=user_type.value,
         user_id=user_id,
+        profile_img_url=get_profile_img_url(user_id),
         user_name=user_data["full_name"],
         user_title=user_data["title"] or "",
         user_office=user_data.get("office", ""),

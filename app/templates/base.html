@@ -56,7 +56,8 @@
           background-color: black;
         }
       }
-      .user-menu button:hover {
+      .user-menu button:hover,
+      .user-menu a:hover {
         background-color: rgba(0, 0, 0, 0.2);
         &:where(.dark, .dark *) {
           background-color: rgba(255, 255, 255, 0.2);
@@ -92,36 +93,40 @@
         <button
           id="profile-icon"
           type="button"
-          class="flex items-center justify-center font-light text-lg text-center w-[40px] h-[40px] text-white bg-(--color-primary) rounded-[90px] hover:cursor-pointer"
+          class="flex items-center justify-center font-light text-lg text-center w-[50px] h-[50px] text-white bg-(--color-primary) rounded-[90px] hover:cursor-pointer"
         >
-          {{session['user_name'][0] if session['user_name'] else
-          session["pin_user"][0]}}
+          {{ ui.profile_icon(session["profile_img_url"], session["user_name"],
+          width=50, height=50) }}
         </button>
 
         <div
           id="user-menu"
-          class="user-menu card hidden absolute top-[60px] w-[250px] rounded-xl bg-white py-2 border border-default dark:bg-[#4a4e8d]"
+          class="user-menu card popup hidden absolute top-[60px] w-[250px] rounded-xl bg-white py-2 border border-default"
         >
           <div id="menu-content">
-            <div class="hand-written text-sm text-center mb-2">
-              {{session["user_type"].upper()}}
+            <div class="hand-written text-sm text-center mb-2 uppercase">
+              {{session["user_type"]}}
             </div>
             <div class="flex items-center px-4 gap-2 mb-3">
               <span
                 id="menu-profile-icon"
                 class="flex items-center justify-center font-sans font-normal text-center w-[40px] h-[40px] text-white bg-(--color-primary) rounded-[90px]"
               >
-                {{session['user_name'][0] if session['user_name'] else
-                session["pin_user"][0]}}
+                {{ ui.profile_icon(session["profile_img_url"],
+                session["user_name"], width=40, height=40) }}
               </span>
-              <span id="logged-in-user"
-                >{{session['user_name'] if session['user_name'] else
-                session["pin_user"]}}</span
-              >
+              <span id="logged-in-user">{{session['user_name']}}</span>
             </div>
 
             <hr class="border-gray-300" />
 
+            <a
+              href="/profile"
+              class="flex items-center py-3 px-4 w-full text-start gap-3"
+            >
+              <i data-lucide="user"></i>
+              My Profile
+            </a>
             <button
               id="open-theme-selection-btn"
               type="button"
@@ -343,7 +348,6 @@
       /*
         Modal handlers
       */
-      let initialDialogContent;
       let modalOpen = false;
 
       function openModal(id, e) {
@@ -353,7 +357,6 @@
         document.body.classList.add("modal-open");
 
         const modal = document.getElementById(id);
-        initialDialogContent = modal.innerHTML;
 
         modal.showModal();
         modal.classList.remove("hidden");
@@ -367,7 +370,18 @@
         document.body.classList.remove("modal-open");
 
         const modal = document.getElementById(id);
-        modal.innerHTML = initialDialogContent;
+
+        // Reset any forms within the dialog
+        const formNode = modal.querySelector("form");
+        if (formNode) {
+          formNode.reset();
+
+          // Reset any file inputs
+          const fileInputs = formNode.querySelectorAll('input[type="file"]');
+          fileInputs.forEach((input) => {
+            input.value = "";
+          });
+        }
 
         modal.close();
         modal.classList.add("hidden");
