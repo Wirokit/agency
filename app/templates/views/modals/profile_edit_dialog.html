@@ -29,16 +29,19 @@
       >
         <i data-lucide="pen" class="w-10 h-10"></i>
       </span>
+
       <span
         id="default_profile_icon"
-        class="{{'hidden' if profile_img_url else ''}} color-icon bg-(--color-primary) flex items-center justify-center text-center w-[120px] h-[120px] text-white rounded-[90px] text-3xl"
+        class="hidden color-icon bg-(--color-primary) flex items-center justify-center text-center text-white rounded-[50%] text-3xl w-[120px] h-[120px]"
       >
         {{ user_name[0] }}
       </span>
+
       <img
         id="profile_img"
-        class="{{'' if profile_img_url else 'hidden'}} w-[120px] h-[120px] rounded-[90px]"
+        class="rounded-[50%] w-[120px] h-[120px]"
         src="{{profile_img_url}}"
+        onerror="handleProfileIconError(event)"
       />
     </button>
 
