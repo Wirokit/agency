@@ -23,6 +23,16 @@
           background-repeat: no-repeat;
           background-size: 100% auto;
         }
+        &:not(.dark, .dark *) {
+          background: #f0f0ff;
+          background: linear-gradient(
+            180deg,
+            rgba(240, 240, 255, 1) 0%,
+            rgba(237, 237, 255, 1) 5%,
+            rgba(227, 227, 255, 1) 17%,
+            rgba(222, 222, 255, 1) 32%
+          );
+        }
       }
       .card {
         box-shadow:

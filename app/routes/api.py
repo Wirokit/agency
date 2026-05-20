@@ -52,7 +52,6 @@ def createUser():
     is_admin = request.values["is_admin"] == "true"
     username = request.values["username"]
     full_name = request.values["full_name"]
-    title = request.values["title"]
     location = request.values["location"]
     email = request.values["email"]
     phone = request.values["phone"]
@@ -99,7 +98,7 @@ def createUser():
                 user_uuid,
                 username,
                 full_name,
-                title,
+                "" if cv is None else cv.cv_data.title,
                 location,
                 email,
                 phone,
@@ -220,13 +219,14 @@ def upload_source_cv(id):
     with db.cursor() as cur:
         query = """
             UPDATE users
-            SET cv_data = %s
+            SET cv_data = %s, title = %s
             WHERE id = %s
         """
         cur.execute(
             query,
             (
                 cv.cv_data.toJSON(),
+                cv.cv_data.title,
                 id,
             ),
         )
@@ -349,12 +349,13 @@ def edit_profile(id):
 @api_bp.route("/targeted-cv/<source_user_id>", methods=["POST"])
 @auth_required(modes=["admin"])
 def post_targeted_cv(source_user_id):
-    source_user_data = get_user_by_id(source_user_id, "cv_data")
+    source_user_data = get_user_by_id(source_user_id, "cv_data, full_name, title")
 
     if not source_user_data["cv_data"]:
         return jsonify({"success": False, "error": "No source CV exists"}), 424
 
     cv_data = CV_data.fromJSON(source_user_data["cv_data"])
+    cv_data.name = source_user_data["full_name"]
 
     job_id = request.values["job_id"]
     language = request.values["language"]

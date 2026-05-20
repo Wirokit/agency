@@ -61,6 +61,8 @@ def serve_landing():
     """Serves the login and landing pages to the frontend."""
 
     if UserType(session["user_type"]) in [UserType.ADMIN, UserType.INTERNAL]:
+        external_result = None
+
         db = get_db()
         with db.cursor() as cur:
             internal_query = """
@@ -189,6 +191,7 @@ def serve_profile_by_id(user_id):
         pin_code=user_data.get("pin_code", ""),
         created_at=user_data["created_at"],
         targeted_cv_list=targeted_cv_list or [],
+        hide_basic_info_from_cv_edit=True,
     )
 
 

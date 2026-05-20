@@ -83,7 +83,7 @@ def check_pin():
 
 
 @auth_bp.route("/password", methods=["UPDATE"])
-@auth_required(modes=["admin"])
+@auth_required(modes=["admin", "internal"])
 def update_password():
     """
     Update a user's password

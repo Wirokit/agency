@@ -90,11 +90,7 @@
           </a>
         </div>
 
-        <button
-          id="profile-icon"
-          type="button"
-          class="flex items-center justify-center font-light text-lg text-center w-[50px] h-[50px] text-white bg-(--color-primary) rounded-[90px] hover:cursor-pointer"
-        >
+        <button id="profile-icon" type="button" class="rounded-[50%]">
           {{ ui.profile_icon(session["profile_img_url"], session["user_name"],
           width=50, height=50) }}
         </button>
@@ -108,13 +104,8 @@
               {{session["user_type"]}}
             </div>
             <div class="flex items-center px-4 gap-2 mb-3">
-              <span
-                id="menu-profile-icon"
-                class="flex items-center justify-center font-sans font-normal text-center w-[40px] h-[40px] text-white bg-(--color-primary) rounded-[90px]"
-              >
-                {{ ui.profile_icon(session["profile_img_url"],
-                session["user_name"], width=40, height=40) }}
-              </span>
+              {{ ui.profile_icon(session["profile_img_url"],
+              session["user_name"], width=40, height=40) }}
               <span id="logged-in-user">{{session['user_name']}}</span>
             </div>
 

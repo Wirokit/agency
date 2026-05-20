@@ -8,7 +8,7 @@
     {{ ui.pdf_upload() }}
 
     <!---->
-    {% if user_id == session["user_id"] %}
+    {% if user_id == session["user_id"]|string %}
     <div
       id="consent-box"
       class="consent-check rounded-xs warn-border p-2 text-center"

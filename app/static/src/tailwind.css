@@ -184,6 +184,9 @@ select option {
 }
 
 /* Profile icon colors */
+.profile-icon-u {
+  background-color: var(--color-primary);
+}
 .profile-icon-1 {
   background-color: #c323b0;
 }

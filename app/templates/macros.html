@@ -400,7 +400,7 @@
 {% macro profile_icon(image_url, user_name, width=300, height=300) %}
 <div>
   <span
-    class="hidden color-icon bg-(--color-primary) flex items-center justify-center text-center text-white rounded-[50%] text-3xl"
+    class="hidden {{'color-icon' if user_name != session['user_name'] else 'color-icon-u'}} bg-(--color-primary) flex items-center justify-center text-center text-white rounded-[50%] text-3xl"
     style="width: {{width}}px; height: {{height}}px;"
   >
     {{ user_name[0] }}

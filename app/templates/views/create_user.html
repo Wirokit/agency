@@ -71,17 +71,6 @@
       />
     </label>
 
-    <label for="title">
-      <p class="text-sm font-medium">Title</p>
-      <input
-        required
-        type="text"
-        id="title"
-        name="title"
-        class="w-full border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
-      />
-    </label>
-
     <label for="full-name">
       <p class="text-sm font-medium">Location (City, Office etc.)</p>
       <input
@@ -225,7 +214,6 @@
     if (
       !formObject["username"] ||
       !formObject["full_name"] ||
-      !formObject["title"] ||
       !formObject["location"]
     ) {
       displayMessage("Please fill all required fields.", "error");
