@@ -360,8 +360,13 @@
 
       profileSettingsMenu.classList.remove("hidden");
       const menuRect = profileSettingsMenu.getBoundingClientRect();
-      profileSettingsMenu.style.left = `${buttonRect.left - menuRect.width + 5}px`;
-      profileSettingsMenu.style.top = `${buttonRect.bottom - 5}px`;
+
+      const topPosition = buttonRect.bottom - 5 + window.scrollY;
+      profileSettingsMenu.style.top = `${topPosition}px`;
+
+      const leftPosition =
+        buttonRect.left - menuRect.width + 5 + window.scrollX;
+      profileSettingsMenu.style.left = `${leftPosition}px`;
     } else {
       profileSettingsMenu.classList.add("hidden");
     }
