@@ -56,8 +56,8 @@
           background-color: black;
         }
       }
-      .user-menu button:hover,
-      .user-menu a:hover {
+      .menu button:hover,
+      .menu a:hover {
         background-color: rgba(0, 0, 0, 0.2);
         &:where(.dark, .dark *) {
           background-color: rgba(255, 255, 255, 0.2);
@@ -97,7 +97,7 @@
 
         <div
           id="user-menu"
-          class="user-menu card popup hidden absolute top-[60px] w-[250px] rounded-xl bg-white py-2 border border-default"
+          class="menu card popup hidden absolute top-[60px] w-[250px] rounded-xl bg-white py-2 border border-default"
         >
           <div id="menu-content">
             <div class="hand-written text-sm text-center mb-2 uppercase">
@@ -314,6 +314,12 @@
           !menu.contains(e.target) &&
           e.srcElement?.id !== "profile-icon"
         ) {
+          toggleMenu(e);
+        }
+      });
+
+      window.addEventListener("resize", (e) => {
+        if (!menu.classList.contains("hidden")) {
           toggleMenu(e);
         }
       });

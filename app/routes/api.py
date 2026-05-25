@@ -56,9 +56,9 @@ def createUser():
     email = request.values["email"]
     phone = request.values["phone"]
 
-    cv = None
+    cv_data = None
     if file and file.filename != "":
-        cv = extract_data_from_cv(file)
+        cv_data = extract_data_from_cv(file)
 
     user_uuid = uuid.uuid4()
     password = "".join(secrets.choice(alphabet) for i in range(20))
@@ -98,11 +98,11 @@ def createUser():
                 user_uuid,
                 username,
                 full_name,
-                "" if cv is None else cv.cv_data.title,
+                "" if cv_data is None else cv_data.title,
                 location,
                 email,
                 phone,
-                "{}" if cv is None else cv.cv_data.toJSON(),
+                "{}" if cv_data is None else cv_data.toJSON(),
                 1 if is_admin else 2,
                 hashed_password,
             ),
@@ -122,9 +122,9 @@ def createTempUser():
     email = request.values["email"]
     location = request.values["location"]
 
-    cv = None
+    cv_data = None
     if file.filename != "":
-        cv = extract_data_from_cv(file)
+        cv_data = extract_data_from_cv(file)
 
     user_uuid = uuid.uuid4()
 
@@ -171,7 +171,8 @@ def createTempUser():
                 office,
                 pin_code,
                 cv_data,
-                user_type_id
+                user_type_id,
+                title
             ) VALUES (
                 %s,
                 %s,
@@ -179,7 +180,8 @@ def createTempUser():
                 %s,
                 %s,
                 %s,
-                3
+                3,
+                %s
             );
         """
         cur.execute(
@@ -190,7 +192,8 @@ def createTempUser():
                 email,
                 location,
                 pin,
-                "{}" if cv is None else cv.cv_data.toJSON(),
+                "{}" if cv_data is None else cv_data.toJSON(),
+                "" if cv_data is None else cv_data.title,
             ),
         )
         db.commit()
@@ -213,7 +216,7 @@ def upload_source_cv(id):
     ):
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 
-    cv = extract_data_from_cv(request.files["file"])
+    cv_data = extract_data_from_cv(request.files["file"])
 
     db = get_db()
     with db.cursor() as cur:
@@ -225,8 +228,8 @@ def upload_source_cv(id):
         cur.execute(
             query,
             (
-                cv.cv_data.toJSON(),
-                cv.cv_data.title,
+                cv_data.toJSON(),
+                cv_data.title,
                 id,
             ),
         )

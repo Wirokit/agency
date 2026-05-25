@@ -94,7 +94,7 @@
   <div class="print-hidden w-full p-4 flex justify-between items-center">
     <div>
       <a
-        href="{{'/profile' if is_users_cv else '/profile/{owner_id}'}}"
+        href="{{'/profile' if is_users_cv else '/profile/' + owner_id|string}}"
         class="outlined flex gap-2 items-center"
         style="border-radius: 90px; padding: 10px"
       >

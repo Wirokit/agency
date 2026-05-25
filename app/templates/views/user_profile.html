@@ -79,22 +79,107 @@
   .empty-col {
     text-align: center !important;
   }
+
+  .settings-btn-icon {
+    transition: none;
+  }
+  .settings-btn:hover .settings-btn-icon {
+    transition: transform 1s;
+    transform: rotate(180deg);
+  }
 </style>
 
 <meta id="profile_user_id" data-other="{{user_id}}" />
 
 <div class="p-8 w-full max-w-4xl space-y-6 dark:bg-(--bg-paper)">
-  <div class="flex gap-4 items-center">
-    <div class="flex-none">
-      {{ ui.profile_icon(profile_img_url, user_name, width=120, height=120) }}
+  <div class="flex gap-6 justify-between">
+    <div class="flex gap-4 items-center">
+      <div class="flex-none">
+        {{ ui.profile_icon(profile_img_url, user_name, width=120, height=120) }}
+      </div>
+      <div class="flex flex-col">
+        <span class="hand-written uppercase text-sm mb-2">{{user_type}}</span>
+        <span>{{user_name}}</span>
+        <span class="text-sm opacity-[0.8]">{{user_title}}</span>
+        <span class="text-sm opacity-[0.8]">{{user_office}}</span>
+      </div>
     </div>
-    <div class="flex flex-col">
-      <span class="hand-written uppercase text-sm mb-2">{{user_type}}</span>
-      <span>{{user_name}}</span>
-      <span class="text-sm opacity-[0.8]">{{user_title}}</span>
-      <span class="text-sm opacity-[0.8]">{{user_office}}</span>
+
+    <div class="flex items-center">
+      <button id="profile-settings-btn" class="settings-btn rounded-[50%]">
+        <i
+          id="profile-settings-icon"
+          data-lucide="settings"
+          class="settings-btn-icon w-10 h-10"
+        ></i>
+      </button>
     </div>
   </div>
+
+  {% if session["user_type"] == "admin" or session["user_id"]|string == user_id
+  %}
+  <div
+    id="settings-menu"
+    class="menu card hidden absolute rounded-xl bg-white py-2 border border-default min-w-[200px] z-[30]"
+  >
+    <p class="text-center p-2 font-bold">User Settings</p>
+
+    <hr class="border-gray-300" />
+
+    <button
+      type="button"
+      class="flex items-center py-3 px-4 w-full gap-3"
+      onclick="openModal('profile_edit_dialog', event)"
+    >
+      <i data-lucide="user-pen" class="w-5 h-5"></i>
+      Edit Profile
+    </button>
+    {% if cv_data %}
+    <!---->
+    {% if session["user_type"] == "admin" %}
+    <button
+      class="flex items-center py-3 px-4 w-full gap-3"
+      onclick="openModal('new_targeted_cv_dialog', event)"
+    >
+      <i data-lucide="file-plus" class="w-5 h-5"></i>
+      New Targeted CV
+    </button>
+    {% endif %}
+    <button
+      class="flex items-center py-3 px-4 w-full gap-3"
+      onclick="openModal('edit_dialog', event)"
+    >
+      <i data-lucide="pencil-line" class="w-5 h-5"></i>
+      Edit Source CV
+    </button>
+    {% else %}
+    <button
+      class="flex items-center py-3 px-4 w-full gap-3"
+      onclick="openModal('upload_dialog', event)"
+    >
+      <i data-lucide="file-up" class="w-5 h-5"></i>
+      Upload Source CV
+    </button>
+    <button
+      class="flex items-center py-3 px-4 w-full gap-3"
+      onclick="openModal('edit_dialog', event)"
+    >
+      <i data-lucide="pencil-line" class="w-5 h-5"></i>
+      Custom Source CV
+    </button>
+    {% endif %}
+    <!---->
+    {% if session["user_type"] != "internal" %}
+    <button
+      class="flex items-center py-3 px-4 w-full gap-3 text-(--color-error)"
+      onclick="openModal('delete_dialog', event)"
+    >
+      <i data-lucide="trash" class="w-5 h-5"></i>
+      Delete Profile
+    </button>
+    {% endif %}
+  </div>
+  {% endif %}
 
   <div class="flex items-center gap-4">
     <div class="flex items-center gap-2">
@@ -121,66 +206,6 @@
     </div>
     {% endif %}
   </div>
-
-  {% if session["user_type"] == "admin" or session["user_id"]|string == user_id
-  %}
-  <div
-    class="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-2"
-  >
-    <button
-      class="contained flex items-center gap-2"
-      onclick="openModal('profile_edit_dialog', event)"
-    >
-      <i data-lucide="user-pen" class="w-5 h-5"></i>
-      Edit Profile
-    </button>
-    <!---->
-    {% if cv_data %}
-    <!---->
-    {% if session["user_type"] == "admin" %}
-    <button
-      class="contained flex items-center gap-2"
-      onclick="openModal('new_targeted_cv_dialog', event)"
-    >
-      <i data-lucide="file-plus" class="w-5 h-5"></i>
-      New Targeted CV
-    </button>
-    {% endif %}
-    <button
-      class="outlined flex items-center gap-2"
-      onclick="openModal('edit_dialog', event)"
-    >
-      <i data-lucide="pencil-line" class="w-5 h-5"></i>
-      Edit Source CV
-    </button>
-    {% else %}
-    <button
-      class="contained flex items-center gap-2"
-      onclick="openModal('upload_dialog', event)"
-    >
-      <i data-lucide="file-up" class="w-5 h-5"></i>
-      Upload Source CV
-    </button>
-    <button
-      class="outlined flex items-center gap-2"
-      onclick="openModal('edit_dialog', event)"
-    >
-      <i data-lucide="pencil-line" class="w-5 h-5"></i>
-      Custom Source CV
-    </button>
-    {% endif %}
-    <!---->
-    {% if session["user_type"] != "internal" %}
-    <button
-      class="outlined dangerous flex items-center gap-2"
-      onclick="openModal('delete_dialog', event)"
-    >
-      <i data-lucide="trash" class="w-5 h-5"></i>
-      Delete Profile
-    </button>
-    {% endif %}
-  </div>
-  {% endif %}
 
   <table id="cv-table">
     <caption class="text-lg mb-2 font-medium">
@@ -301,14 +326,57 @@
 {% endif %}
 
 <!---->
-{% if session["user_type"] == "admin" or session["user_id"]|string == user_id %}
+{% if session["user_type"] == "admin" %}
 <!---->
 {% include 'views/modals/new_targeted_cv_dialog.html' %}
 <!---->
 {% endif %}
 
+<!-- Profile logic -->
 <script type="module">
   // Initialize Icons
   lucide.createIcons();
+
+  const profileSettingsButton = document.getElementById("profile-settings-btn");
+  const profileSettingsMenu = document.getElementById("settings-menu");
+
+  function toggleMenu(e) {
+    if (profileSettingsMenu.classList.contains("hidden")) {
+      const buttonRect = profileSettingsButton.getBoundingClientRect();
+
+      profileSettingsMenu.classList.remove("hidden");
+      const menuRect = profileSettingsMenu.getBoundingClientRect();
+      profileSettingsMenu.style.left = `${buttonRect.left - menuRect.width + 5}px`;
+      profileSettingsMenu.style.top = `${buttonRect.bottom - 5}px`;
+    } else {
+      profileSettingsMenu.classList.add("hidden");
+    }
+  }
+
+  profileSettingsButton.addEventListener("click", toggleMenu);
+
+  window.addEventListener("mouseup", (e) => {
+    if (
+      !profileSettingsMenu.classList.contains("hidden") &&
+      !profileSettingsButton.contains(e.target)
+    ) {
+      toggleMenu(e);
+    }
+  });
+
+  window.addEventListener("scroll", (e) => {
+    if (
+      !profileSettingsMenu.classList.contains("hidden") &&
+      !profileSettingsButton.contains(e.target)
+    ) {
+      toggleMenu(e);
+    }
+  });
+
+  window.addEventListener("resize", (e) => {
+    if (!profileSettingsMenu.classList.contains("hidden")) {
+      toggleMenu(e);
+    }
+  });
 </script>
 {% endblock %}
