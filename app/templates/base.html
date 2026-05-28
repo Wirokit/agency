@@ -322,7 +322,7 @@
       });
 
       async function logOut(e) {
-        e.preventDefault();
+        e?.preventDefault();
 
         try {
           const response = await fetch("/auth/logout", {
@@ -333,8 +333,8 @@
           if (result.success) {
             window.location.href = "/";
           }
-        } catch (e) {
-          console.error("Logout error:", e);
+        } catch (err) {
+          console.error("Logout error:", err);
         }
       }
       window.logOut = logOut; // Set logOut as a global function

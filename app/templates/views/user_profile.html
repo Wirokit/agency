@@ -91,7 +91,7 @@
 
 <meta id="profile_user_id" data-other="{{user_id}}" />
 
-<div class="flex flex-col w-full">
+<div class="flex flex-col w-full max-w-4xl lg:mt-8">
   {% if session["user_type"] != "external" %}
   <a
     href="/"
@@ -129,8 +129,7 @@
       </div>
     </div>
 
-    {% if session["user_type"] == "admin" or session["user_id"]|string ==
-    user_id %}
+    {% if session["user_type"] == "admin" or session["user_id"] == user_id %}
     <div
       id="settings-menu"
       class="menu card popup hidden absolute rounded-xl bg-white py-2 border border-default min-w-[200px] z-[30]"
@@ -149,15 +148,6 @@
       </button>
       {% if cv_data %}
       <!---->
-      {% if session["user_type"] == "admin" %}
-      <button
-        class="flex items-center py-3 px-4 w-full gap-3"
-        onclick="openModal('new_targeted_cv_dialog', event)"
-      >
-        <i data-lucide="file-plus" class="w-5 h-5"></i>
-        New Targeted CV
-      </button>
-      {% endif %}
       <button
         class="flex items-center py-3 px-4 w-full gap-3"
         onclick="openModal('edit_dialog', event)"
@@ -220,73 +210,74 @@
       {% endif %}
     </div>
 
-    <table id="cv-table">
-      <caption class="text-lg mb-2 font-medium">
-        Targeted CVs
-      </caption>
-      <tr class="header-row z-10">
-        <th class="w-1/5"><p>Job Name</p></th>
-        <th class="w-1/3"><p>Date Created</p></th>
-        <th class="w-full"><p>Link</p></th>
-      </tr>
-      {% if not targeted_cv_list %}
-      <tr id="empty-col">
-        <td colspan="100%" class="empty-col font-bold">Nothing to see here!</td>
-      </tr>
-      {% endif %}
-      <!---->
-      {% for cv in targeted_cv_list %}
-      <tr>
-        <td>
-          <label for="row-{{loop.index}}"> {{cv['job_identifier']}} </label>
-        </td>
-        <td>
-          <label for="row-{{loop.index}}">
-            {{cv['date_created'].strftime('%d/%m/%Y')}}
-          </label>
-        </td>
-        <td>
-          <label for="row-{{loop.index}}">
-            <a id="row-{{loop.index}}-id" href="/cv/{{cv['id']}}">
-              {{cv['id']}}
-            </a>
-          </label>
-        </td>
-      </tr>
-      {% endfor %}
-    </table>
+    <div class="space-y-2">
+      <div class="flex gap-2 justify-between items-center">
+        <p class="text-lg font-medium">Targeted CVs</p>
+
+        <button
+          class="contained primary flex gap-2 items-center"
+          onclick="openModal('new_targeted_cv_dialog', event)"
+        >
+          <i data-lucide="plus" class="w-5 h-5"></i>
+          New
+        </button>
+      </div>
+
+      <table id="cv-table">
+        <tr class="header-row z-10">
+          <th class="w-1/5"><p>Job Name</p></th>
+          <th class="w-1/3"><p>Date Created</p></th>
+          <th class="w-full"><p>Link</p></th>
+        </tr>
+        {% if not targeted_cv_list %}
+        <tr id="empty-col">
+          <td colspan="100%" class="empty-col font-bold">
+            Nothing to see here!
+          </td>
+        </tr>
+        {% endif %}
+        <!---->
+        {% for cv in targeted_cv_list %}
+        <tr>
+          <td>
+            <label for="row-{{loop.index}}"> {{cv['job_identifier']}} </label>
+          </td>
+          <td>
+            <label for="row-{{loop.index}}">
+              {{cv['date_created'].strftime('%d/%m/%Y')}}
+            </label>
+          </td>
+          <td>
+            <label for="row-{{loop.index}}">
+              <a id="row-{{loop.index}}-id" href="/cv/{{cv['id']}}">
+                {{cv['id']}}
+              </a>
+            </label>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
 
     {% if cv_data %}
     <div class="flex flex-col gap-8">
-      <div>
-        <p
-          class="w-full text-lg mb-4 font-medium text-center border-y-[1px] border-white"
-        >
-          PROFILE
-        </p>
+      <div class="space-y-2">
+        <p class="w-full text-lg font-medium">PROFILE</p>
         {% for profile in cv_data.get("profile_texts", []) %}
         <p>{{profile}}</p>
         {% endfor %}
       </div>
 
-      <div>
-        <p
-          class="w-full text-lg mb-4 font-medium text-center border-y-[1px] border-white"
-        >
-          SKILLS
-        </p>
+      <div class="space-y-2">
+        <p class="w-full text-lg font-medium">SKILLS</p>
         <!-- Normal -->
         {% for skill in cv_data.get("skills", []) %}
         <span class="skill-tag">{{skill}}</span>
         {% endfor %}
       </div>
 
-      <div>
-        <p
-          class="w-full text-lg mb-4 font-medium text-center border-y-[1px] border-white"
-        >
-          WORK EXPERIENCE
-        </p>
+      <div class="space-y-4">
+        <p class="w-full text-lg font-medium">WORK EXPERIENCE</p>
         <div class="space-y-6">
           {% for job in cv_data.get("job_experience", []) %}
           <div>
@@ -302,12 +293,8 @@
       </div>
 
       {% if cv_data.get("education", [])|length > 0 %}
-      <div>
-        <p
-          class="w-full text-lg mb-4 font-medium text-center border-y-[1px] border-white"
-        >
-          EDUCATION
-        </p>
+      <div class="space-y-4">
+        <p class="w-full text-lg font-medium">EDUCATION</p>
         <span class="space-y-6">
           {% for education in cv_data.get("education", []) %}
           <div>
@@ -327,7 +314,7 @@
   </div>
 </div>
 
-{% if session["user_type"] == "admin" or session["user_id"]|string == user_id %}
+{% if session["user_type"] == "admin" or session["user_id"] == user_id %}
 <!---->
 {% include 'views/modals/cv_edit_dialog.html' %}
 <!---->

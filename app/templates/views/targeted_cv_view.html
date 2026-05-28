@@ -90,7 +90,7 @@
   <meta id="cv_id" data-other="{{cv_id}}" />
 
   <!-- Admin buttons -->
-  {% if session["user_type"] == "admin" %}
+
   <div class="print-hidden w-full p-4 flex justify-between items-center">
     <div>
       <a
@@ -103,6 +103,7 @@
       </a>
     </div>
 
+    {% if session["user_type"] == "admin" %}
     <div class="flex justify-center gap-4">
       <button
         id="edit-btn"
@@ -125,8 +126,8 @@
         Delete
       </button>
     </div>
+    {% endif %}
   </div>
-  {% endif %}
 
   <div class="w-full mb-8 rounded-xs dark:rounded-none dark:bg-(--bg-paper)">
     <span class="confidential-header text-2xl border-b-2 border-black">
