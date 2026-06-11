@@ -89,7 +89,7 @@
       </button>
       <div id="profile-wrapper" class="hidden p-4 px-12 space-y-4">
         <div id="profile-list" class="space-y-4">
-          {% for profile in cv_data.get("profile_texts", []) %}
+          {% for profile in cv_data.profile_texts %}
           <div id="container-profile-{{loop.index}}" class="flex gap-2">
             <!-- prettier-ignore -->
             <textarea
@@ -151,7 +151,7 @@
         </p>
         <div id="skill-list">
           <!-- Highlight -->
-          {% for skill in cv_data.get("highlight_skills", []) %}
+          {% for skill in cv_data.skills %} {% if skill.is_highlight %}
           <div class="inline-flex items-center w-fit">
             <span
               class="skill-tag highlight hover:cursor-pointer"
@@ -170,9 +170,9 @@
               <i data-lucide="x" class="text-white w-4 h-4"></i>
             </button>
           </div>
-          {% endfor %}
+          {% endif %} {% endfor %}
           <!-- Normal -->
-          {% for skill in cv_data.get("skills", []) %}
+          {% for skill in cv_data.skills %} {% if not skill.is_highlight %}
           <div class="inline-flex items-center w-fit">
             <span
               class="skill-tag hover:cursor-pointer"
@@ -191,7 +191,7 @@
               <i data-lucide="x" class="text-white w-4 h-4"></i>
             </button>
           </div>
-          {% endfor %}
+          {% endif %} {% endfor %}
         </div>
         <div class="w-full mt-1">
           <label for="skill-input">Add a new skill</label>
@@ -224,7 +224,7 @@
       </button>
       <div id="work-wrapper" class="hidden wrapper pb-4 px-12 space-y-4">
         <div id="experience-list" class="space-y-8">
-          {% for experience in cv_data.get("job_experience", []) %}
+          {% for experience in cv_data.job_experience %}
           <div class="flex gap-2">
             <div class="w-full space-y-2">
               <div class="relative w-full pt-2">
@@ -337,7 +337,7 @@
       </button>
       <div id="edu-wrapper" class="hidden wrapper pb-4 px-12 space-y-4">
         <div id="edu-list" class="space-y-8">
-          {% for education in cv_data.get("education", []) %}
+          {% for education in cv_data.education %}
           <div class="flex gap-2">
             <div class="w-full space-y-2">
               <div class="relative w-full pt-2">
@@ -836,23 +836,13 @@
     const editMessage = document.getElementById("edit-message");
     editMessage.setAttribute("class", "hidden text-sm");
 
-    let apiURL = "";
-
-    const cv_id_el = document.getElementById("cv_id");
-    if (cv_id_el) {
-      apiURL = `/api/targeted-cv/${cv_id_el.getAttribute("data-other")}`;
-    } else {
-      const targetUserID = document
-        .getElementById("profile_user_id")
-        .getAttribute("data-other");
-      apiURL = `/api/source-cv/${targetUserID}`;
-    }
+    const cv_id = document.getElementById("cv_id").getAttribute("data-other");
 
     try {
       const formData = new FormData();
       formData.append("cv_json", JSON.stringify(jsonData));
 
-      const response = await fetch(apiURL, {
+      const response = await fetch(`/api/cv/${cv_id}`, {
         method: "PATCH",
         body: formData,
       });

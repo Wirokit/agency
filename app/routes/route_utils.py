@@ -2,7 +2,7 @@ from flask import session, jsonify
 from functools import wraps
 from psycopg2.extensions import AsIs
 from app.db import get_db
-from app.types.user import UserType
+from models import UserType
 
 """
   Utility functions that require session variables and/or a database connection.

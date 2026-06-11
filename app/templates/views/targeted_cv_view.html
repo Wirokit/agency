@@ -89,8 +89,6 @@
   <meta id="owner_id" data-other="{{owner_id}}" />
   <meta id="cv_id" data-other="{{cv_id}}" />
 
-  <!-- Admin buttons -->
-
   <div class="print-hidden w-full p-4 flex justify-between items-center">
     <div>
       <a
@@ -162,13 +160,13 @@
       <div>
         <div class="font-bold uppercase text-lg mb-4 header">Skills</div>
         <!-- Highlight -->
-        {% for skill in cv_data.highlight_skills %}
-        <span class="skill-tag highlight">{{skill}}</span>
-        {% endfor %}
+        {% for skill in cv_data.skills %} {% if skill.is_highlight %}
+        <span class="skill-tag highlight">{{skill.name}}</span>
+        {% endif %} {% endfor %}
         <!-- Normal -->
-        {% for skill in cv_data.skills %}
-        <span class="skill-tag">{{skill}}</span>
-        {% endfor %}
+        {% for skill in cv_data.skills %} {% if not skill.is_highlight %}
+        <span class="skill-tag">{{skill.name}}</span>
+        {% endif %} {% endfor %}
       </div>
 
       <!-- Work Experience -->
@@ -191,7 +189,7 @@
       </div>
 
       <!-- Education -->
-      {% if cv_data.education|length > 0 %}
+      {% if cv_data.education %}
       <div>
         <div class="font-bold uppercase text-lg mb-4 header">Education</div>
         <span class="space-y-6">

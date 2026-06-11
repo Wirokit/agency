@@ -91,6 +91,10 @@
 
 <meta id="profile_user_id" data-other="{{user_id}}" />
 
+{% if cv_data %}
+<meta id="cv_id" data-other="{{cv_data.id}}" />
+{% endif %}
+
 <div class="flex flex-col w-full max-w-4xl lg:mt-8">
   {% if session["user_type"] != "external" %}
   <a
@@ -240,7 +244,7 @@
         {% for cv in targeted_cv_list %}
         <tr>
           <td>
-            <label for="row-{{loop.index}}"> {{cv['job_identifier']}} </label>
+            <label for="row-{{loop.index}}"> {{cv['job_name']}} </label>
           </td>
           <td>
             <label for="row-{{loop.index}}">
@@ -263,7 +267,7 @@
     <div class="flex flex-col gap-8">
       <div class="space-y-2">
         <p class="w-full text-lg font-medium">PROFILE</p>
-        {% for profile in cv_data.get("profile_texts", []) %}
+        {% for profile in cv_data.profile_texts %}
         <p>{{profile}}</p>
         {% endfor %}
       </div>
@@ -271,15 +275,15 @@
       <div class="space-y-2">
         <p class="w-full text-lg font-medium">SKILLS</p>
         <!-- Normal -->
-        {% for skill in cv_data.get("skills", []) %}
-        <span class="skill-tag">{{skill}}</span>
+        {% for skill in cv_data.skills %}
+        <span class="skill-tag">{{skill.name}}</span>
         {% endfor %}
       </div>
 
       <div class="space-y-4">
         <p class="w-full text-lg font-medium">WORK EXPERIENCE</p>
         <div class="space-y-6">
-          {% for job in cv_data.get("job_experience", []) %}
+          {% for job in cv_data.job_experience %}
           <div>
             <div class="flex justify-between items-center">
               <b class="text-lg">{{job.title}}</b>
@@ -292,11 +296,11 @@
         </div>
       </div>
 
-      {% if cv_data.get("education", [])|length > 0 %}
+      {% if cv_data.education %}
       <div class="space-y-4">
         <p class="w-full text-lg font-medium">EDUCATION</p>
         <span class="space-y-6">
-          {% for education in cv_data.get("education", []) %}
+          {% for education in cv_data.education %}
           <div>
             <div class="flex justify-between items-center">
               <b class="text-lg">{{education.degree}}</b>

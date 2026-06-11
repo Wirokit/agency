@@ -1,8 +1,15 @@
 from flask import Blueprint, jsonify, render_template, session, request, redirect
 from app.db import get_db
+from app.services.cv import (
+    get_cv_data_by_id,
+    get_cv_handler,
+    get_cv_owner,
+    get_source_cv,
+    get_targeted_cvs_by_id,
+)
 from app.services.s3 import get_profile_img_url
-from app.types.user import UserType, get_user_type_by_id
-from .route_utils import auth_required, get_targeted_cvs_by_id, get_user_by_id
+from models import UserType, get_user_type_by_id
+from .route_utils import auth_required, get_user_by_id
 
 bp_name = "views"
 
@@ -104,41 +111,17 @@ def serve_landing():
 def serve_targeted_cv(cv_id):
     """Serves a targeted CV to the frontend."""
 
-    db = get_db()
-    with db.cursor() as cur:
-        query = """
-            SELECT
-                cv.owner_id,
-                owner.full_name AS owner_name,
-                cv.cv_json,
-                handler.full_name AS handler_name,
-                handler.email AS handler_email,
-                handler.phone_num AS handler_phone
-            FROM targeted_cv cv
-            JOIN users handler ON cv.handler_id = handler.id
-            JOIN users owner ON cv.owner_id = owner.id
-            WHERE cv.id = %s
-        """
-        cur.execute(query, (cv_id,))
-        result = cur.fetchone()
-
-    db.rollback()
-
-    json = result["cv_json"]
-    contact = {
-        "name": result["handler_name"],
-        "email": result["handler_email"],
-        "phone": result["handler_phone"],
-    }
+    cv_data = get_cv_data_by_id(cv_id)
+    owner = get_cv_owner(cv_id)
+    handler = get_cv_handler(cv_id)
 
     return render_template(
         "views/targeted_cv_view.html",
-        is_users_cv=session["user_id"] == result["owner_id"],
-        owner_name=result["owner_name"],
-        owner_id=result["owner_id"],
+        is_users_cv=session["user_id"] == owner.id,
+        owner_id=owner.id,
         cv_id=cv_id,
-        cv_data=json,
-        contact=contact,
+        cv_data=cv_data,
+        contact=handler,
     )
 
 
@@ -165,7 +148,7 @@ def serve_profile_by_id(user_id):
     # Get target user's info
     user_data = get_user_by_id(
         user_id,
-        "full_name, title, office, cv_data, user_type_id, pin_code, created_at",
+        "full_name, title, office, user_type_id, pin_code, created_at",
     )
     user_type = get_user_type_by_id(user_data["user_type_id"])
 
@@ -175,6 +158,8 @@ def serve_profile_by_id(user_id):
         and user_type is UserType.EXTERNAL
     ):
         return jsonify({"success": False, "error": "Access forbidden."}), 403
+
+    cv_data = get_source_cv(user_id)
 
     # Get targeted CVs for the target user
     targeted_cv_list = get_targeted_cvs_by_id(user_id)
@@ -187,10 +172,10 @@ def serve_profile_by_id(user_id):
         user_name=user_data["full_name"],
         user_title=user_data["title"] or "",
         user_office=user_data.get("office", ""),
-        cv_data=user_data.get("cv_data", "{}"),
+        cv_data=cv_data or {},
         pin_code=user_data.get("pin_code", ""),
         created_at=user_data["created_at"],
-        targeted_cv_list=targeted_cv_list or [],
+        targeted_cv_list=targeted_cv_list,
         hide_basic_info_from_cv_edit=True,
     )
 

@@ -2,16 +2,18 @@ import json
 from flask import Blueprint, jsonify, request, session, current_app
 from app.db import get_db
 from app.services.bedrock import (
-    CV_data,
-    CV_education,
-    CV_experience,
     highlight_skills,
     translate_cv,
 )
 from app.services.s3 import S3_PROFILE_IMG_BUCKET, get_s3_client
-from app.types.user import UserType
+from models import CV_data, Education, JobExperience, UserType
 from .route_utils import auth_required, get_user_by_id
-from app.services.cv import extract_data_from_cv
+from app.services.cv import (
+    extract_data_from_cv,
+    get_source_cv,
+    replace_cv_data,
+    save_cv_to_db,
+)
 from app.services.utils import (
     generate_pin,
 )
@@ -76,11 +78,9 @@ def createUser():
                 office,
                 email,
                 phone_num,
-                cv_data,
                 user_type_id,
                 password_hash
             ) VALUES (
-                %s,
                 %s,
                 %s,
                 %s,
@@ -102,12 +102,16 @@ def createUser():
                 location,
                 email,
                 phone,
-                "{}" if cv_data is None else cv_data.toJSON(),
                 1 if is_admin else 2,
                 hashed_password,
             ),
         )
         db.commit()
+
+    if cv_data:
+        save_cv_to_db(
+            cv=cv_data, user_uuid=user_uuid, user_name=full_name, is_source=True
+        )
 
     return jsonify({"success": True, "user_uuid": user_uuid, "password": password})
 
@@ -170,11 +174,9 @@ def createTempUser():
                 email,
                 office,
                 pin_code,
-                cv_data,
                 user_type_id,
                 title
             ) VALUES (
-                %s,
                 %s,
                 %s,
                 %s,
@@ -192,11 +194,15 @@ def createTempUser():
                 email,
                 location,
                 pin,
-                "{}" if cv_data is None else cv_data.toJSON(),
                 "" if cv_data is None else cv_data.title,
             ),
         )
         db.commit()
+
+    if cv_data:
+        save_cv_to_db(
+            cv=cv_data, user_uuid=user_uuid, user_name=full_name, is_source=True
+        )
 
     return jsonify({"success": True, "pin": pin, "user_uuid": user_uuid})
 
@@ -216,61 +222,23 @@ def upload_source_cv(id):
     ):
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 
+    # Delete existing source CV from the DB
+    db = get_db()
+    with db.cursor() as cur:
+        query = """
+            DELETE FROM cv
+            WHERE owner_id = %s and is_source = True;
+        """
+        cur.execute(
+            query,
+            (id,),
+        )
+        # Commit will be done in save_to_db if successful
+
     cv_data = extract_data_from_cv(request.files["file"])
-
-    db = get_db()
-    with db.cursor() as cur:
-        query = """
-            UPDATE users
-            SET cv_data = %s, title = %s
-            WHERE id = %s
-        """
-        cur.execute(
-            query,
-            (
-                cv_data.toJSON(),
-                cv_data.title,
-                id,
-            ),
-        )
-
-    db.commit()
-
-    # Send the success response
-    return jsonify({"success": True})
-
-
-@api_bp.route("/source-cv/<id>", methods=["PATCH"])
-@auth_required(modes=["all"])
-def edit_source_cv(id):
-    """Used to edit a user's source CV"""
-
-    # Ensure that either the user is an admin, or the profile being edited belongs
-    # to the logged in user
-    if (
-        UserType(session["user_type"]) != UserType.ADMIN
-        and str(session["user_id"]) != id
-    ):
-        return jsonify({"success": False, "error": "Access forbidden."}), 403
-
-    cv_data = request.values["cv_json"]
-
-    db = get_db()
-    with db.cursor() as cur:
-        query = """
-            UPDATE users
-            SET cv_data = %s
-            WHERE id = %s
-        """
-        cur.execute(
-            query,
-            (
-                cv_data,
-                id,
-            ),
-        )
-
-    db.commit()
+    save_cv_to_db(
+        cv=cv_data, user_uuid=id, user_name=session["user_name"], is_source=True
+    )
 
     # Send the success response
     return jsonify({"success": True})
@@ -352,15 +320,15 @@ def edit_profile(id):
 @api_bp.route("/targeted-cv/<source_user_id>", methods=["POST"])
 @auth_required(modes=["admin"])
 def post_targeted_cv(source_user_id):
-    source_user_data = get_user_by_id(source_user_id, "cv_data, full_name, title")
+    source_user_data = get_user_by_id(source_user_id, "full_name, title")
 
-    if not source_user_data["cv_data"]:
+    cv_data = get_source_cv(source_user_id)
+    if not cv_data:
         return jsonify({"success": False, "error": "No source CV exists"}), 424
 
-    cv_data = CV_data.fromJSON(source_user_data["cv_data"])
     cv_data.name = source_user_data["full_name"]
 
-    job_id = request.values["job_id"]
+    job_name = request.values["job_id"]
     language = request.values["language"]
     job_description = request.values["job_description"]
     extra_profile_text = request.values["extra_profile_text"]
@@ -369,76 +337,53 @@ def post_targeted_cv(source_user_id):
         translated_json = translate_cv(language, cv_data)
         cv_data.profile_texts = translated_json["profile_texts"]
         cv_data.job_experience = [
-            CV_experience.fromJSON(experience)
+            JobExperience(**experience)
             for experience in translated_json["job_experience"]
         ]
         cv_data.education = [
-            CV_education.fromJSON(education)
-            for education in translated_json["education"]
+            Education(**education) for education in translated_json["education"]
         ]
 
     if job_description:
-        skills_json = highlight_skills(cv_data.skills, job_description)
-        cv_data.highlight_skills = skills_json["highlight_skills"]
-
-        for skill in cv_data.highlight_skills:
-            if skill in cv_data.skills:
-                cv_data.skills.remove(skill)
+        print(job_description)
+        cv_data.skills = highlight_skills(cv_data.skills, job_description)
 
     if extra_profile_text:
         cv_data.profile_texts.append(extra_profile_text)
 
-    # Create a unique ID for the targeted CV
-    targeted_cv_uuid = uuid.uuid4()
+    cv_id = save_cv_to_db(
+        cv_data,
+        user_uuid=source_user_id,
+        user_name=source_user_data["full_name"],
+        is_source=False,
+    )
 
     db = get_db()
     with db.cursor() as cur:
+        # Base CV
         query = """
-            INSERT INTO targeted_cv (id, cv_json, job_identifier, owner_id, handler_id)
-            VALUES (%s, %s, %s, %s, %s)
+            UPDATE cv
+            SET handler_id = %s, job_name = %s
+            WHERE id = %s;
         """
-
         cur.execute(
             query,
-            (
-                targeted_cv_uuid,
-                cv_data.toJSON(),
-                job_id,
-                source_user_id,
-                session["user_id"],
-            ),
+            (session["user_id"], job_name, cv_id),
         )
-
-    db.commit()
+        db.commit()
 
     # Send the success response
-    return jsonify({"success": True})
+    return jsonify({"success": True, "cv_id": cv_id})
 
 
-@api_bp.route("/targeted-cv/<id>", methods=["PATCH"])
+@api_bp.route("/cv/<id>", methods=["PATCH"])
 @auth_required(modes=["admin"])
 def edit_targeted_cv(id):
-    """Used by admins to edit targeted CVs"""
+    """Used by admins to edit CVs"""
 
-    cv_data = CV_data.fromJSON(json.loads(request.values["cv_json"]))
+    cv_data = CV_data(**json.loads(request.values["cv_json"]))
 
-    db = get_db()
-    with db.cursor() as cur:
-        query = """
-            UPDATE targeted_cv
-            SET cv_json = %s
-            WHERE id = %s
-        """
-
-        cur.execute(
-            query,
-            (
-                cv_data.toJSON(),
-                id,
-            ),
-        )
-
-    db.commit()
+    replace_cv_data(id, cv_data)
 
     # Send the success response
     return jsonify({"success": True})
@@ -452,7 +397,7 @@ def delete_targeted_cv(id):
     db = get_db()
     with db.cursor() as cur:
         query = """
-            DELETE FROM targeted_cv
+            DELETE FROM cv
             WHERE id = %s
         """
 

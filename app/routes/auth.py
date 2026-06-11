@@ -3,7 +3,7 @@ from app.db import get_db
 from app.services.utils import (
     bcrypt,
 )
-from app.types.user import UserType, get_user_type_by_id
+from models import UserType, get_user_type_by_id
 from .route_utils import auth_required, get_user_by_id, get_user_by_username
 
 # Define the Blueprint

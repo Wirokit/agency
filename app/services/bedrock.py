@@ -2,7 +2,7 @@ import boto3
 import re
 import json
 
-from app.types.cv import CV_data, CV_experience, CV_education
+from models import CV_data, Skill
 
 
 def _get_extract_prompt(cv_text):
@@ -94,36 +94,27 @@ def extract_cv(cv_data):
     prompt = _get_extract_prompt(cv_data)
     json = _query_bedrock_for_json(prompt)
 
-    return CV_data(
-        name=json["name"],
-        title=json["title"],
-        profile_texts=json["profile_texts"],
-        skills=json["skills"],
-        highlight_skills=[],
-        job_experience=[
-            CV_experience(
-                title=experience["title"],
-                company_name=experience["company_name"],
-                time_period=experience["time_period"],
-                description=experience["description"],
-            )
-            for experience in json["job_experience"]
-        ],
-        education=[
-            CV_education(
-                degree=education["degree"],
-                school=education["school"],
-                time_period=education["time_period"],
-                description=education["description"],
-            )
-            for education in json["education"]
-        ],
-    )
+    # Fix skills before class conversion
+    skills = []
+    for skill_name in json["skills"]:
+        skills.append({"name": skill_name, "proficiency": 1, "is_highlight": False})
+
+    json["skills"] = skills
+
+    return CV_data(**json)
 
 
-def highlight_skills(skills, job_description):
-    prompt = _get_highlight_prompt(skills, job_description)
-    return _query_bedrock_for_json(prompt)
+def highlight_skills(skills: list[Skill], job_description: str):
+    raw_skills = [skill.name for skill in skills]
+
+    prompt = _get_highlight_prompt(raw_skills, job_description)
+    highlight_skills = _query_bedrock_for_json(prompt)["highlight_skills"]
+
+    for skill in skills:
+        if skill.name in highlight_skills:
+            skill.is_highlight = True
+
+    return skills
 
 
 def translate_cv(language: str, cv_data: CV_data):
