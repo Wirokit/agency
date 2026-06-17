@@ -463,6 +463,7 @@
       <label for="skill_name">
         Name
         <input
+          required
           id="skill_name"
           name="name"
           value="SQL"
@@ -582,11 +583,13 @@
   function openSkillEditDialog(event, rowEl) {
     event.preventDefault();
 
-    const deleteButton = rowEl.getElementsByClassName("delete-skill")[0];
+    if (rowEl) {
+      const deleteButton = rowEl.getElementsByClassName("delete-skill")[0];
 
-    // Do not open edit if delete button was clicked
-    if (deleteButton.contains(event.target)) {
-      return;
+      // Do not open edit if delete button was clicked
+      if (deleteButton.contains(event.target)) {
+        return;
+      }
     }
 
     let skillName = "";
