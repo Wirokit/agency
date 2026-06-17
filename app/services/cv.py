@@ -204,7 +204,10 @@ def get_cv_data_by_id(cv_id: UUID):
                 WHERE pt.cv_id = c.id) AS profile_texts,
 
                 -- 2. Aggregate Skills paired with their Proficiencies
-                (SELECT jsonb_agg(jsonb_build_object('name', s.name, 'proficiency', cs.proficiency, 'is_highlight', cs.is_highlight))
+                (SELECT jsonb_agg(
+                    jsonb_build_object('name', s.name, 'proficiency', cs.proficiency, 'is_highlight', cs.is_highlight)
+                    ORDER BY cs.is_highlight DESC, cs.proficiency DESC, s.name
+                )
                 FROM cv_skills cs
                 JOIN skills s ON cs.skill_id = s.id
                 WHERE cs.cv_id = c.id) AS skills,

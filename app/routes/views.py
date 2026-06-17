@@ -125,6 +125,26 @@ def serve_targeted_cv(cv_id):
     )
 
 
+@views_bp.route("/edit-cv/<cv_id>", methods=["GET"])
+@auth_required(modes=["all"])
+def serve_cv_edit(cv_id):
+    """Serves a CV's edit page to the frontend."""
+
+    owner = get_cv_owner(cv_id)
+    if session["user_type"] != UserType.ADMIN and owner.id != session["user_id"]:
+        return jsonify({"success": False, "error": "Access forbidden."}), 403
+
+    cv_data = get_cv_data_by_id(cv_id)
+
+    return render_template(
+        "views/edit_cv.html",
+        is_users_cv=session["user_id"] == owner.id,
+        owner_id=owner.id,
+        cv_id=cv_id,
+        cv_data=cv_data,
+    )
+
+
 @views_bp.route("/profile", methods=["GET"])
 @auth_required(modes=["all"])
 def serve_profile():

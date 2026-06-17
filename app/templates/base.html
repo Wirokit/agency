@@ -39,6 +39,9 @@
           background-size: 100% 100%;
         }
       }
+      body.modal-open {
+        overflow: hidden;
+      }
       .base-height {
         min-height: calc(100vh - 70px);
       }
@@ -184,7 +187,7 @@
         </div>
       </div>
     </nav>
-    <section class="base-height flex justify-center mt-[70px]">
+    <section class="relative base-height flex justify-center mt-[70px]">
       <header>{% block header %}{% endblock %}</header>
       {% for message in get_flashed_messages() %}
       <div class="flash">{{ message }}</div>
@@ -229,12 +232,16 @@
       const menuDefaultContent = document.getElementById("menu-content");
       const menuThemeSelector = document.getElementById("theme-selector");
 
-      document.addEventListener("scroll", (e) => {
+      function setScrollStatus() {
         if (window.scrollY > 5) {
           nav.classList.add("scrolled");
         } else {
           nav.classList.remove("scrolled");
         }
+      }
+      setScrollStatus();
+      document.addEventListener("scroll", (e) => {
+        setScrollStatus();
       });
 
       // Toggle menu with the top-right icon

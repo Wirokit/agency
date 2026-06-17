@@ -1,14 +1,9 @@
-<style>
-  .accordion-button {
-    font-weight: 500;
-  }
-  .accordion-button .icon {
-    background-color: var(--color-primary);
-    border-radius: 90px;
-    padding: 5px;
-    color: var(--color-white);
-  }
+<!doctype html>
+{% extends 'base.html' %}
 
+<!---->
+{% block content %}
+<style>
   label {
     background-color: var(--bg-dialog);
   }
@@ -24,27 +19,54 @@
   textarea {
     field-sizing: content;
   }
+
+  .bottom-actions {
+    position: fixed;
+    top: calc(100vh - 100px);
+    height: 100px;
+  }
+
+  .skills-row {
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  .skills-row:hover {
+    background-color: #0011ff1a;
+  }
+  button.delete-skill {
+    cursor: pointer;
+    border: 0.5px solid #00000000;
+  }
+  button.delete-skill:hover {
+    border: 0.5px solid #000000;
+  }
+  div.proficiency span {
+    color: var(--color-sky-200);
+  }
+  div.proficiency span.active {
+    color: var(--color-sky-700);
+  }
+  tr.highlight svg.lucide-star {
+    fill: var(--color-amber-300);
+  }
+
+  .skill-table tbody tr:not(:last-child) {
+    border-bottom: 1px solid #0000002a;
+  }
+  .skill-table th,
+  .skill-table td {
+    padding: 5px 20px;
+  }
 </style>
 
-<dialog
-  id="edit_dialog"
-  class="hidden modal card w-full max-w-2xl bg-(--bg-dialog) rounded-2xl overflow-hidden flex relative"
->
+<div class="w-full max-w-3xl overflow-hidden flex relative mb-[100px]">
   <div class="size-full">
-    <div class="modal-box overflow-y-auto max-h-[80vh] p-6 space-y-4">
+    <div class="p-6 space-y-4">
       <p class="text-xl font-bold">Edit CV</p>
 
       <!-- Basic Info -->
       {% if not hide_basic_info_from_cv_edit %}
-      <button
-        type="button"
-        class="accordion-button flex items-center w-full p-5 gap-3"
-        onclick="toggleCvAccordion(event, 'info-wrapper')"
-      >
-        <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
-        <span>Basic Info</span>
-      </button>
-      <div id="info-wrapper" class="hidden wrapper pb-4 px-12 space-y-4">
+      <div id="info-wrapper" class="px-4 pb-4 space-y-4">
         <div class="relative w-full pt-2">
           <label
             for="info_name"
@@ -79,15 +101,8 @@
       {% endif %}
 
       <!-- Profile edit -->
-      <button
-        type="button"
-        class="accordion-button flex items-center w-full p-5 gap-3"
-        onclick="toggleCvAccordion(event, 'profile-wrapper')"
-      >
-        <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
-        <span>Profile Paragraphs</span>
-      </button>
-      <div id="profile-wrapper" class="hidden p-4 px-12 space-y-4">
+      <p class="header text-lg font-bold">Profile Texts</p>
+      <div id="profile-wrapper" class="px-4 pb-4 space-y-4">
         <div id="profile-list" class="space-y-4">
           {% for profile in cv_data.profile_texts %}
           <div id="container-profile-{{loop.index}}" class="flex gap-2">
@@ -118,10 +133,10 @@
           <button
             type="button"
             id="add-profile-btn"
-            class="flex w-full items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-3"
+            class="flex px-4 items-center justify-center border border-green-500 rounded-3xl p-2 gap-3 text-green-600"
           >
-            <i data-lucide="plus" class="text-green-600 w-5 h-5"></i>
-            <span>ADD</span>
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            <span>NEW</span>
           </button>
           <button
             type="button"
@@ -135,94 +150,79 @@
       </div>
 
       <!-- Skills edit -->
-      <button
-        type="button"
-        class="accordion-button flex items-center w-full p-5 gap-3"
-        onclick="toggleCvAccordion(event, 'skills-wrapper')"
-      >
-        <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
-        <span>Skills</span>
-      </button>
-      <div id="skills-wrapper" class="hidden wrapper pb-4 px-12 space-y-2">
-        <p class="flex items-center text-md gap-2 text-yellow-600">
-          <i data-lucide="circle-alert" class="w-5 h-5"></i>
-          Click skill to toggle highlight
-          <i data-lucide="circle-alert" class="w-5 h-5"></i>
-        </p>
-        <div id="skill-list">
-          <!-- Highlight -->
-          {% for skill in cv_data.skills %} {% if skill.is_highlight %}
-          <div class="inline-flex items-center w-fit">
-            <span
-              class="skill-tag highlight hover:cursor-pointer"
-              onclick="toggleCvSkillHighlight(this)"
-              unselectable="on"
-              onselectstart="return false;"
-              onmousedown="return false;"
-            >
-              {{skill}}
-            </span>
-            <button
-              type="button"
-              class="ml-[-15px] rounded-xl bg-red-600"
-              onclick="deleteCvElement(event)"
-            >
-              <i data-lucide="x" class="text-white w-4 h-4"></i>
-            </button>
-          </div>
-          {% endif %} {% endfor %}
-          <!-- Normal -->
-          {% for skill in cv_data.skills %} {% if not skill.is_highlight %}
-          <div class="inline-flex items-center w-fit">
-            <span
-              class="skill-tag hover:cursor-pointer"
-              onclick="toggleCvSkillHighlight(this)"
-              unselectable="on"
-              onselectstart="return false;"
-              onmousedown="return false;"
-            >
-              {{skill}}
-            </span>
-            <button
-              type="button"
-              class="ml-[-15px] rounded-lg bg-red-600"
-              onclick="deleteCvElement(event)"
-            >
-              <i data-lucide="x" class="text-white w-4 h-4"></i>
-            </button>
-          </div>
-          {% endif %} {% endfor %}
-        </div>
-        <div class="w-full mt-1">
-          <label for="skill-input">Add a new skill</label>
-          <div class="flex items-center" class="w-full">
-            <input
-              id="skill-input"
-              type="text"
-              class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm"
-              onchange="addCvSkill(event)"
-            />
-            <button
-              type="button"
-              id="add-skill-btn"
-              onclick="addCvSkill(event)"
-            >
-              <i data-lucide="plus" class="text-green-600 w-5 h-5"></i>
-            </button>
-          </div>
+      <p class="header text-lg font-bold">Skills</p>
+      <div id="skills-wrapper" class="px-4 pb-4 space-y-2">
+        <button
+          class="contained flex items-center gap-2"
+          onclick="openSkillEditDialog(event, '', '', '')"
+        >
+          <i data-lucide="plus" class="w-5 h-5"></i>
+          New
+        </button>
+
+        <div id="skill-list" class="border border-default rounded-xs p-2">
+          <table id="skills-table" class="skill-table w-full table-auto">
+            <thead>
+              <tr>
+                <th>HL?</th>
+                <th class="w-full text-start">Name</th>
+                <th>Proficiency</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for skill in cv_data.skills %}
+              <tr
+                id="skill_row_{{loop.index}}"
+                class="skills-row items-center {{'highlight' if skill.is_highlight else ''}}"
+                onclick="openSkillEditDialog(event, this)"
+              >
+                <td>
+                  <i data-lucide="star" class="w-5 h-5"></i>
+                </td>
+                <td class="skill-name">{{skill.name}}</td>
+                <td class="flex flex-col items-center w-fit text-center">
+                  <div class="proficiency my-[-10px] text-4xl tracking-tighter">
+                    <span class="active">-</span>
+                    <span class="{{'active' if skill.proficiency > 1 else ''}}">
+                      -
+                    </span>
+                    <span class="{{'active' if skill.proficiency > 2 else ''}}">
+                      -
+                    </span>
+                    <span class="{{'active' if skill.proficiency > 3 else ''}}">
+                      -
+                    </span>
+                    <span class="{{'active' if skill.proficiency > 4 else ''}}">
+                      -
+                    </span>
+                  </div>
+                  <p class="proficiency-text text-sm">Loading...</p>
+                  <input
+                    name="proficiency-value"
+                    type="number"
+                    value="{{skill.proficiency}}"
+                    class="hidden"
+                  />
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    class="p-2 delete-skill rounded-lg"
+                    onclick="deleteSkillRow(this)"
+                  >
+                    <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <!-- Work Experience -->
-      <button
-        type="button"
-        class="accordion-button flex items-center w-full p-5 gap-3"
-        onclick="toggleCvAccordion(event, 'work-wrapper')"
-      >
-        <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
-        <span>Work Experience</span>
-      </button>
-      <div id="work-wrapper" class="hidden wrapper pb-4 px-12 space-y-4">
+      <p class="header text-lg font-bold">Job Experience</p>
+      <div id="work-wrapper" class="px-4 pb-4 space-y-4">
         <div id="experience-list" class="space-y-8">
           {% for experience in cv_data.job_experience %}
           <div class="flex gap-2">
@@ -310,7 +310,7 @@
           <button
             type="button"
             id="add-experience-btn"
-            class="flex w-full items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-2 text-green-600"
+            class="flex px-4 items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-2 text-green-600"
           >
             <i data-lucide="plus" class="w-5 h-5"></i>
             <span>ADD</span>
@@ -327,15 +327,8 @@
       </div>
 
       <!-- Education -->
-      <button
-        type="button"
-        class="accordion-button flex items-center w-full p-5 gap-3"
-        onclick="toggleCvAccordion(event, 'edu-wrapper')"
-      >
-        <i data-lucide="chevron-down" class="icon w-6 h-6"></i>
-        <span>Education</span>
-      </button>
-      <div id="edu-wrapper" class="hidden wrapper pb-4 px-12 space-y-4">
+      <p class="header text-lg font-bold">Education</p>
+      <div id="edu-wrapper" class="px-4 pb-4 space-y-4">
         <div id="edu-list" class="space-y-8">
           {% for education in cv_data.education %}
           <div class="flex gap-2">
@@ -423,7 +416,7 @@
           <button
             type="button"
             id="add-education-btn"
-            class="flex w-full items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-2 text-green-600"
+            class="flex px-4 items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-2 text-green-600"
           >
             <i data-lucide="plus" class="w-5 h-5"></i>
             <span>ADD</span>
@@ -441,29 +434,87 @@
 
       <!-- New accordions here -->
     </div>
+  </div>
+</div>
 
-    <div
-      class="flex items-center gap-2 modal-action p-6 border-default border-t-2 dark:bg-(--bg-dialog-actions)"
+<div
+  class="bottom-actions w-full flex justify-center gap-2 px-6 border-default border-t-2 card dark:bg-(--bg-dialog-actions)"
+>
+  <div class="max-w-3xl w-full flex items-center">
+    {{ ui.loading_button("edit-confirm-btn", "Save", "bg-green-600 text-white
+    font-bold hover:bg-green-800 focus:ring-green-300 rounded-sm") }}
+    <button
+      type="button"
+      class="py-3 px-4 rounded-sm focus:outline-none focus:ring-4 transition duration-200"
+      onclick="closeModal('edit_dialog', event)"
     >
-      {{ ui.loading_button("edit-confirm-btn", "Save", "bg-green-600 text-white
-      font-bold hover:bg-green-800 focus:ring-green-300 rounded-sm") }}
+      Cancel
+    </button>
+    <p id="edit-message"></p>
+  </div>
+</div>
+
+{% call ui.modal("skill_edit_dialog", "Skill", "xs") %}
+<div id="upload-body" class="min-w-xs p-4 md:p-6 space-y-4">
+  <form id="skill_edit_form" method="dialog">
+    <div class="flex flex-col gap-4 mb-4">
+      <label for="skill_name">
+        Name
+        <input
+          id="skill_name"
+          name="name"
+          value="SQL"
+          class="w-full p-2 border border-[rgba(0,0,0,0.2)] rounded-sm"
+        />
+      </label>
+
+      <label for="skill_proficiency">
+        Proficiency
+        <select
+          id="skill_proficiency"
+          name="proficiency"
+          class="w-full cursor-pointer"
+        >
+          <option value="1">Less than a year</option>
+          <option value="2">1-3 years</option>
+          <option value="3">4-5 years</option>
+          <option value="4">6-7 years</option>
+          <option value="5">8+ years</option>
+        </select>
+      </label>
+
+      <label for="is_highlighted" class="w-fit flex items-center gap-2">
+        <input
+          id="is_highlighted"
+          name="is_highlight"
+          type="checkbox"
+          class="w-4 h-4"
+        />
+        Highlighted?
+      </label>
+    </div>
+
+    <div class="flex gap-2 items-center">
       <button
-        type="button"
-        class="py-3 px-4 rounded-sm focus:outline-none focus:ring-4 transition duration-200"
-        onclick="closeModal('edit_dialog', event)"
+        type="submit"
+        class="rounded-lg contained success focus:outline-none focus:ring-4 transition duration-200"
+      >
+        Save
+      </button>
+      <button
+        class="px-3 py-2 focus:outline-none focus:ring-4 transition duration-200"
+        onclick="closeModal('skill_edit_dialog', event)"
       >
         Cancel
       </button>
-      <p id="edit-message"></p>
     </div>
-  </div>
-</dialog>
+  </form>
+</div>
+{% endcall %}
 
 <script type="module">
   // Initialize Icons
   lucide.createIcons();
-
-  const dialog = document.getElementById("edit_dialog");
 
   let nextProfileIndex =
     document.getElementById("profile-list").children.length + 1;
@@ -471,34 +522,213 @@
     document.getElementById("experience-list").children.length + 1;
   let nextEduIndex = document.getElementById("edu-list").children.length + 1;
 
-  document.body.addEventListener("keydown", (e) => {
-    if (dialog.open && e.key == "Escape") {
-      e.preventDefault();
-      closeModal("edit_dialog", null);
+  // Changed to whatever skill is being edited to know which one should be updated
+  // Empty string represents a new skill being added
+  let rowToEdit = null;
+
+  function setProficiencyTexts(row_element) {
+    const elements = row_element
+      ? [row_element]
+      : document.getElementsByClassName("skills-row");
+
+    for (let el of elements) {
+      const proficiency = el.getElementsByTagName("input")[0].value;
+      let proficiencyText = "";
+
+      switch (proficiency) {
+        case "1":
+          proficiencyText = "Less than a year";
+          break;
+        case "2":
+          proficiencyText = "1-3 years";
+          break;
+        case "3":
+          proficiencyText = "4-5 years";
+          break;
+        case "4":
+          proficiencyText = "6-7 years";
+          break;
+        case "5":
+          proficiencyText = "8+ years";
+          break;
+        default:
+          proficiencyText = "Unknown";
+          break;
+      }
+
+      const proficiencyTextEl =
+        el.getElementsByClassName("proficiency-text")[0];
+      proficiencyTextEl.innerText = proficiencyText;
     }
+  }
+  window.setProficiencyTexts = setProficiencyTexts;
+
+  function deleteSkillRow(buttonEl) {
+    // delete button -> table cell -> table row
+    const row = buttonEl.parentElement.parentElement;
+    const rowIndex = row.rowIndex;
+
+    const skillsTable = document.getElementById("skills-table");
+    skillsTable.deleteRow(rowIndex);
+  }
+  window.deleteSkillRow = deleteSkillRow;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    setProficiencyTexts();
   });
 
-  function toggleCvAccordion(e, target) {
-    e.preventDefault();
+  function openSkillEditDialog(event, rowEl) {
+    event.preventDefault();
 
-    const buttonEl = e.currentTarget;
-    const targetEl = document.getElementById(target);
-    if (targetEl.classList.contains("hidden")) {
-      buttonEl
-        .getElementsByClassName("icon")[0]
-        .setAttribute("data-lucide", "chevron-up");
-      buttonEl.classList.add("active");
-      targetEl.classList.remove("hidden");
+    let skillName = "";
+    let skillProficiency = 1;
+    let isHighlighted = false;
+
+    if (rowEl) {
+      rowToEdit = rowEl;
+
+      const nameEl = rowEl.getElementsByClassName("skill-name")[0];
+      skillName = nameEl.innerText;
+
+      const profEl = rowEl.getElementsByTagName("input")[0];
+      skillProficiency = profEl.value;
+
+      isHighlighted = rowEl.classList.contains("highlight");
     } else {
-      buttonEl
-        .getElementsByClassName("icon")[0]
-        .setAttribute("data-lucide", "chevron-down");
-      buttonEl.classList.remove("active");
-      targetEl.classList.add("hidden");
+      rowToEdit = null;
     }
-    lucide.createIcons();
+
+    const nameEl = document.getElementById("skill_name");
+    nameEl.value = skillName;
+
+    const proficiencySelector = document.getElementById("skill_proficiency");
+    proficiencySelector.value = skillProficiency;
+
+    const highlightToggle = document.getElementById("is_highlighted");
+    if (isHighlighted) {
+      highlightToggle.setAttribute("checked", "true");
+    } else {
+      highlightToggle.removeAttribute("checked");
+    }
+
+    window.openModal("skill_edit_dialog");
   }
-  window.toggleCvAccordion = toggleCvAccordion;
+  window.openSkillEditDialog = openSkillEditDialog;
+
+  function validSkillName(skillName, ignoredRow) {
+    const rows = document.getElementsByClassName("skills-row");
+
+    for (let row of rows) {
+      if (row == ignoredRow) continue;
+
+      const nameEl = row.getElementsByClassName("skill-name")[0];
+      if (nameEl.innerText.toLowerCase() == skillName.toLowerCase()) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  const skillEditForm = document.getElementById("skill_edit_form");
+  skillEditForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const form = new FormData(skillEditForm);
+    const formObj = Object.fromEntries(form);
+    formObj["is_highlight"] = form.get("is_highlight") == "on" || false;
+
+    if (rowToEdit) {
+      if (!validSkillName(formObj["name"], rowToEdit)) {
+        return;
+      }
+
+      const skillRow = rowToEdit;
+
+      const nameCell = skillRow.getElementsByClassName("skill-name")[0];
+      nameCell.innerText = formObj["name"];
+
+      const proficiencyContainer =
+        skillRow.getElementsByClassName("proficiency")[0];
+      proficiencyContainer.innerHTML = html`
+        <span class="active">-</span>
+        <span class="${formObj["proficiency"] > 1 ? "active" : ""}">-</span>
+        <span class="${formObj["proficiency"] > 2 ? "active" : ""}">-</span>
+        <span class="${formObj["proficiency"] > 3 ? "active" : ""}">-</span>
+        <span class="${formObj["proficiency"] > 4 ? "active" : ""}">-</span>
+      `;
+      skillRow.getElementsByTagName("input")[0].value = formObj["proficiency"];
+
+      formObj["is_highlight"]
+        ? skillRow.classList.add("highlight")
+        : skillRow.classList.remove("highlight");
+
+      setProficiencyTexts(skillRow);
+    } else {
+      if (!validSkillName(formObj["name"])) {
+        return;
+      }
+
+      const skillsTable = document.getElementById("skills-table");
+
+      const newRow = skillsTable.insertRow();
+      newRow.classList.add("skills-row", "items-center");
+      if (formObj["is_highlight"]) {
+        newRow.classList.add("highlight");
+      }
+      newRow.setAttribute("onclick", "openSkillEditDialog(event, this)");
+
+      const highlightCell = newRow.insertCell();
+      highlightCell.innerHTML = html`<i
+        data-lucide="star"
+        class="w-5 h-5"
+      ></i>`;
+
+      const nameCell = newRow.insertCell();
+      nameCell.classList.add("skill-name");
+      nameCell.innerText = formObj["name"];
+
+      const profCell = newRow.insertCell();
+      profCell.classList.add(
+        "flex",
+        "flex-col",
+        "items-center",
+        "w-fit",
+        "text-center",
+      );
+      profCell.innerHTML = html`
+        <div class="proficiency my-[-10px] text-4xl tracking-tighter">
+          <span class="active">-</span>
+          <span class="${formObj["proficiency"] > 1 ? "active" : ""}">-</span>
+          <span class="${formObj["proficiency"] > 2 ? "active" : ""}">-</span>
+          <span class="${formObj["proficiency"] > 3 ? "active" : ""}">-</span>
+          <span class="${formObj["proficiency"] > 4 ? "active" : ""}">-</span>
+        </div>
+        <p class="proficiency-text text-sm">Loading...</p>
+        <input
+          name="proficiency-value"
+          type="number"
+          value="${formObj["proficiency"]}"
+          class="hidden"
+        />
+      `;
+
+      const deleteBtnCell = newRow.insertCell();
+      deleteBtnCell.innerHTML = html`
+        <button
+          type="button"
+          class="p-2 delete-skill rounded-lg"
+          onclick="deleteSkillRow(this)"
+        >
+          <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+        </button>
+      `;
+
+      setProficiencyTexts(newRow);
+      lucide.createIcons();
+    }
+    window.closeModal("skill_edit_dialog");
+  });
 
   document.getElementById("add-profile-btn").addEventListener("click", (e) => {
     e.preventDefault();
@@ -534,15 +764,6 @@
     lucide.createIcons();
   });
 
-  function toggleCvSkillHighlight(skillNode) {
-    if (skillNode.classList.contains("highlight")) {
-      skillNode.classList.remove("highlight");
-    } else {
-      skillNode.classList.add("highlight");
-    }
-  }
-  window.toggleCvSkillHighlight = toggleCvSkillHighlight;
-
   function deleteCvElement(e, listId) {
     e.preventDefault();
 
@@ -557,37 +778,6 @@
     }
   }
   window.deleteCvElement = deleteCvElement;
-
-  function addCvSkill(e) {
-    e.preventDefault();
-
-    const skillInput = document.getElementById("skill-input");
-
-    const skillEl = document.createElement("div");
-    skillEl.classList.add("inline-flex", "items-center", "w-fit");
-    skillEl.innerHTML = html`
-      <span
-        class="skill-tag hover:cursor-pointer"
-        onclick="toggleCvSkillHighlight(this)"
-      >
-        ${skillInput.value}
-      </span>
-      <button
-        type="button"
-        class="ml-[-15px] rounded-lg bg-red-600"
-        onclick="deleteCvElement(event)"
-      >
-        <i data-lucide="x" class="text-white w-4 h-4"></i>
-      </button>
-    `;
-
-    document.getElementById("skill-list").appendChild(skillEl);
-    skillInput.value = "";
-
-    // Initialize new icon
-    lucide.createIcons();
-  }
-  window.addCvSkill = addCvSkill;
 
   const addExperienceButton = document.getElementById("add-experience-btn");
   addExperienceButton.addEventListener("click", (e) => {
@@ -871,3 +1061,4 @@
     }
   });
 </script>
+{% endblock %}

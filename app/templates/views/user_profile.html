@@ -4,10 +4,6 @@
 <!-- Main Container -->
 {% block content %}
 <style>
-  body.modal-open {
-    overflow: hidden;
-  }
-
   table {
     font-family: arial, sans-serif;
     border-collapse: collapse;
@@ -319,8 +315,6 @@
 </div>
 
 {% if session["user_type"] == "admin" or session["user_id"] == user_id %}
-<!---->
-{% include 'views/modals/cv_edit_dialog.html' %}
 <!---->
 {% include 'views/modals/cv_upload_dialog.html' %}
 <!---->
