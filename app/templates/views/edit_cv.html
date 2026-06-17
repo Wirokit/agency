@@ -59,6 +59,8 @@
   }
 </style>
 
+<meta id="cv_id" data-other="{{cv_id}}" />
+
 <div class="w-full max-w-3xl overflow-hidden flex relative mb-[100px]">
   <div class="size-full">
     <div class="p-6 space-y-4">
@@ -442,14 +444,14 @@
 >
   <div class="max-w-3xl w-full flex items-center">
     {{ ui.loading_button("edit-confirm-btn", "Save", "bg-green-600 text-white
-    font-bold hover:bg-green-800 focus:ring-green-300 rounded-sm") }}
-    <button
+    font-bold hover:bg-green-800 focus:ring-black-300 rounded-sm") }}
+    <a
+      href="/profile"
       type="button"
       class="py-3 px-4 rounded-sm focus:outline-none focus:ring-4 transition duration-200"
-      onclick="closeModal('edit_dialog', event)"
     >
-      Cancel
-    </button>
+      Back to Profile
+    </a>
     <p id="edit-message"></p>
   </div>
 </div>
@@ -579,6 +581,13 @@
 
   function openSkillEditDialog(event, rowEl) {
     event.preventDefault();
+
+    const deleteButton = rowEl.getElementsByClassName("delete-skill")[0];
+
+    // Do not open edit if delete button was clicked
+    if (deleteButton.contains(event.target)) {
+      return;
+    }
 
     let skillName = "";
     let skillProficiency = 1;
@@ -977,18 +986,18 @@
     }
 
     // Skills
-    const skillsList = document.getElementById("skill-list");
-    jsonData.highlight_skills = [];
+    const skillRows = document.getElementsByClassName("skills-row");
     jsonData.skills = [];
-    for (const child of skillsList.children) {
-      let skillNode = child.getElementsByClassName("skill-tag")[0];
-      let value = skillNode.textContent.replaceAll("\n", "").trim();
+    for (const row of skillRows) {
+      const skillName = row.getElementsByClassName("skill-name")[0].innerText;
+      const skillProf = row.getElementsByTagName("input")[0].value;
+      const skillhighlight = row.classList.contains("highlight");
 
-      if (skillNode.classList.contains("highlight")) {
-        jsonData.highlight_skills.push(value);
-      } else {
-        jsonData.skills.push(value);
-      }
+      jsonData.skills.push({
+        name: skillName,
+        proficiency: skillProf,
+        is_highlight: skillhighlight,
+      });
     }
 
     // Work Experience
