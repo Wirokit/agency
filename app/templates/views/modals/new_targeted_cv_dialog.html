@@ -4,22 +4,37 @@
 <div id="targeted-cv-dialog-body" class="w-full p-4 md:p-6 space-y-4">
   <form id="targeted-cv-form" class="space-y-6">
     <!-- Job ID -->
-    <div>
-      <label for="job-id" class="text-sm font-medium text-heading">
-        Job ID*
-      </label>
-      <input
-        id="job-id"
-        name="job_id"
-        required
-        class="w-full mb-4 border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
-        placeholder="e.g. Tester for Company Y"
-      />
-    </div>
-
-    <!-- Language selector -->
     <div class="space-y-4">
-      <div class="relative flex flex-col gap-2">
+      <div>
+        <label for="job-id" class="text-sm font-medium text-heading">
+          Job ID*
+        </label>
+        <input
+          id="job-id"
+          name="job_id"
+          required
+          class="w-full mb-4 border border-default-medium rounded-xs text-sm rounded-base focus:ring-brand focus:border-brand block p-3.5 shadow-xs placeholder:text-body"
+          placeholder="e.g. Tester for Company Y"
+        />
+      </div>
+
+      <!-- Contact user -->
+      <div class="relative flex flex-col">
+        <label for="contact-selector" class="select-none text-sm font-medium">
+          Wirokit Contact (Admins)
+        </label>
+        <select name="contact" id="contact-selector">
+          {% for contact in contact_list %} {% if contact.full_name ==
+          session['user_name'] %}
+          <option value="{{contact.id}}" selected>{{contact.full_name}}</option>
+          {% else %}
+          <option value="{{contact.id}}">{{contact.full_name}}</option>
+          {% endif %} {% endfor %}
+        </select>
+      </div>
+
+      <!-- Language selector -->
+      <div class="relative flex flex-col">
         <label for="language-selector" class="select-none text-sm font-medium">
           Language
         </label>
@@ -120,7 +135,6 @@
     e.preventDefault(); // Prevent default form submission
 
     const formData = new FormData(form);
-    const formObject = Object.fromEntries(formData);
 
     hideMessage();
     setLoading(true);

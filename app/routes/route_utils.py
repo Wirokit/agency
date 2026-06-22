@@ -131,3 +131,18 @@ def get_targeted_cvs_by_id(user_id):
     db.rollback()
 
     return cv_list
+
+
+def get_contact_users():
+    db = get_db()
+    with db.cursor() as cur:
+        query = """
+            SELECT id, full_name FROM users
+            WHERE user_type_id = 1
+        """
+        cur.execute(query)
+        contact_list = cur.fetchall()
+
+    db.rollback()
+
+    return contact_list

@@ -10,7 +10,7 @@ from app.services.cv import (
 )
 from app.services.s3 import get_profile_img_url
 from models import UserType, get_user_type_by_id
-from .route_utils import auth_required, get_user_by_id
+from .route_utils import auth_required, get_contact_users, get_user_by_id
 
 bp_name = "views"
 
@@ -139,7 +139,7 @@ def serve_cv_edit(cv_id):
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 
     cv_data = get_fulL_cv_object(cv_id)
-    other_cv_info = get_cv_data_by_columns(cv_id, "is_source")
+    other_cv_info = get_cv_data_by_columns(cv_id, "is_source, handler_id")
     is_source = other_cv_info["is_source"]
 
     return_link = ""
@@ -150,6 +150,10 @@ def serve_cv_edit(cv_id):
     else:
         return_link = f"/cv/{cv_id}"
 
+    contact_list = []
+    if UserType(session["user_type"]) is UserType.ADMIN:
+        contact_list = get_contact_users()
+
     return render_template(
         "views/edit_cv.html",
         return_link=return_link,
@@ -157,6 +161,8 @@ def serve_cv_edit(cv_id):
         owner_id=owner.id,
         cv_id=cv_id,
         cv_data=cv_data,
+        current_handler_id=other_cv_info["handler_id"],
+        contact_list=contact_list,
     )
 
 
@@ -199,6 +205,10 @@ def serve_profile_by_id(user_id):
     # Get targeted CVs for the target user
     targeted_cv_list = get_targeted_cvs_by_id(user_id)
 
+    contact_list = []
+    if UserType(session["user_type"]) is UserType.ADMIN:
+        contact_list = get_contact_users()
+
     return render_template(
         "views/user_profile.html",
         user_type=user_type.value,
@@ -211,7 +221,7 @@ def serve_profile_by_id(user_id):
         pin_code=user_data.get("pin_code", ""),
         created_at=user_data["created_at"],
         targeted_cv_list=targeted_cv_list,
-        hide_basic_info_from_cv_edit=True,
+        contact_list=contact_list,
     )
 
 

@@ -107,6 +107,29 @@
             value="{{cv_data.title}}"
           />
         </div>
+
+        <div class="relative pt-2">
+          <label
+            for="contact-selector"
+            class="absolute top-0 left-1 px-1 text-xs font-semibold"
+          >
+            Wirokit Contact
+          </label>
+          <select
+            name="contact"
+            id="contact-selector"
+            class="w-full max-w-[300px]"
+          >
+            {% for contact in contact_list %} {% if contact.id ==
+            current_handler_id %}
+            <option value="{{contact.id}}" selected>
+              {{contact.full_name}}
+            </option>
+            {% else %}
+            <option value="{{contact.id}}">{{contact.full_name}}</option>
+            {% endif %} {% endfor %}
+          </select>
+        </div>
       </div>
       {% endif %}
 
@@ -1056,11 +1079,15 @@
     const editMessage = document.getElementById("edit-message");
     editMessage.setAttribute("class", "hidden text-sm");
 
+    const contactSelector = document.getElementById("contact-selector");
+    const contactId = contactSelector.value;
+
     const cv_id = document.getElementById("cv_id").getAttribute("data-other");
 
     try {
       const formData = new FormData();
       formData.append("cv_json", JSON.stringify(jsonData));
+      formData.append("contact_id", contactId);
 
       const response = await fetch(`/api/cv/${cv_id}`, {
         method: "PATCH",

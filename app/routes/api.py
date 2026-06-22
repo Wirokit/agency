@@ -327,11 +327,13 @@ def post_targeted_cv(source_user_id):
         return jsonify({"success": False, "error": "No source CV exists"}), 424
 
     cv_data.name = source_user_data["full_name"]
+    cv_data.title = source_user_data["title"]
 
     job_name = request.values["job_id"]
     language = request.values["language"]
     job_description = request.values["job_description"]
     extra_profile_text = request.values["extra_profile_text"]
+    contact_user_id = request.values["contact"]
 
     if language:
         translated_json = translate_cv(language, cv_data)
@@ -368,7 +370,7 @@ def post_targeted_cv(source_user_id):
         """
         cur.execute(
             query,
-            (session["user_id"], job_name, cv_id),
+            (contact_user_id, job_name, cv_id),
         )
         db.commit()
 
@@ -382,6 +384,7 @@ def edit_targeted_cv(id):
     """Used by admins to edit CVs"""
 
     cv_data = CV_data(**json.loads(request.values["cv_json"]))
+    contact_id = request.values["contact_id"]
 
     # Edit basic info
     db = get_db()
@@ -389,12 +392,12 @@ def edit_targeted_cv(id):
         # Base CV
         query = """
             UPDATE cv
-            SET name = %s, title = %s
+            SET name = %s, title = %s, handler_id = %s
             WHERE id = %s;
         """
         cur.execute(
             query,
-            (cv_data.name, cv_data.title, id),
+            (cv_data.name, cv_data.title, contact_id, id),
         )
 
     replace_cv_data(id, cv_data)
