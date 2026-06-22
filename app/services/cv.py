@@ -5,6 +5,7 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from app.db import get_db
 from models import CV_Handler, CV_Owner, CV_data
+from psycopg2.extensions import AsIs
 
 from .bedrock import extract_cv
 from .utils import parse_pdf
@@ -186,7 +187,29 @@ def save_cv_to_db(cv: CV_data, user_uuid: UUID, user_name: str, is_source: bool)
     return new_cv_id
 
 
-def get_cv_data_by_id(cv_id: UUID):
+def get_cv_data_by_columns(cv_id: UUID, columns="*"):
+    cv_data = None
+
+    db = get_db()
+    with db.cursor() as cur:
+        # Base CV
+        query = """
+            SELECT %s FROM cv
+            WHERE id = %s
+        """
+        cur.execute(
+            query,
+            (
+                AsIs(columns),
+                cv_id,
+            ),
+        )
+        cv_data = cur.fetchone()
+
+    return cv_data
+
+
+def get_fulL_cv_object(cv_id: UUID):
     cv_data = None
 
     db = get_db()
@@ -310,7 +333,7 @@ def get_source_cv(user_id: UUID):
 
         cv_data = cur.fetchone()
         if cv_data:
-            return get_cv_data_by_id(cv_data["id"])
+            return get_fulL_cv_object(cv_data["id"])
 
     return None
 

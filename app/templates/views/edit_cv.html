@@ -4,6 +4,12 @@
 <!---->
 {% block content %}
 <style>
+  p.page-title {
+    border-top: 1px solid var(--color-slate-300);
+    border-bottom: 1px solid var(--color-slate-300);
+    font-size: x-large;
+  }
+
   label {
     background-color: var(--bg-dialog);
   }
@@ -60,14 +66,16 @@
 </style>
 
 <meta id="cv_id" data-other="{{cv_id}}" />
+<meta id="return_link" data-other="{{return_link}}" />
 
 <div class="w-full max-w-3xl overflow-hidden flex relative mb-[100px]">
   <div class="size-full">
     <div class="p-6 space-y-4">
-      <p class="text-xl font-bold">Edit CV</p>
+      <p class="page-title text-xl font-bold w-full text-center">Edit CV</p>
 
       <!-- Basic Info -->
-      {% if not hide_basic_info_from_cv_edit %}
+      {% if not is_source_cv %}
+      <p class="header text-lg font-bold">Basic Info</p>
       <div id="info-wrapper" class="px-4 pb-4 space-y-4">
         <div class="relative w-full pt-2">
           <label
@@ -111,7 +119,7 @@
             <!-- prettier-ignore -->
             <textarea
               id="profile-{{loop.index}}"
-              class="border border-[rgba(0,0,0,0.2)] rounded-sm p-4 w-full min-w-100"
+              class="border border-[rgba(0,0,0,0.2)] rounded-sm p-4 w-full"
             >{{profile}}</textarea>
 
             <div
@@ -154,19 +162,13 @@
       <!-- Skills edit -->
       <p class="header text-lg font-bold">Skills</p>
       <div id="skills-wrapper" class="px-4 pb-4 space-y-2">
-        <button
-          class="contained flex items-center gap-2"
-          onclick="openSkillEditDialog(event, '', '', '')"
-        >
-          <i data-lucide="plus" class="w-5 h-5"></i>
-          New
-        </button>
-
         <div id="skill-list" class="border border-default rounded-xs p-2">
           <table id="skills-table" class="skill-table w-full table-auto">
             <thead>
-              <tr>
+              <tr id="skill-table-header">
+                {% if not is_source_cv %}
                 <th>HL?</th>
+                {% endif %}
                 <th class="w-full text-start">Name</th>
                 <th>Proficiency</th>
                 <th></th>
@@ -179,9 +181,11 @@
                 class="skills-row items-center {{'highlight' if skill.is_highlight else ''}}"
                 onclick="openSkillEditDialog(event, this)"
               >
+                {% if not is_source_cv %}
                 <td>
                   <i data-lucide="star" class="w-5 h-5"></i>
                 </td>
+                {% endif %}
                 <td class="skill-name">{{skill.name}}</td>
                 <td class="flex flex-col items-center w-fit text-center">
                   <div class="proficiency my-[-10px] text-4xl tracking-tighter">
@@ -221,6 +225,15 @@
             </tbody>
           </table>
         </div>
+
+        <button
+          type="button"
+          class="flex px-4 items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-2 text-green-600"
+          onclick="openSkillEditDialog(event, '', '', '')"
+        >
+          <i data-lucide="plus" class="w-5 h-5"></i>
+          <span>ADD</span>
+        </button>
       </div>
 
       <p class="header text-lg font-bold">Job Experience</p>
@@ -442,15 +455,15 @@
 <div
   class="bottom-actions w-full flex justify-center gap-2 px-6 border-default border-t-2 card dark:bg-(--bg-dialog-actions)"
 >
-  <div class="max-w-3xl w-full flex items-center">
+  <div class="max-w-3xl w-full flex items-center gap-2">
     {{ ui.loading_button("edit-confirm-btn", "Save", "bg-green-600 text-white
     font-bold hover:bg-green-800 focus:ring-black-300 rounded-sm") }}
     <a
-      href="/profile"
+      href="{{return_link}}"
       type="button"
       class="py-3 px-4 rounded-sm focus:outline-none focus:ring-4 transition duration-200"
     >
-      Back to Profile
+      {{ "Back to profile" if "profile" in return_link else "Back to CV"}}
     </a>
     <p id="edit-message"></p>
   </div>
@@ -486,6 +499,7 @@
         </select>
       </label>
 
+      {% if not is_source_cv %}
       <label for="is_highlighted" class="w-fit flex items-center gap-2">
         <input
           id="is_highlighted"
@@ -495,6 +509,7 @@
         />
         Highlighted?
       </label>
+      {% endif %}
     </div>
 
     <div class="flex gap-2 items-center">
@@ -617,9 +632,9 @@
     proficiencySelector.value = skillProficiency;
 
     const highlightToggle = document.getElementById("is_highlighted");
-    if (isHighlighted) {
+    if (highlightToggle && isHighlighted) {
       highlightToggle.setAttribute("checked", "true");
-    } else {
+    } else if (highlightToggle) {
       highlightToggle.removeAttribute("checked");
     }
 
@@ -690,11 +705,14 @@
       }
       newRow.setAttribute("onclick", "openSkillEditDialog(event, this)");
 
-      const highlightCell = newRow.insertCell();
-      highlightCell.innerHTML = html`<i
-        data-lucide="star"
-        class="w-5 h-5"
-      ></i>`;
+      const tableHeader = document.getElementById("skill-table-header");
+      if (tableHeader.cells.length > 3) {
+        const highlightCell = newRow.insertCell();
+        highlightCell.innerHTML = html`<i
+          data-lucide="star"
+          class="w-5 h-5"
+        ></i>`;
+      }
 
       const nameCell = newRow.insertCell();
       nameCell.classList.add("skill-name");
@@ -1054,8 +1072,12 @@
       editMessage.classList.remove("hidden");
       if (response.ok && result.success) {
         editMessage.classList.add("text-green-700");
-        editMessage.textContent = "Done! Reloading page...";
-        window.location.reload();
+        editMessage.textContent = "Done! Redirecting...";
+
+        const returnLink = document
+          .getElementById("return_link")
+          .getAttribute("data-other");
+        window.location.href = returnLink;
       } else {
         // Handle backend error
         editMessage.classList.add("text-red-700");

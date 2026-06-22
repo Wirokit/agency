@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, render_template, session, request, redirect
 from app.db import get_db
 from app.services.cv import (
-    get_cv_data_by_id,
+    get_cv_data_by_columns,
+    get_fulL_cv_object,
     get_cv_handler,
     get_cv_owner,
     get_source_cv,
@@ -111,7 +112,7 @@ def serve_landing():
 def serve_targeted_cv(cv_id):
     """Serves a targeted CV to the frontend."""
 
-    cv_data = get_cv_data_by_id(cv_id)
+    cv_data = get_fulL_cv_object(cv_id)
     owner = get_cv_owner(cv_id)
     handler = get_cv_handler(cv_id)
 
@@ -131,14 +132,28 @@ def serve_cv_edit(cv_id):
     """Serves a CV's edit page to the frontend."""
 
     owner = get_cv_owner(cv_id)
-    if session["user_type"] != UserType.ADMIN and owner.id != session["user_id"]:
+    if (
+        UserType(session["user_type"]) != UserType.ADMIN
+        and owner.id != session["user_id"]
+    ):
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 
-    cv_data = get_cv_data_by_id(cv_id)
+    cv_data = get_fulL_cv_object(cv_id)
+    other_cv_info = get_cv_data_by_columns(cv_id, "is_source")
+    is_source = other_cv_info["is_source"]
+
+    return_link = ""
+    if session["user_id"] == owner.id and is_source:
+        return_link = "/profile"
+    elif is_source:
+        return_link = f"/profile/{owner.id}"
+    else:
+        return_link = f"/cv/{cv_id}"
 
     return render_template(
         "views/edit_cv.html",
-        is_users_cv=session["user_id"] == owner.id,
+        return_link=return_link,
+        is_source_cv=is_source,
         owner_id=owner.id,
         cv_id=cv_id,
         cv_data=cv_data,

@@ -383,6 +383,20 @@ def edit_targeted_cv(id):
 
     cv_data = CV_data(**json.loads(request.values["cv_json"]))
 
+    # Edit basic info
+    db = get_db()
+    with db.cursor() as cur:
+        # Base CV
+        query = """
+            UPDATE cv
+            SET name = %s, title = %s
+            WHERE id = %s;
+        """
+        cur.execute(
+            query,
+            (cv_data.name, cv_data.title, id),
+        )
+
     replace_cv_data(id, cv_data)
 
     # Send the success response

@@ -148,13 +148,13 @@
       </button>
       {% if cv_data %}
       <!---->
-      <button
+      <a
+        href="/edit-cv/{{cv_data.id}}"
         class="flex items-center py-3 px-4 w-full gap-3"
-        onclick="openModal('edit_dialog', event)"
       >
         <i data-lucide="pencil-line" class="w-5 h-5"></i>
         Edit Source CV
-      </button>
+      </a>
       {% else %}
       <button
         class="flex items-center py-3 px-4 w-full gap-3"
