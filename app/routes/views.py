@@ -205,9 +205,9 @@ def serve_profile_by_id(user_id):
     # Get targeted CVs for the target user
     targeted_cv_list = get_targeted_cvs_by_id(user_id)
 
-    contact_list = []
     if UserType(session["user_type"]) is UserType.ADMIN:
         contact_list = get_contact_users()
+        contact = get_user_by_id(user_id, "email, phone_num")
 
     return render_template(
         "views/user_profile.html",
@@ -217,11 +217,13 @@ def serve_profile_by_id(user_id):
         user_name=user_data["full_name"],
         user_title=user_data["title"] or "",
         user_office=user_data.get("office", ""),
+        email=contact["email"] if contact else "",
+        phone_num=contact["phone_num"] if contact else "",
         cv_data=cv_data or {},
         pin_code=user_data.get("pin_code", ""),
         created_at=user_data["created_at"],
         targeted_cv_list=targeted_cv_list,
-        contact_list=contact_list,
+        contact_list=contact_list or [],
     )
 
 

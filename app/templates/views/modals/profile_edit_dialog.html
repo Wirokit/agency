@@ -10,6 +10,10 @@
   .profile-img-button:hover .edit-icon {
     opacity: 1;
   }
+
+  label {
+    background-color: var(--bg-dialog);
+  }
 </style>
 
 <!-- Card -->
@@ -105,6 +109,49 @@
           type="text"
           class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
           value="{{user_office}}"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="space-y-2">
+    <p class="w-full font-medium">Contact Info</p>
+
+    <div class="flex gap-2 items-center">
+      <div class="relative w-full">
+        <label
+          for="contact_email"
+          class="absolute top-[-6px] left-1 px-1 text-xs font-semibold flex items-center gap-1"
+        >
+          <i data-lucide="mail" class="w-3 h-3"></i>
+          Email
+        </label>
+
+        <input
+          required
+          id="contact_email"
+          name="email"
+          type="text"
+          class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+          value="{{email}}"
+        />
+      </div>
+      <div class="relative w-full">
+        <label
+          for="contact_phone"
+          class="absolute top-[-6px] left-1 px-1 text-xs font-semibold flex items-center gap-1"
+        >
+          <i data-lucide="phone" class="w-3 h-3"></i>
+          Phone
+        </label>
+
+        <input
+          required
+          id="contact_phone"
+          name="phone_num"
+          type="text"
+          class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+          value="{{phone_num}}"
         />
       </div>
     </div>

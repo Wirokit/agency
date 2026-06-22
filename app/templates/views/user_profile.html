@@ -194,13 +194,27 @@
         <p>Source CV not provided</p>
         {% endif %}
       </div>
+      {% if user_type == "admin" %}
+      <div
+        class="flex items-center gap-2 {{'text-(--color-error)' if not email else ''}}"
+      >
+        <i data-lucide="mail" class="w-6 h-6"></i>
+        <p>{{email or "Email missing"}}</p>
+      </div>
+      <div
+        class="flex items-center gap-2 {{'text-(--color-error)' if not phone_num else ''}}"
+      >
+        <i data-lucide="phone" class="w-6 h-6"></i>
+        <p>{{phone_num or "Phone number missing"}}</p>
+      </div>
+      {% endif %}
+      <!---->
       {% if user_type == "EXTERNAL" %}
       <div class="flex items-center gap-2">
         <i data-lucide="clock" class="w-6 h-6"></i>
         <p>Expires in: 14 days</p>
       </div>
       {% endif %}
-
       <!---->
       {% if session["user_type"] == "admin" and pin_code %}
       <div class="flex items-center gap-2">

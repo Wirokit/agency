@@ -292,12 +292,14 @@ def edit_profile(id):
     full_name = request.values["full_name"]
     title = request.values["title"]
     location = request.values["location"]
+    email = request.values["email"]
+    phone_num = request.values["phone_num"]
 
     db = get_db()
     with db.cursor() as cur:
         query = """
             UPDATE users
-            SET full_name = %s, title = %s, office = %s
+            SET full_name = %s, title = %s, office = %s, email = %s, phone_num = %s
             WHERE id = %s
         """
 
@@ -307,6 +309,8 @@ def edit_profile(id):
                 full_name,
                 title,
                 location,
+                email,
+                phone_num,
                 id,
             ),
         )
