@@ -153,16 +153,23 @@
       </div>
 
       <!-- Skills -->
-      <div>
-        <div class="font-bold uppercase text-lg mb-4 header">Skills</div>
-        <!-- Highlight -->
-        {% for skill in cv_data.skills %} {% if skill.is_highlight %}
-        <span class="skill-tag highlight">{{skill.name}}</span>
-        {% endif %} {% endfor %}
-        <!-- Normal -->
-        {% for skill in cv_data.skills %} {% if not skill.is_highlight %}
-        <span class="skill-tag">{{skill.name}}</span>
-        {% endif %} {% endfor %}
+      <div class="space-y-4">
+        <div class="font-bold uppercase text-lg header">Skills</div>
+        {% for group in cv_data.skills|groupby('proficiency')|reverse %}
+        <div class="space-y-2">
+          <p class="w-full font-medium">
+            {% if group.grouper == 5 %} 8+ years {% elif group.grouper == 4 %}
+            6-7 years {% elif group.grouper == 3 %} 4-5 years {% elif
+            group.grouper == 2 %} 1-3 years {% elif group.grouper == 1 %} Less
+            than a year {% endif %}
+          </p>
+          {% for skill in group.list %}
+          <span class="skill-tag {{'highlight' if skill.is_highlight else ''}}">
+            {{skill.name}}
+          </span>
+          {% endfor %}
+        </div>
+        {% endfor %}
       </div>
 
       <!-- Work Experience -->
