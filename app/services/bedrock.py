@@ -11,9 +11,9 @@ def _get_extract_prompt(cv_text):
         - "name": The full name of the CV owner.
         - "title": The job title of the CV owner.
         - "profile_texts": An array of profile paragraphs.
-        - "skills": Array of objects containing a skill name (as name) and a proficiency value as a number between 1 and 5 (as proficiency). The skill names should be discrete, one-to-two-word Sentence Case 'tags.' Remove redundant words like 'knowledge of,' 'processes,' or 'experience in.' The proficiency should be 1 if indicated skill experience is less than a year, 2 means 1-3 years, 3 means 4-5 years, 4 means 6-7 years and 5 means 8+ years of experience. If skill level is unclear, leave proficiency as 1.
-        - "job_experience": Array of objects containing a job title (as title), company name (as company_name), time period (as time_period) and description of a listed work experience. Return non-existing values as empty strings.
-        - "education": Array of objects containing a degree, school, time period (as time_period) and description of a listed education. Return non-existing values as empty strings.
+        - "skills": Array of objects containing a skill name (as name) and a proficiency value as a number between 1 and 5 (as proficiency). The skill names should be discrete, one-to-two-word Sentence Case 'tags.' Remove redundant words like 'knowledge of,' 'processes,' or 'experience in.' The proficiency should be 1 if indicated skill experience is less than a year, 2 means 1-3 years, 3 means 4-5 years, 4 means 6-7 years and 5 means 8+ years of experience.
+        - "job_experience": Array of objects containing a job title (as title), company name (as company_name), time period (as time_period) and description of a listed work experience. Return non-existing values as empty strings. Leave as an empty array if no work experience is listed.
+        - "education": Array of objects containing a degree, school, time period (as time_period) and description of a listed education. Return non-existing values as empty strings. Leave as an empty array if no education is listed.
 
         CV Text:
         {cv_text}

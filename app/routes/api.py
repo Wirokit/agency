@@ -235,10 +235,10 @@ def upload_source_cv(id):
         )
         # Commit will be done in save_to_db if successful
 
+    user_name = get_user_by_id(id, "full_name")["full_name"]
+
     cv_data = extract_data_from_cv(request.files["file"])
-    save_cv_to_db(
-        cv=cv_data, user_uuid=id, user_name=session["user_name"], is_source=True
-    )
+    save_cv_to_db(cv=cv_data, user_uuid=id, user_name=user_name, is_source=True)
 
     # Send the success response
     return jsonify({"success": True})
