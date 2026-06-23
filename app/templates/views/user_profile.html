@@ -228,6 +228,7 @@
       <div class="flex gap-2 justify-between items-center">
         <p class="text-lg font-medium">Targeted CVs</p>
 
+        {% if cv_data %}
         <button
           class="contained primary flex gap-2 items-center"
           onclick="openModal('new_targeted_cv_dialog', event)"
@@ -235,6 +236,7 @@
           <i data-lucide="plus" class="w-5 h-5"></i>
           New
         </button>
+        {% endif %}
       </div>
 
       <table id="cv-table">
