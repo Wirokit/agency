@@ -371,7 +371,8 @@
       profileSettingsMenu.classList.remove("hidden");
       const menuRect = profileSettingsMenu.getBoundingClientRect();
 
-      const topPosition = buttonRect.bottom - 5 + window.scrollY;
+      // Reduce top bar height (70px) plus 5 to better align menu
+      const topPosition = buttonRect.bottom - 75 + window.scrollY;
       profileSettingsMenu.style.top = `${topPosition}px`;
 
       const leftPosition =
