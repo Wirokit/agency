@@ -205,6 +205,8 @@ def serve_profile_by_id(user_id):
     # Get targeted CVs for the target user
     targeted_cv_list = get_targeted_cvs_by_id(user_id)
 
+    contact_list = None
+    contact = None
     if UserType(session["user_type"]) is UserType.ADMIN:
         contact_list = get_contact_users()
         contact = get_user_by_id(user_id, "email, phone_num")
