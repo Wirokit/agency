@@ -258,3 +258,11 @@ def serve_source_creation(user_id):
         cv_id="",
         cv_data=empty_cv,
     )
+
+
+@views_bp.route("/change-password", methods=["GET"])
+@auth_required(modes=["admin", "internal"])
+def serve_password_change():
+    """Serves the password update page"""
+
+    return render_template("views/update_pw.html", forced=False)

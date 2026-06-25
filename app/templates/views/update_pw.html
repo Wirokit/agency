@@ -166,6 +166,8 @@
         displayMessage("Password changed successfully!", "success");
         if (forcedChange) {
           window.location.reload();
+        } else {
+          window.location.replace("/");
         }
       } else {
         displayMessage(`Error changing password: ${result.error}`, "error");
