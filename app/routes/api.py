@@ -241,7 +241,7 @@ def upload_source_cv(id):
             query,
             (id,),
         )
-        # Commit will be done in save_to_db if successful
+        db.commit()
 
     user_data = get_user_by_id(id, "full_name, title")
     user_name = user_data["full_name"]
