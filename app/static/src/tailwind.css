@@ -14,6 +14,8 @@ html {
   --color-funky: #c323b0;
   --color-error: #df4040;
   --color-error-hover: #b32020;
+  --color-success: var(--color-green-600);
+  --color-success-hover: var(--color-green-800);
 
   --color-primary: #4a4e8d;
   --color-primary-hover: #2a2e64;
@@ -95,6 +97,18 @@ button.loading {
   pointer-events: none;
 }
 
+a.contained:focus,
+button.contained:focus,
+a.outlined:focus,
+button.outlined:focus {
+  outline: none;
+  --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0
+    calc(4px + var(--tw-ring-offset-width)) var(--tw-ring-color, black);
+  box-shadow:
+    var(--tw-inset-shadow), var(--tw-inset-ring-shadow),
+    var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+}
+
 a.contained,
 a.outlined,
 button.contained,
@@ -141,6 +155,14 @@ button.contained {
 a.contained.dangerous,
 button.contained.dangerous {
   background-color: var(--color-error);
+}
+a.contained.success,
+button.contained.success {
+  background-color: var(--color-success);
+}
+a.contained.success:hover,
+button.contained.success:hover {
+  background-color: var(--color-success-hover);
 }
 a.contained:hover,
 button.contained:hover {

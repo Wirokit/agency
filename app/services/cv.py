@@ -156,7 +156,9 @@ def replace_cv_data(cv_id: UUID, cv: CV_data):
         _save_data_by_id(cv_id, cv)
 
 
-def save_cv_to_db(cv: CV_data, user_uuid: UUID, user_name: str, is_source: bool):
+def save_cv_to_db(
+    cv: CV_data, user_uuid: UUID, user_name: str, user_title: str, is_source: bool
+):
     new_cv_id = None
 
     db = get_db()
@@ -178,7 +180,7 @@ def save_cv_to_db(cv: CV_data, user_uuid: UUID, user_name: str, is_source: bool)
         """
         cur.execute(
             query,
-            (user_uuid, user_name, cv.title, is_source),
+            (user_uuid, user_name, user_title, is_source),
         )
         new_cv_id = cur.fetchone()["id"]
 

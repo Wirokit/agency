@@ -63,15 +63,23 @@
   .skill-table td {
     padding: 5px 20px;
   }
+
+  button.save-cv-btn {
+    padding-block: calc(var(--spacing) * 3);
+    padding-inline: calc(var(--spacing) * 4);
+  }
 </style>
 
+<meta id="owner_id" data-other="{{owner_id}}" />
 <meta id="cv_id" data-other="{{cv_id}}" />
 <meta id="return_link" data-other="{{return_link}}" />
 
 <div class="w-full max-w-3xl overflow-hidden flex relative mb-[100px]">
   <div class="size-full">
     <div class="p-6 space-y-4">
-      <p class="page-title text-xl font-bold w-full text-center">Edit CV</p>
+      <p class="page-title text-xl font-bold w-full text-center">
+        {{"Edit CV" if cv_id != "" else "Create CV"}}
+      </p>
 
       <!-- Basic Info -->
       {% if not is_source_cv %}
@@ -169,7 +177,7 @@
             class="flex px-4 items-center justify-center border border-green-500 rounded-3xl p-2 gap-3 text-green-600"
           >
             <i data-lucide="plus" class="w-5 h-5"></i>
-            <span>NEW</span>
+            <span>ADD</span>
           </button>
           <button
             type="button"
@@ -185,7 +193,10 @@
       <!-- Skills edit -->
       <p class="header text-lg font-bold">Skills</p>
       <div id="skills-wrapper" class="px-4 pb-4 space-y-2">
-        <div id="skill-list" class="border border-default rounded-xs p-2">
+        <div
+          id="skill-list"
+          class="border border-default rounded-xs p-2 {{'hidden' if not cv_data.skills else ''}}"
+        >
           <table id="skills-table" class="skill-table w-full table-auto">
             <thead>
               <tr id="skill-table-header">
@@ -479,8 +490,8 @@
   class="bottom-actions w-full flex justify-center gap-2 px-6 border-default border-t-2 card dark:bg-(--bg-dialog-actions)"
 >
   <div class="max-w-3xl w-full flex items-center gap-2">
-    {{ ui.loading_button("edit-confirm-btn", "Save", "bg-green-600 text-white
-    font-bold hover:bg-green-800 focus:ring-black-300 rounded-sm") }}
+    {{ ui.loading_button("edit-confirm-btn", "Save", "save-cv-btn contained
+    success rounded-sm") }}
     <a
       href="{{return_link}}"
       type="button"
@@ -495,7 +506,7 @@
 {% call ui.modal("skill_edit_dialog", "Skill", "xs") %}
 <div id="upload-body" class="min-w-xs p-4 md:p-6 space-y-4">
   <form id="skill_edit_form" method="dialog">
-    <div class="flex flex-col gap-4 mb-4">
+    <div class="flex flex-col gap-4 mb-6">
       <label for="skill_name">
         Name
         <input
@@ -536,14 +547,11 @@
     </div>
 
     <div class="flex gap-2 items-center">
-      <button
-        type="submit"
-        class="rounded-lg contained success focus:outline-none focus:ring-4 transition duration-200"
-      >
+      <button type="submit" class="contained success transition duration-200">
         Save
       </button>
       <button
-        class="px-3 py-2 focus:outline-none focus:ring-4 transition duration-200"
+        class="px-3 py-2 rounded-sm focus:outline-none focus:ring-4 transition duration-200"
         onclick="closeModal('skill_edit_dialog', event)"
       >
         Cancel
@@ -611,6 +619,10 @@
 
     const skillsTable = document.getElementById("skills-table");
     skillsTable.deleteRow(rowIndex);
+
+    if (skillsTable.rows.length == 1) {
+      document.getElementById("skill-list").classList.add("hidden");
+    }
   }
   window.deleteSkillRow = deleteSkillRow;
 
@@ -778,6 +790,7 @@
       `;
 
       setProficiencyTexts(newRow);
+      document.getElementById("skill-list").classList.remove("hidden");
       lucide.createIcons();
     }
     window.closeModal("skill_edit_dialog");
@@ -1079,22 +1092,41 @@
     const editMessage = document.getElementById("edit-message");
     editMessage.setAttribute("class", "hidden text-sm");
 
-    const contactSelector = document.getElementById("contact-selector");
-    const contactId = contactSelector.value;
-
-    const cv_id = document.getElementById("cv_id").getAttribute("data-other");
-
     try {
       const formData = new FormData();
       formData.append("cv_json", JSON.stringify(jsonData));
-      formData.append("contact_id", contactId);
 
-      const response = await fetch(`/api/cv/${cv_id}`, {
-        method: "PATCH",
-        body: formData,
-      });
+      let response = {
+        ok: false,
+      };
+      let result = {
+        success: false,
+      };
 
-      const result = await response.json();
+      const cv_id = document.getElementById("cv_id").getAttribute("data-other");
+      if (cv_id != "") {
+        const contactId =
+          document.getElementById("contact-selector")?.value || "";
+        formData.append("contact_id", contactId);
+
+        response = await fetch(`/api/cv/${cv_id}`, {
+          method: "PATCH",
+          body: formData,
+        });
+
+        result = await response.json();
+      } else {
+        const owner_id = document
+          .getElementById("owner_id")
+          .getAttribute("data-other");
+
+        response = await fetch(`/api/custom-source/${owner_id}`, {
+          method: "POST",
+          body: formData,
+        });
+
+        result = await response.json();
+      }
 
       editMessage.classList.remove("hidden");
       if (response.ok && result.success) {

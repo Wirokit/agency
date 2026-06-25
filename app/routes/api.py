@@ -110,7 +110,11 @@ def createUser():
 
     if cv_data:
         save_cv_to_db(
-            cv=cv_data, user_uuid=user_uuid, user_name=full_name, is_source=True
+            cv=cv_data,
+            user_uuid=user_uuid,
+            user_name=full_name,
+            user_title="" if cv_data is None else cv_data.title,
+            is_source=True,
         )
 
     return jsonify({"success": True, "user_uuid": user_uuid, "password": password})
@@ -201,7 +205,11 @@ def createTempUser():
 
     if cv_data:
         save_cv_to_db(
-            cv=cv_data, user_uuid=user_uuid, user_name=full_name, is_source=True
+            cv=cv_data,
+            user_uuid=user_uuid,
+            user_name=full_name,
+            user_title="" if cv_data is None else cv_data.title,
+            is_source=True,
         )
 
     return jsonify({"success": True, "pin": pin, "user_uuid": user_uuid})
@@ -235,10 +243,18 @@ def upload_source_cv(id):
         )
         # Commit will be done in save_to_db if successful
 
-    user_name = get_user_by_id(id, "full_name")["full_name"]
+    user_data = get_user_by_id(id, "full_name, title")
+    user_name = user_data["full_name"]
+    user_title = user_data["title"]
 
     cv_data = extract_data_from_cv(request.files["file"])
-    save_cv_to_db(cv=cv_data, user_uuid=id, user_name=user_name, is_source=True)
+    save_cv_to_db(
+        cv=cv_data,
+        user_uuid=id,
+        user_name=user_name,
+        user_title=user_title,
+        is_source=True,
+    )
 
     # Send the success response
     return jsonify({"success": True})
@@ -361,6 +377,7 @@ def post_targeted_cv(source_user_id):
         cv_data,
         user_uuid=source_user_id,
         user_name=source_user_data["full_name"],
+        user_title=source_user_data["title"],
         is_source=False,
     )
 
@@ -393,16 +410,27 @@ def edit_targeted_cv(id):
     # Edit basic info
     db = get_db()
     with db.cursor() as cur:
-        # Base CV
-        query = """
-            UPDATE cv
-            SET name = %s, title = %s, handler_id = %s
-            WHERE id = %s;
-        """
-        cur.execute(
-            query,
-            (cv_data.name, cv_data.title, contact_id, id),
-        )
+        # No contact update
+        if contact_id != "":
+            query = """
+                UPDATE cv
+                SET name = %s, title = %s, handler_id = %s
+                WHERE id = %s;
+            """
+            cur.execute(
+                query,
+                (cv_data.name, cv_data.title, contact_id, id),
+            )
+        else:
+            query = """
+                UPDATE cv
+                SET name = %s, title = %s
+                WHERE id = %s;
+            """
+            cur.execute(
+                query,
+                (cv_data.name, cv_data.title, id),
+            )
 
     replace_cv_data(id, cv_data)
 
@@ -428,6 +456,26 @@ def delete_targeted_cv(id):
         )
 
     db.commit()
+
+    # Send the success response
+    return jsonify({"success": True})
+
+
+@api_bp.route("/custom-source/<user_id>", methods=["POST"])
+@auth_required(modes=["all"])
+def save_custom_source(user_id):
+    """Save a custom source CV"""
+
+    source_user_data = get_user_by_id(user_id, "full_name, title")
+
+    cv_data = CV_data(**json.loads(request.values["cv_json"]))
+    save_cv_to_db(
+        cv_data,
+        user_uuid=user_id,
+        user_name=source_user_data["full_name"],
+        user_title=source_user_data["title"],
+        is_source=True,
+    )
 
     # Send the success response
     return jsonify({"success": True})

@@ -163,13 +163,13 @@
         <i data-lucide="file-up" class="w-5 h-5"></i>
         Upload Source CV
       </button>
-      <button
+      <a
+        href="/create-source/{{user_id}}"
         class="flex items-center py-3 px-4 w-full gap-3"
-        onclick="openModal('edit_dialog', event)"
       >
         <i data-lucide="pencil-line" class="w-5 h-5"></i>
         Custom Source CV
-      </button>
+      </a>
       {% endif %}
       <!---->
       {% if session["user_type"] != "internal" %}
@@ -282,6 +282,10 @@
         {% for profile in cv_data.profile_texts %}
         <p>{{profile}}</p>
         {% endfor %}
+        <!-- If no profile texts exist -->
+        {% if not cv_data.profile_texts %}
+        <i class="text-(--color-error)">No profile defined</i>
+        {% endif %}
       </div>
 
       <div class="space-y-4">
@@ -299,8 +303,13 @@
           {% endfor %}
         </div>
         {% endfor %}
+        <!-- If no skills exist -->
+        {% if not cv_data.skills %}
+        <i class="text-(--color-error)">No skills defined</i>
+        {% endif %}
       </div>
 
+      <!---->
       <div class="space-y-4">
         <p class="w-full text-lg font-medium">WORK EXPERIENCE</p>
         <div class="space-y-6">
@@ -314,10 +323,14 @@
             <p>{{job.description}}</p>
           </div>
           {% endfor %}
+          <!-- If no work experience exists -->
+          {% if not cv_data.job_experience %}
+          <i class="text-(--color-error)">No work experience defined</i>
+          {% endif %}
         </div>
       </div>
 
-      {% if cv_data.education %}
+      <!---->
       <div class="space-y-4">
         <p class="w-full text-lg font-medium">EDUCATION</p>
         <span class="space-y-6">
@@ -331,9 +344,12 @@
             <p>{{education.description}}</p>
           </div>
           {% endfor %}
+          <!-- If no education exists -->
+          {% if not cv_data.education %}
+          <i class="text-(--color-error)">No education defined</i>
+          {% endif %}
         </span>
       </div>
-      {% endif %}
     </div>
     {% endif %}
   </div>

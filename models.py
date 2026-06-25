@@ -26,12 +26,12 @@ class Education(BaseModel):
 
 class CV_data(BaseModel):
     id: Optional[UUID] = None
-    name: str
-    title: str
-    profile_texts: List[str]
-    skills: List[Skill]
-    job_experience: List[JobExperience]
-    education: List[Education]
+    name: str = ""
+    title: str = ""
+    profile_texts: List[str] = []
+    skills: List[Skill] = []
+    job_experience: List[JobExperience] = []
+    education: List[Education] = []
 
     @classmethod
     def from_dict(cls, data: dict):
@@ -39,8 +39,8 @@ class CV_data(BaseModel):
             id=data["id"],
             name=data["name"],
             title=data["title"],
-            profile_texts=data["profile_texts"],
-            skills=[Skill(**s) for s in data["skills"]],
+            profile_texts=data["profile_texts"] or [],
+            skills=[Skill(**s) for s in data["skills"]] if data["skills"] else [],
             job_experience=(
                 ([JobExperience(**j) for j in data["job_experience"]])
                 if data["job_experience"]

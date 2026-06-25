@@ -9,7 +9,7 @@ from app.services.cv import (
     get_targeted_cvs_by_id,
 )
 from app.services.s3 import get_profile_img_url
-from models import UserType, get_user_type_by_id
+from models import CV_data, UserType, get_user_type_by_id
 from .route_utils import auth_required, get_contact_users, get_user_by_id
 
 bp_name = "views"
@@ -241,3 +241,20 @@ def serve_extarnal_creation():
     """Serves the external talent creation page"""
 
     return render_template("views/create_external.html")
+
+
+@views_bp.route("/create-source/<user_id>", methods=["GET"])
+@auth_required(modes=["all"])
+def serve_source_creation(user_id):
+    """Serves the custom source CV creation page"""
+
+    empty_cv = CV_data()
+
+    return render_template(
+        "views/edit_cv.html",
+        return_link=f"/profile/{user_id}",
+        is_source_cv=True,
+        owner_id=user_id,
+        cv_id="",
+        cv_data=empty_cv,
+    )
