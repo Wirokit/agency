@@ -14,12 +14,40 @@
     background-color: var(--bg-dialog);
   }
   input,
-  textarea {
+  textarea,
+  select {
     background-color: var(--bg-dialog-actions);
   }
 
-  .index {
+  div.list-index {
     background-color: var(--bg-dialog-actions);
+    display: flex;
+    height: inherit;
+    border: 1px solid rgba(0, 0, 0, 0.4);
+    border-radius: var(--radius-xl);
+    padding-inline: calc(var(--spacing) * 1);
+    text-align: center;
+    align-items: center;
+    font-size: var(--text-3xl);
+    line-height: var(--tw-leading, var(--text-3xl--line-height));
+    &:where(.dark, .dark *) {
+      border-color: var(--color-slate-300);
+    }
+  }
+  button.delete-index {
+    display: flex;
+    height: inherit;
+    border: 1px solid var(--color-red-500);
+    border-radius: var(--radius-xl);
+    padding-inline: calc(var(--spacing) * 1);
+    text-align: center;
+    align-items: center;
+    color: var(--color-red-500);
+    &:where(.dark, .dark *) {
+      color: var(--color-white);
+      background-color: var(--color-red-800);
+      border-color: var(--color-red-800);
+    }
   }
 
   textarea {
@@ -30,8 +58,19 @@
     position: fixed;
     top: calc(100vh - 100px);
     height: 100px;
+    &:where(.dark, .dark *) {
+      background-color: black;
+      box-shadow: none;
+    }
   }
 
+  div.skill-list {
+    &:where(.dark, .dark *) {
+      background-color: var(--bg-dialog-actions);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-slate-300);
+    }
+  }
   .skills-row {
     cursor: pointer;
     border-radius: 5px;
@@ -48,9 +87,15 @@
   }
   div.proficiency span {
     color: var(--color-sky-200);
+    &:where(.dark, .dark *) {
+      color: var(--color-fuchsia-100);
+    }
   }
   div.proficiency span.active {
     color: var(--color-sky-700);
+    &:where(.dark, .dark *) {
+      color: var(--color-fuchsia-700);
+    }
   }
   tr.highlight svg.lucide-star {
     fill: var(--color-amber-300);
@@ -62,6 +107,28 @@
   .skill-table th,
   .skill-table td {
     padding: 5px 20px;
+  }
+
+  button.add-btn {
+    display: flex;
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4);
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-success);
+    color: var(--color-success);
+    border-radius: var(--radius-3xl);
+    &:where(.dark, .dark *) {
+      background-color: var(--color-success);
+      color: var(--color-white);
+    }
+  }
+  button.add-btn:hover {
+    border-color: var(--color-success-hover);
+    color: var(--color-success-hover);
+    &:where(.dark, .dark *) {
+      background-color: var(--color-success-hover);
+      color: var(--color-white);
+    }
   }
 
   button.save-cv-btn {
@@ -153,39 +220,30 @@
               class="border border-[rgba(0,0,0,0.2)] rounded-sm p-4 w-full"
             >{{profile}}</textarea>
 
-            <div
-              id="list-index"
-              class="index flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
-            >
-              {{loop.index}}
-            </div>
+            <div id="list-index" class="list-index">{{loop.index}}</div>
             <button
               type="button"
               id="delete-experience-{{loop.index}}"
-              class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+              class="delete-index"
               onclick="deleteCvElement(event, 'profile-list')"
             >
-              <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+              <i data-lucide="trash" class="w-5 h-5"></i>
             </button>
           </div>
           {% endfor %}
         </div>
         <div class="flex w-full gap-2">
-          <button
-            type="button"
-            id="add-profile-btn"
-            class="flex px-4 items-center justify-center border border-green-500 rounded-3xl p-2 gap-3 text-green-600"
-          >
+          <button type="button" id="add-profile-btn" class="add-btn gap-2">
             <i data-lucide="plus" class="w-5 h-5"></i>
             <span>ADD</span>
           </button>
           <button
             type="button"
             id="delete-experience-1"
-            class="invisible flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+            class="invisible delete-index"
             onclick="event.preventDefault()"
           >
-            <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+            <i data-lucide="trash" class="w-5 h-5"></i>
           </button>
         </div>
       </div>
@@ -195,7 +253,7 @@
       <div id="skills-wrapper" class="px-4 pb-4 space-y-2">
         <div
           id="skill-list"
-          class="border border-default rounded-xs p-2 {{'hidden' if not cv_data.skills else ''}}"
+          class="skill-list border border-default rounded-xs p-2 {{'hidden' if not cv_data.skills else ''}}"
         >
           <table id="skills-table" class="skill-table w-full table-auto">
             <thead>
@@ -251,7 +309,7 @@
                     class="p-2 delete-skill rounded-lg"
                     onclick="deleteSkillRow(this)"
                   >
-                    <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+                    <i data-lucide="trash" class="w-5 h-5"></i>
                   </button>
                 </td>
               </tr>
@@ -262,7 +320,7 @@
 
         <button
           type="button"
-          class="flex px-4 items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-2 text-green-600"
+          class="add-btn gap-2"
           onclick="openSkillEditDialog(event, '', '', '')"
         >
           <i data-lucide="plus" class="w-5 h-5"></i>
@@ -337,40 +395,31 @@
               </div>
             </div>
 
-            <div
-              id="list-index"
-              class="index flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
-            >
-              {{loop.index}}
-            </div>
+            <div id="list-index" class="list-index">{{loop.index}}</div>
             <button
               type="button"
               id="delete-experience-1"
-              class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+              class="delete-index"
               onclick="deleteCvElement(event, 'experience-list')"
             >
-              <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+              <i data-lucide="trash" class="w-5 h-5"></i>
             </button>
           </div>
           {% endfor %}
         </div>
 
         <div class="flex w-full gap-2">
-          <button
-            type="button"
-            id="add-experience-btn"
-            class="flex px-4 items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-2 text-green-600"
-          >
+          <button type="button" id="add-experience-btn" class="add-btn gap-2">
             <i data-lucide="plus" class="w-5 h-5"></i>
             <span>ADD</span>
           </button>
           <button
             type="button"
             id="delete-experience-x"
-            class="invisible flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+            class="invisible delete-index"
             onclick="event.preventDefault()"
           >
-            <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+            <i data-lucide="trash" class="w-5 h-5"></i>
           </button>
         </div>
       </div>
@@ -443,40 +492,31 @@
               </div>
             </div>
 
-            <div
-              id="list-index"
-              class="index flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
-            >
-              {{loop.index}}
-            </div>
+            <div id="list-index" class="list-index">{{loop.index}}</div>
             <button
               type="button"
               id="delete-edu-1"
-              class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+              class="delete-index"
               onclick="deleteCvElement(event, 'edu-list')"
             >
-              <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+              <i data-lucide="trash" class="w-5 h-5"></i>
             </button>
           </div>
           {% endfor %}
         </div>
 
         <div class="flex w-full gap-2">
-          <button
-            type="button"
-            id="add-education-btn"
-            class="flex px-4 items-center justify-center border border-green-500 rounded-3xl p-2 bg-green gap-2 text-green-600"
-          >
+          <button type="button" id="add-education-btn" class="add-btn gap-2">
             <i data-lucide="plus" class="w-5 h-5"></i>
             <span>ADD</span>
           </button>
           <button
             type="button"
             id="delete-edu-x"
-            class="invisible flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+            class="invisible delete-index"
             onclick="event.preventDefault()"
           >
-            <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+            <i data-lucide="trash" class="w-5 h-5"></i>
           </button>
         </div>
       </div>
@@ -487,7 +527,7 @@
 </div>
 
 <div
-  class="bottom-actions w-full flex justify-center gap-2 px-6 border-default border-t-2 card dark:bg-(--bg-dialog-actions)"
+  class="bottom-actions w-full flex justify-center gap-2 px-6 border-default border-t-2 card"
 >
   <div class="max-w-3xl w-full flex items-center gap-2">
     {{ ui.loading_button("edit-confirm-btn", "Save", "save-cv-btn contained
@@ -785,7 +825,7 @@
           class="p-2 delete-skill rounded-lg"
           onclick="deleteSkillRow(this)"
         >
-          <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+          <i data-lucide="trash" class="w-5 h-5"></i>
         </button>
       `;
 
@@ -808,19 +848,16 @@
         class="border border-[rgba(0,0,0,0.2)] rounded-sm p-4 w-full min-w-100"
       ></textarea>
 
-      <div
-        id="list-index"
-        class="index flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
-      >
+      <div id="list-index" class="list-index">
         ${document.getElementById("profile-list").children.length + 1}
       </div>
       <button
         type="button"
         id="delete-experience-${nextProfileIndex}"
-        class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+        class="delete-index"
         onclick="deleteCvElement(event, 'profile-list')"
       >
-        <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+        <i data-lucide="trash" class="w-5 h-5"></i>
       </button>
     `;
     document.getElementById("profile-list").appendChild(newParagraph);
@@ -911,19 +948,16 @@
         </div>
       </div>
 
-      <div
-        id="list-index"
-        class="index flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
-      >
+      <div id="list-index" class="list-index">
         ${document.getElementById("experience-list").children.length + 1}
       </div>
       <button
         type="button"
         id="delete-experience-${nextExperienceIndex}"
-        class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+        class="delete-index"
         onclick="deleteCvElement(event, 'experience-list')"
       >
-        <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+        <i data-lucide="trash" class="w-5 h-5"></i>
       </button>
     `;
 
@@ -999,19 +1033,16 @@
         </div>
       </div>
 
-      <div
-        id="list-index"
-        class="index flex h-inherit border border-[rgba(0,0,0,0.4)] rounded-xl px-1 items-center text-3xl text-center"
-      >
+      <div id="list-index" class="list-index">
         ${document.getElementById("edu-list").children.length + 1}
       </div>
       <button
         type="button"
         id="delete-edu-${nextEduIndex}"
-        class="flex h-inherit border border-red-500 rounded-xl px-1 items-center text-center"
+        class="delete-index"
         onclick="deleteCvElement(event, 'edu-list')"
       >
-        <i data-lucide="trash" class="text-red-500 w-5 h-5"></i>
+        <i data-lucide="trash" class="w-5 h-5"></i>
       </button>
     `;
 

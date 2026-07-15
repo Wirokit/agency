@@ -28,6 +28,7 @@ class CV_data(BaseModel):
     id: Optional[UUID] = None
     name: str = ""
     title: str = ""
+    show_skill_levels: bool = True
     profile_texts: List[str] = []
     skills: List[Skill] = []
     job_experience: List[JobExperience] = []
@@ -39,6 +40,7 @@ class CV_data(BaseModel):
             id=data["id"],
             name=data["name"],
             title=data["title"],
+            show_skill_levels=data["show_skill_levels"],
             profile_texts=data["profile_texts"] or [],
             skills=[Skill(**s) for s in data["skills"]] if data["skills"] else [],
             job_experience=(

@@ -222,6 +222,7 @@ def get_fulL_cv_object(cv_id: UUID):
                 c.id,
                 c.name,
                 c.title,
+                c.show_skill_levels,
 
                 -- 1. Aggregate Profile Texts
                 (SELECT jsonb_agg(pt.profile_text)

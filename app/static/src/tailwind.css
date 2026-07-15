@@ -3,7 +3,7 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-html {
+:root {
   --bg-paper: #ffffff;
   --bg-paper-hover: #eeeeee;
   --bg-paper-green: #e2fde8;
@@ -14,12 +14,13 @@ html {
   --color-funky: #c323b0;
   --color-error: #df4040;
   --color-error-hover: #b32020;
-  --color-success: var(--color-green-600);
-  --color-success-hover: var(--color-green-800);
 
   --color-primary: #4a4e8d;
   --color-primary-hover: #2a2e64;
   --color-secondary: #c323b0;
+
+  --color-success: var(--color-green-600);
+  --color-success-hover: var(--color-green-800);
 
   &:where(.dark, .dark *) {
     --bg-paper: #4a4e8d60;
@@ -33,6 +34,9 @@ html {
     --color-primary-hover: #970c87;
     --color-secondary: #4a4e8d;
     --color-white: #ffffffde;
+
+    --color-success: var(--color-green-700);
+    --color-success-hover: var(--color-green-900);
   }
 }
 
@@ -41,6 +45,10 @@ body {
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
+}
+
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 table {
