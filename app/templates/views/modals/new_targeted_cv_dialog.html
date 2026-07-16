@@ -1,7 +1,16 @@
-<style></style>
+<style>
+  div.targeted-cv-wrapper input,
+  div.targeted-cv-wrapper select,
+  div.targeted-cv-wrapper textarea {
+    background-color: var(--bg-dialog-actions);
+  }
+</style>
 
 {% call ui.modal("new_targeted_cv_dialog", "New Targeted CV", "md") %}
-<div id="targeted-cv-dialog-body" class="w-full p-4 md:p-6 space-y-4">
+<div
+  id="targeted-cv-dialog-body"
+  class="targeted-cv-wrapper w-full p-4 md:p-6 space-y-4"
+>
   <form id="targeted-cv-form" class="space-y-6">
     <!-- Job ID -->
     <div class="space-y-4">
@@ -43,6 +52,11 @@
           <option value="finnish">Finnish</option>
           <option value="english">English</option>
         </select>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <p>Display skill proficiency in CV?</p>
+        {{ ui.styled_checkbox("skill-level-checkbox", False) }}
       </div>
 
       <!-- Keywords / Job description -->
@@ -135,6 +149,11 @@
     e.preventDefault(); // Prevent default form submission
 
     const formData = new FormData(form);
+
+    const skillLevelInput = document.getElementById(
+      "skill-level-checkbox-input",
+    );
+    formData.append("show_skill_levels", skillLevelInput.checked);
 
     hideMessage();
     setLoading(true);

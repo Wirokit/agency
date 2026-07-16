@@ -35,6 +35,9 @@
     --color-secondary: #4a4e8d;
     --color-white: #ffffffde;
 
+    --color-error: var(--color-red-700);
+    --color-error-hover: var(--color-red-900);
+
     --color-success: var(--color-green-700);
     --color-success-hover: var(--color-green-900);
   }

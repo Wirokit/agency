@@ -421,3 +421,81 @@
   }
 </script>
 {% endmacro %}
+
+<!-- Styled Checkbox -->
+{% macro styled_checkbox(id, is_checked) %}
+<style>
+  div.styled-checkbox {
+    display: flex;
+  }
+  div.styled-checkbox div {
+    border: 1px solid var(--color-slate-300);
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4);
+    &:where(.dark, .dark *) {
+      background-color: var(--bg-dialog-actions);
+    }
+  }
+  div.styled-checkbox div.active {
+    color: var(--color-white);
+  }
+  div.styled-checkbox div:first-child {
+    border-right: 0;
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  }
+  div.styled-checkbox div.active:first-child {
+    background-color: var(--color-success);
+  }
+  div.styled-checkbox div:last-child {
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+  div.styled-checkbox div.active:last-child {
+    background-color: var(--color-error);
+  }
+</style>
+
+<button id="{{id}}" class="w-fit" onclick="handleCheckboxClick(event, this)">
+  <!--prettier-ignore-->
+  <input
+    id="{{id}}-input"
+    type="checkbox"
+    {{checked if is_checked}}
+    class="hidden"
+  />
+
+  <div class="styled-checkbox">
+    <div class="check-true {{'active' if is_checked else ''}}">
+      <i data-lucide="check" class="w-5 h-5"></i>
+    </div>
+    <div class="check-false {{'active' if not is_checked else ''}}">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </div>
+  </div>
+</button>
+
+<script type="module">
+  // Initialize Icons
+  lucide.createIcons();
+
+  function handleCheckboxClick(event, buttonElement) {
+    event.preventDefault();
+
+    const checkTrueElement =
+      buttonElement.getElementsByClassName("check-true")[0];
+    const checkFalseElement =
+      buttonElement.getElementsByClassName("check-false")[0];
+
+    const hiddenInput = buttonElement.getElementsByTagName("input")[0];
+
+    if (checkTrueElement.classList.contains("active")) {
+      checkTrueElement.classList.remove("active");
+      checkFalseElement.classList.add("active");
+      hiddenInput.removeAttribute("checked");
+    } else {
+      checkTrueElement.classList.add("active");
+      checkFalseElement.classList.remove("active");
+      hiddenInput.setAttribute("checked", "");
+    }
+  }
+  window.handleCheckboxClick = handleCheckboxClick;
+</script>
+{% endmacro %}

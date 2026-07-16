@@ -386,12 +386,12 @@ def post_targeted_cv(source_user_id):
         # Base CV
         query = """
             UPDATE cv
-            SET handler_id = %s, job_name = %s
+            SET handler_id = %s, job_name = %s, show_skill_levels = %s
             WHERE id = %s;
         """
         cur.execute(
             query,
-            (contact_user_id, job_name, cv_id),
+            (contact_user_id, job_name, request.values["show_skill_levels"], cv_id),
         )
         db.commit()
 
@@ -414,12 +414,18 @@ def edit_targeted_cv(id):
         if contact_id != "":
             query = """
                 UPDATE cv
-                SET name = %s, title = %s, handler_id = %s
+                SET name = %s, title = %s, handler_id = %s, show_skill_levels = %s
                 WHERE id = %s;
             """
             cur.execute(
                 query,
-                (cv_data.name, cv_data.title, contact_id, id),
+                (
+                    cv_data.name,
+                    cv_data.title,
+                    contact_id,
+                    cv_data.show_skill_levels,
+                    id,
+                ),
             )
         else:
             query = """

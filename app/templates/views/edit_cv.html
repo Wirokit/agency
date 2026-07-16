@@ -10,8 +10,11 @@
     font-size: x-large;
   }
 
-  label {
+  label.absolute {
     background-color: var(--bg-dialog);
+    &:where(.dark, .dark *) {
+      background-color: var(--bg-dialog-actions);
+    }
   }
   input,
   textarea,
@@ -163,7 +166,7 @@
             id="info_name"
             name="name"
             type="text"
-            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full max-w-[300px]"
+            class="p-2 px-4 border border-[rgba(0,0,0,0.2)] rounded-sm w-full max-w-[300px]"
             value="{{cv_data.name}}"
           />
         </div>
@@ -178,7 +181,7 @@
           <input
             id="info_title"
             type="text"
-            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full max-w-[300px]"
+            class="p-2 px-4 border border-[rgba(0,0,0,0.2)] rounded-sm w-full max-w-[300px]"
             value="{{cv_data.title}}"
           />
         </div>
@@ -193,7 +196,7 @@
           <select
             name="contact"
             id="contact-selector"
-            class="w-full max-w-[300px]"
+            class="w-full max-w-[300px] rounded-sm"
           >
             {% for contact in contact_list %} {% if contact.id ==
             current_handler_id %}
@@ -250,7 +253,15 @@
 
       <!-- Skills edit -->
       <p class="header text-lg font-bold">Skills</p>
-      <div id="skills-wrapper" class="px-4 pb-4 space-y-2">
+      <div id="skills-wrapper" class="px-4 pb-4 space-y-4">
+        {% if not is_source_cv %}
+        <div class="flex flex-col gap-2">
+          <p>Display skill proficiency in CV?</p>
+          {{ ui.styled_checkbox("skill-level-checkbox",
+          cv_data.show_skill_levels) }}
+        </div>
+        {% endif %}
+
         <div
           id="skill-list"
           class="skill-list border border-default rounded-xs p-2 {{'hidden' if not cv_data.skills else ''}}"
@@ -262,7 +273,7 @@
                 <th>HL?</th>
                 {% endif %}
                 <th class="w-full text-start">Name</th>
-                <th>Proficiency</th>
+                <th class="proficiency-cell">Proficiency</th>
                 <th></th>
               </tr>
             </thead>
@@ -279,7 +290,9 @@
                 </td>
                 {% endif %}
                 <td class="skill-name">{{skill.name}}</td>
-                <td class="flex flex-col items-center w-fit text-center">
+                <td
+                  class="proficiency-cell flex flex-col items-center w-fit text-center"
+                >
                   <div class="proficiency my-[-10px] text-4xl tracking-tighter">
                     <span class="active">-</span>
                     <span class="{{'active' if skill.proficiency > 1 else ''}}">
@@ -547,8 +560,13 @@
 <div id="upload-body" class="min-w-xs p-4 md:p-6 space-y-4">
   <form id="skill_edit_form" method="dialog">
     <div class="flex flex-col gap-4 mb-6">
-      <label for="skill_name">
-        Name
+      <div class="relative w-full pt-2">
+        <label
+          for="skill_name"
+          class="absolute top-0 left-1 px-1 text-xs font-semibold"
+        >
+          Name
+        </label>
         <input
           required
           id="skill_name"
@@ -556,10 +574,15 @@
           value="SQL"
           class="w-full p-2 border border-[rgba(0,0,0,0.2)] rounded-sm"
         />
-      </label>
+      </div>
 
-      <label for="skill_proficiency">
-        Proficiency
+      <div class="relative w-full pt-2">
+        <label
+          for="skill_proficiency"
+          class="absolute top-0 left-1 px-1 text-xs font-semibold"
+        >
+          Proficiency
+        </label>
         <select
           id="skill_proficiency"
           name="proficiency"
@@ -571,7 +594,7 @@
           <option value="4">6-7 years</option>
           <option value="5">8+ years</option>
         </select>
-      </label>
+      </div>
 
       {% if not is_source_cv %}
       <label for="is_highlighted" class="w-fit flex items-center gap-2">
@@ -1074,6 +1097,17 @@
     }
 
     // Skills
+    // IF NOT editing source CV, ignore skill level display setting
+    const returnLink = document
+      .getElementById("return_link")
+      .getAttribute("data-other");
+    if (returnLink != "/profile") {
+      const skillLevelInput = document.getElementById(
+        "skill-level-checkbox-input",
+      );
+      jsonData.show_skill_levels = skillLevelInput.checked;
+    }
+
     const skillRows = document.getElementsByClassName("skills-row");
     jsonData.skills = [];
     for (const row of skillRows) {
