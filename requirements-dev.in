@@ -3,5 +3,5 @@ dotenv
 pytest
 testcontainers
 yoyo-migrations
-pip-tools
 moto[s3]
+uv
