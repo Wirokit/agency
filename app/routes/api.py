@@ -5,11 +5,12 @@ from app.services.bedrock import (
     highlight_skills,
     translate_cv,
 )
-from app.services.s3 import S3_PROFILE_IMG_BUCKET, get_s3_client
-from models import CV_data, Education, JobExperience, UserType
+from app.services.s3 import get_s3_client
+from models import CV_data, Education, JobExperience, AuthType, get_user_type_by_id
 from .route_utils import auth_required, get_user_by_id
 from app.services.cv import (
     extract_data_from_cv,
+    get_cv_data_by_columns,
     get_source_cv,
     replace_cv_data,
     save_cv_to_db,
@@ -43,7 +44,7 @@ def get_privacy_policy():
 
 
 @api_bp.route("/user", methods=["POST"])
-@auth_required(modes=["admin"])
+@auth_required(modes=[AuthType.ADMIN])
 def createUser():
     """Create a new user"""
 
@@ -121,7 +122,7 @@ def createUser():
 
 
 @api_bp.route("/external", methods=["POST"])
-@auth_required(modes=["admin"])
+@auth_required(modes=[AuthType.ADMIN])
 def createTempUser():
     """Create a temporary user as an external talent"""
 
@@ -215,8 +216,32 @@ def createTempUser():
     return jsonify({"success": True, "pin": pin, "user_uuid": user_uuid})
 
 
+@api_bp.route("/cv/<id>", methods=["GET"])
+@auth_required(modes=[AuthType.ALL])
+def get_cv(id):
+    """Used to get any CV object from the database"""
+
+    # Get CV object
+    cv_data = get_cv_data_by_columns(id)
+    owner_data = get_user_by_id(id, "user_type_id")
+
+    # Ensure that either the user is an admin, an external user fetching their own cv
+    # OR an internal user that is not trying to access external CVs
+    if (
+        AuthType(session["user_type"]) == AuthType.EXTERNAL
+        and cv_data["owner_id"] != session["user_id"]
+    ) or (
+        AuthType(session["user_type"]) == AuthType.INTERNAL
+        and get_user_type_by_id(owner_data["user_type_id"]) == AuthType.EXTERNAL
+    ):
+        return jsonify({"success": False, "error": "Access forbidden."}), 403
+
+    # Send the success response
+    return jsonify({"success": True, "cv_data": cv_data})
+
+
 @api_bp.route("/source-cv/<id>", methods=["PUT"])
-@auth_required(modes=["all"])
+@auth_required(modes=[AuthType.ALL])
 def upload_source_cv(id):
     # Ensure that a file was sent
     if "file" not in request.files:
@@ -225,7 +250,7 @@ def upload_source_cv(id):
     # Ensure that either the user is an admin, or the profile being edited belongs
     # to the logged in user
     if (
-        UserType(session["user_type"]) != UserType.ADMIN
+        AuthType(session["user_type"]) != AuthType.ADMIN
         and str(session["user_id"]) != id
     ):
         return jsonify({"success": False, "error": "Access forbidden."}), 403
@@ -248,7 +273,7 @@ def upload_source_cv(id):
     user_title = user_data["title"]
 
     cv_data = extract_data_from_cv(request.files["file"])
-    save_cv_to_db(
+    cv_id = save_cv_to_db(
         cv=cv_data,
         user_uuid=id,
         user_name=user_name,
@@ -257,16 +282,16 @@ def upload_source_cv(id):
     )
 
     # Send the success response
-    return jsonify({"success": True})
+    return jsonify({"success": True, "cv_id": cv_id})
 
 
 @api_bp.route("/profile/<id>", methods=["DELETE"])
-@auth_required(modes=["admin", "external"])
+@auth_required(modes=[AuthType.ADMIN, AuthType.EXTERNAL])
 def delete_user_profile_by_id(id):
     """Used by external users to delete their own profile"""
     """Used by admins to delete any profile"""
 
-    if UserType(session["user_type"]) is UserType.EXTERNAL and id != str(
+    if AuthType(session["user_type"]) is AuthType.EXTERNAL and id != str(
         session["user_id"]
     ):
         return jsonify({"success": False, "error": "Access forbidden."}), 403
@@ -285,7 +310,7 @@ def delete_user_profile_by_id(id):
 
 
 @api_bp.route("/profile/<id>", methods=["PATCH"])
-@auth_required(modes=["all"])
+@auth_required(modes=[AuthType.ALL])
 def edit_profile(id):
     if "profile_image" in request.files:
         file = request.files["profile_image"]
@@ -297,7 +322,7 @@ def edit_profile(id):
             try:
                 s3_client.upload_fileobj(
                     file,
-                    S3_PROFILE_IMG_BUCKET,
+                    current_app.config.get("S3_PROFILE_IMG_BUCKET"),
                     file_name,
                     ExtraArgs={"ContentType": file.content_type},
                 )
@@ -338,7 +363,7 @@ def edit_profile(id):
 
 
 @api_bp.route("/targeted-cv/<source_user_id>", methods=["POST"])
-@auth_required(modes=["admin"])
+@auth_required(modes=[AuthType.ADMIN])
 def post_targeted_cv(source_user_id):
     source_user_data = get_user_by_id(source_user_id, "full_name, title")
 
@@ -400,7 +425,7 @@ def post_targeted_cv(source_user_id):
 
 
 @api_bp.route("/cv/<id>", methods=["PATCH"])
-@auth_required(modes=["admin"])
+@auth_required(modes=[AuthType.ADMIN])
 def edit_targeted_cv(id):
     """Used by admins to edit CVs"""
 
@@ -445,7 +470,7 @@ def edit_targeted_cv(id):
 
 
 @api_bp.route("/targeted-cv/<id>", methods=["DELETE"])
-@auth_required(modes=["admin"])
+@auth_required(modes=[AuthType.ADMIN])
 def delete_targeted_cv(id):
     """Used by admins to delete a targeted CV"""
 
@@ -468,7 +493,7 @@ def delete_targeted_cv(id):
 
 
 @api_bp.route("/custom-source/<user_id>", methods=["POST"])
-@auth_required(modes=["all"])
+@auth_required(modes=[AuthType.ALL])
 def save_custom_source(user_id):
     """Save a custom source CV"""
 

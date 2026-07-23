@@ -2,18 +2,21 @@ from flask import session, jsonify
 from functools import wraps
 from psycopg2.extensions import AsIs
 from app.db import get_db
-from models import UserType
+from models import AuthType
 
 """
   Utility functions that require session variables and/or a database connection.
 """
 
 
-def auth_required(modes):
+def auth_required(modes: list[AuthType]):
     def wrapper(f):
         @wraps(f)
         def decorated(*args, **kwargs):
             success = True
+
+            if not session.get("user_id", False) or not session.get("user_type", False):
+                return jsonify({"error": "Unauthorized"}), 401
 
             db = get_db()  # Get connection from pool
             with db.cursor() as cur:
@@ -39,8 +42,8 @@ def auth_required(modes):
 
             # User type check
             if (
-                "all" not in modes
-                and UserType(user_record["user_type_name"]).value not in modes
+                AuthType.ALL not in modes
+                and AuthType(user_record["user_type_name"]) not in modes
             ):
                 success = False
 

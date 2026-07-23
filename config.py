@@ -27,4 +27,6 @@ def getConfig(testing=False, testing_overrides={}):
             "TESTING": False,
             "SECRET_KEY": os.environ.get("SECRET_FLASK_KEY"),
             "DATABASE_URL": f"postgresql://{os.environ['RDS_USERNAME']}:{os.environ['RDS_PASSWORD']}@{os.environ['RDS_HOSTNAME']}:{os.environ['RDS_PORT']}/{os.environ['RDS_DB_NAME']}",
+            "AWS_S3_ENDPOINT_URL": "https://s3.eu-north-1.amazonaws.com",
+            "S3_PROFILE_IMG_BUCKET": os.environ.get("S3_PROFILE_IMG_BUCKET"),
         }

@@ -9,7 +9,6 @@ CREATE TABLE users
     full_name character varying(100) NOT NULL,
     title character varying(100) DEFAULT ''::character varying,
     office character varying(30) DEFAULT ''::character varying,
-    cv_data json DEFAULT '{}'::json,
     user_type_id smallint NOT NULL,
     phone_num character varying(20) DEFAULT ''::character varying,
     email character varying(100) DEFAULT ''::character varying,

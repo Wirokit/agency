@@ -1,4 +1,5 @@
 from enum import Enum
+import json
 from typing import List, Optional
 from uuid import UUID
 from pydantic import BaseModel
@@ -55,6 +56,22 @@ class CV_data(BaseModel):
             ),
         )
 
+    def toJSON(self):
+        return json.dumps(
+            {
+                "id": self.id,
+                "name": self.name,
+                "title": self.title,
+                "show_skill_levels": self.show_skill_levels,
+                "profile_texts": self.profile_texts,
+                "skills": [vars(skill) for skill in self.skills],
+                "job_experience": [
+                    vars(experience) for experience in self.job_experience
+                ],
+                "education": [vars(education) for education in self.education],
+            }
+        )
+
 
 class CV_Handler(BaseModel):
     name: str
@@ -68,7 +85,8 @@ class CV_Owner(BaseModel):
     title: str
 
 
-class UserType(Enum):
+class AuthType(Enum):
+    ALL = "all"
     ADMIN = "admin"
     INTERNAL = "internal"
     EXTERNAL = "external"
@@ -77,8 +95,8 @@ class UserType(Enum):
 def get_user_type_by_id(type_id: int):
     match type_id:
         case 1:
-            return UserType.ADMIN
+            return AuthType.ADMIN
         case 2:
-            return UserType.INTERNAL
+            return AuthType.INTERNAL
         case 3:
-            return UserType.EXTERNAL
+            return AuthType.EXTERNAL

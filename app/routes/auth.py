@@ -3,7 +3,7 @@ from app.db import get_db
 from app.services.utils import (
     bcrypt,
 )
-from models import UserType, get_user_type_by_id
+from models import AuthType, get_user_type_by_id
 from .route_utils import auth_required, get_user_by_id, get_user_by_username
 
 # Define the Blueprint
@@ -77,13 +77,13 @@ def check_pin():
 
     session["user_id"] = result["id"]
     session["user_name"] = result["full_name"]
-    session["user_type"] = UserType.EXTERNAL.value
+    session["user_type"] = AuthType.EXTERNAL.value
 
     return jsonify({"success": True})
 
 
 @auth_bp.route("/password", methods=["UPDATE"])
-@auth_required(modes=["admin", "internal"])
+@auth_required(modes=[AuthType.ADMIN, AuthType.INTERNAL])
 def update_password():
     """
     Update a user's password

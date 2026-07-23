@@ -9,7 +9,7 @@ from app.services.cv import (
     get_targeted_cvs_by_id,
 )
 from app.services.s3 import get_profile_img_url
-from models import CV_data, UserType, get_user_type_by_id
+from models import CV_data, AuthType, get_user_type_by_id
 from .route_utils import auth_required, get_contact_users, get_user_by_id
 
 bp_name = "views"
@@ -22,7 +22,7 @@ views_bp = Blueprint(bp_name, __name__)
 def before_request():
     """Serve password update page if change is required. If user is not logged in, redirect to login."""
 
-    ignored_endpoints = ["views.serve_login", "static"]
+    ignored_endpoints = ["views.serve_login", "static", "views.serve_targeted_cv"]
     redirect_to_login = False
 
     if "user_id" in session:
@@ -37,7 +37,7 @@ def before_request():
             session.clear()
             redirect_to_login = True
         elif (
-            UserType(session["user_type"]) is not UserType.EXTERNAL
+            AuthType(session["user_type"]) is not AuthType.EXTERNAL
             and user_record["require_pw_update"]
         ):
             return render_template("views/update_pw.html", forced=True)
@@ -64,11 +64,11 @@ def serve_login():
 
 
 @views_bp.route("/", methods=["GET"])
-@auth_required(modes=["all"])
+@auth_required(modes=[AuthType.ALL])
 def serve_landing():
     """Serves the login and landing pages to the frontend."""
 
-    if UserType(session["user_type"]) in [UserType.ADMIN, UserType.INTERNAL]:
+    if AuthType(session["user_type"]) in [AuthType.ADMIN, AuthType.INTERNAL]:
         external_result = None
 
         db = get_db()
@@ -83,7 +83,7 @@ def serve_landing():
             cur.execute(internal_query)
             internal_result = cur.fetchall()
 
-            if UserType(session["user_type"]) is UserType.ADMIN:
+            if AuthType(session["user_type"]) is AuthType.ADMIN:
                 external_query = """
                     SELECT u.id, u.full_name, u.title, u.office, t.user_type_name
                     FROM users u
@@ -108,7 +108,6 @@ def serve_landing():
 
 
 @views_bp.route("/cv/<cv_id>", methods=["GET"])
-@auth_required(modes=["all"])
 def serve_targeted_cv(cv_id):
     """Serves a targeted CV to the frontend."""
 
@@ -118,7 +117,7 @@ def serve_targeted_cv(cv_id):
 
     return render_template(
         "views/targeted_cv_view.html",
-        is_users_cv=session["user_id"] == owner.id,
+        is_users_cv=session.get("user_id", False) == owner.id,
         owner_id=owner.id,
         cv_id=cv_id,
         cv_data=cv_data,
@@ -127,13 +126,13 @@ def serve_targeted_cv(cv_id):
 
 
 @views_bp.route("/edit-cv/<cv_id>", methods=["GET"])
-@auth_required(modes=["all"])
+@auth_required(modes=[AuthType.ALL])
 def serve_cv_edit(cv_id):
     """Serves a CV's edit page to the frontend."""
 
     owner = get_cv_owner(cv_id)
     if (
-        UserType(session["user_type"]) != UserType.ADMIN
+        AuthType(session["user_type"]) != AuthType.ADMIN
         and owner.id != session["user_id"]
     ):
         return jsonify({"success": False, "error": "Access forbidden."}), 403
@@ -151,7 +150,7 @@ def serve_cv_edit(cv_id):
         return_link = f"/cv/{cv_id}"
 
     contact_list = []
-    if UserType(session["user_type"]) is UserType.ADMIN:
+    if AuthType(session["user_type"]) is AuthType.ADMIN:
         contact_list = get_contact_users()
 
     return render_template(
@@ -167,7 +166,7 @@ def serve_cv_edit(cv_id):
 
 
 @views_bp.route("/profile", methods=["GET"])
-@auth_required(modes=["all"])
+@auth_required(modes=[AuthType.ALL])
 def serve_profile():
     """Serves the user's profile page."""
 
@@ -175,13 +174,13 @@ def serve_profile():
 
 
 @views_bp.route("/profile/<user_id>", methods=["GET"])
-@auth_required(modes=["all"])
+@auth_required(modes=[AuthType.ALL])
 def serve_profile_by_id(user_id):
     """Serves a specific user's profile page."""
 
     # If user is external, ensure the profile is theirs
     if (
-        UserType(session["user_type"]) is UserType.EXTERNAL
+        AuthType(session["user_type"]) is AuthType.EXTERNAL
         and user_id != session["user_id"]
     ):
         return jsonify({"success": False, "error": "Access forbidden."}), 403
@@ -195,8 +194,8 @@ def serve_profile_by_id(user_id):
 
     # Internal non-admin users can not view external users
     if (
-        UserType(session["user_type"]) is UserType.INTERNAL
-        and user_type is UserType.EXTERNAL
+        AuthType(session["user_type"]) is AuthType.INTERNAL
+        and user_type is AuthType.EXTERNAL
     ):
         return jsonify({"success": False, "error": "Access forbidden."}), 403
 
@@ -207,7 +206,7 @@ def serve_profile_by_id(user_id):
 
     contact_list = None
     contact = None
-    if UserType(session["user_type"]) is UserType.ADMIN:
+    if AuthType(session["user_type"]) is AuthType.ADMIN:
         contact_list = get_contact_users()
         contact = get_user_by_id(user_id, "email, phone_num")
 
@@ -230,7 +229,7 @@ def serve_profile_by_id(user_id):
 
 
 @views_bp.route("/new-user", methods=["GET"])
-@auth_required(modes=["admin"])
+@auth_required(modes=[AuthType.ADMIN])
 def serve_user_creation():
     """Serves the user creation page"""
 
@@ -238,7 +237,7 @@ def serve_user_creation():
 
 
 @views_bp.route("/new-external", methods=["GET"])
-@auth_required(modes=["admin"])
+@auth_required(modes=[AuthType.ADMIN])
 def serve_extarnal_creation():
     """Serves the external talent creation page"""
 
@@ -246,7 +245,7 @@ def serve_extarnal_creation():
 
 
 @views_bp.route("/create-source/<user_id>", methods=["GET"])
-@auth_required(modes=["all"])
+@auth_required(modes=[AuthType.ALL])
 def serve_source_creation(user_id):
     """Serves the custom source CV creation page"""
 
@@ -263,7 +262,7 @@ def serve_source_creation(user_id):
 
 
 @views_bp.route("/change-password", methods=["GET"])
-@auth_required(modes=["admin", "internal"])
+@auth_required(modes=[AuthType.ADMIN, AuthType.INTERNAL])
 def serve_password_change():
     """Serves the password update page"""
 
