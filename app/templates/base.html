@@ -90,7 +90,13 @@
           </a>
         </div>
 
-        <button id="profile-icon" type="button" class="rounded-[50%]">
+        {% if session.get("user_name", False) %}
+        <button
+          id="profile-icon"
+          type="button"
+          class="rounded-[50%]"
+          onclick="toggleUserMenu(event)"
+        >
           {{ ui.profile_icon(session["profile_img_url"], session["user_name"],
           width=50, height=50) }}
         </button>
@@ -131,6 +137,7 @@
               id="open-theme-selection-btn"
               type="button"
               class="flex items-center py-3 px-4 w-full text-start gap-3 justify-between"
+              onclick="toggleThemeSelector(event)"
             >
               <div class="flex dark:hidden items-center gap-3">
                 <i data-lucide="sun"></i>
@@ -157,6 +164,7 @@
               id="close-theme-selector-btn"
               type="button"
               class="flex items-center py-3 px-4 w-full text-start gap-3 font-medium"
+              onclick="toggleThemeSelector(event)"
             >
               <i data-lucide="arrow-left"></i>
               Theme
@@ -168,6 +176,7 @@
               id="btn-theme-default"
               type="button"
               class="flex items-center py-3 px-4 w-full text-start gap-3"
+              onclick="changeTheme(event, 'system')"
             >
               <i data-lucide="check" class="invisible"></i>
               <p>
@@ -179,6 +188,7 @@
               id="btn-theme-dark"
               type="button"
               class="flex items-center py-3 px-4 w-full text-start gap-3"
+              onclick="changeTheme(event, 'dark')"
             >
               <i data-lucide="check" class="invisible"></i>
               Dark theme
@@ -188,12 +198,27 @@
               id="btn-theme-light"
               type="button"
               class="flex items-center py-3 px-4 w-full text-start gap-3"
+              onclick="changeTheme(event, 'light')"
             >
               <i data-lucide="check" class="invisible"></i>
               Light theme
             </button>
           </div>
         </div>
+        {% else %}
+        <button
+          id="guest-theme-toggle"
+          type="button"
+          class="rounded-[50%]"
+          onclick="changeTheme(event)"
+        >
+          <i
+            data-lucide="sun"
+            class="w-6 h-6 text-yellow-500 hidden dark:block"
+          ></i>
+          <i data-lucide="moon" class="w-6 h-6 text-blue-500 dark:hidden"></i>
+        </button>
+        {% endif %}
       </div>
     </nav>
     <section class="relative base-height flex justify-center mt-[70px]">
@@ -217,8 +242,9 @@
         "(prefers-color-scheme: dark)",
       ).matches;
 
-      if (prefersDarkMode) {
-        document.getElementById("preferred-color-scheme").innerText = "Dark";
+      const colorSchemeEl = document.getElementById("preferred-color-scheme");
+      if (colorSchemeEl && prefersDarkMode) {
+        colorSchemeEl.innerText = "Dark";
       }
 
       document.documentElement.classList.toggle(
@@ -231,7 +257,7 @@
         .getElementById(
           `btn-theme-${!("theme" in localStorage) ? "default" : localStorage.theme}`,
         )
-        .getElementsByClassName("invisible")[0]
+        ?.getElementsByClassName("invisible")[0]
         .classList.remove("invisible");
 
       const nav = document.getElementById("top-nav");
@@ -254,7 +280,7 @@
       });
 
       // Toggle menu with the top-right icon
-      function toggleMenu(e) {
+      function toggleUserMenu(e) {
         e.preventDefault();
 
         if (menu.classList.contains("hidden")) {
@@ -268,9 +294,7 @@
           menuDefaultContent.classList.remove("hidden");
         }
       }
-      document
-        .getElementById("profile-icon")
-        .addEventListener("click", toggleMenu);
+      window.toggleUserMenu = toggleUserMenu;
 
       function toggleThemeSelector(e) {
         e.preventDefault();
@@ -283,12 +307,7 @@
           menuDefaultContent.classList.remove("hidden");
         }
       }
-      document
-        .getElementById("open-theme-selection-btn")
-        .addEventListener("click", toggleThemeSelector);
-      document
-        .getElementById("close-theme-selector-btn")
-        .addEventListener("click", toggleThemeSelector);
+      window.toggleThemeSelector = toggleThemeSelector;
 
       function changeTheme(e, mode) {
         e.preventDefault();
@@ -298,6 +317,12 @@
           (!localStorage.theme && mode == "system")
         ) {
           return;
+        }
+
+        if (!mode) {
+          mode = document.documentElement.classList.contains("dark")
+            ? "light"
+            : "dark";
         }
 
         if (mode == "system") {
@@ -310,30 +335,23 @@
 
         window.location.reload();
       }
-      document
-        .getElementById("btn-theme-default")
-        .addEventListener("click", (e) => changeTheme(e, "system"));
-      document
-        .getElementById("btn-theme-dark")
-        .addEventListener("click", (e) => changeTheme(e, "dark"));
-      document
-        .getElementById("btn-theme-light")
-        .addEventListener("click", (e) => changeTheme(e, "light"));
+      window.changeTheme = changeTheme;
 
       // If menu is open, close the menu when user clicks somewhere else
       window.addEventListener("mouseup", (e) => {
         if (
+          menu &&
           !menu.classList.contains("hidden") &&
           !menu.contains(e.target) &&
           e.srcElement?.id !== "profile-icon"
         ) {
-          toggleMenu(e);
+          toggleUserMenu(e);
         }
       });
 
       window.addEventListener("resize", (e) => {
-        if (!menu.classList.contains("hidden")) {
-          toggleMenu(e);
+        if (menu && !menu.classList.contains("hidden")) {
+          toggleUserMenu(e);
         }
       });
 

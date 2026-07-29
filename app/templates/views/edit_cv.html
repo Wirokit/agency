@@ -144,7 +144,9 @@
 <meta id="cv_id" data-other="{{cv_id}}" />
 <meta id="return_link" data-other="{{return_link}}" />
 
-<div class="w-full max-w-3xl overflow-hidden flex relative mb-[100px]">
+<div
+  class="cv-edit-container w-full max-w-3xl overflow-hidden flex relative mb-[100px] rounded-xs"
+>
   <div class="size-full">
     <div class="p-6 space-y-4">
       <p class="page-title text-xl font-bold w-full text-center">
@@ -557,7 +559,10 @@
 </div>
 
 {% call ui.modal("skill_edit_dialog", "Skill", "xs") %}
-<div id="upload-body" class="min-w-xs p-4 md:p-6 space-y-4">
+<div
+  id="skill_edit_dialog"
+  class="skill-edit-container min-w-xs p-4 md:p-6 space-y-4"
+>
   <form id="skill_edit_form" method="dialog">
     <div class="flex flex-col gap-4 mb-6">
       <div class="relative w-full pt-2">

@@ -10,7 +10,12 @@ from app.services.cv import (
 )
 from app.services.s3 import get_profile_img_url
 from models import CV_data, AuthType, get_user_type_by_id
-from .route_utils import auth_required, get_contact_users, get_user_by_id
+from .route_utils import (
+    auth_required,
+    get_contact_users,
+    get_user_by_id,
+    log_cv_opened_by_guest,
+)
 
 bp_name = "views"
 
@@ -114,6 +119,10 @@ def serve_targeted_cv(cv_id):
     cv_data = get_fulL_cv_object(cv_id)
     owner = get_cv_owner(cv_id)
     handler = get_cv_handler(cv_id)
+
+    # Log the visit if the user is not logged in
+    if not session or not session["user_id"]:
+        log_cv_opened_by_guest(cv_id)
 
     return render_template(
         "views/targeted_cv_view.html",

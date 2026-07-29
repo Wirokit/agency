@@ -89,6 +89,7 @@
   <meta id="owner_id" data-other="{{owner_id}}" />
   <meta id="cv_id" data-other="{{cv_id}}" />
 
+  {% if session.get("user_id", False) %}
   <div class="print-hidden w-full p-4 flex justify-between items-center">
     <div>
       <a
@@ -125,6 +126,7 @@
     </div>
     {% endif %}
   </div>
+  {% endif %}
 
   <div
     class="print-area w-full mb-8 rounded-xs dark:rounded-none dark:bg-(--bg-paper)"
@@ -302,7 +304,7 @@
   }
 
   const confirmButton = document.getElementById("delete-confirm-btn");
-  confirmButton.addEventListener("click", async (e) => {
+  confirmButton?.addEventListener("click", async (e) => {
     e.preventDefault();
 
     // Loading state

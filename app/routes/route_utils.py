@@ -149,3 +149,19 @@ def get_contact_users():
     db.rollback()
 
     return contact_list
+
+
+def log_cv_opened_by_guest(cv_id):
+    db = get_db()
+    with db.cursor() as cur:
+        query = """
+            UPDATE cv
+            SET times_opened_by_guests = times_opened_by_guests + 1
+            WHERE id = %s;
+        """
+        cur.execute(
+            query,
+            (cv_id,),
+        )
+
+    db.commit()
