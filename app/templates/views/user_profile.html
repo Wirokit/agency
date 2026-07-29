@@ -21,6 +21,10 @@
     text-align: left;
     padding: 0;
   }
+  td.text-center,
+  th.text-center {
+    text-align: center !important;
+  }
   td > *,
   th > * {
     display: inline-block;
@@ -249,8 +253,11 @@
       <table id="cv-table">
         <tr class="header-row z-10">
           <th class="w-1/5"><p>Job Name</p></th>
-          <th class="w-1/3"><p>Date Created</p></th>
+          <th class="w-1/4"><p>Date Created</p></th>
           <th class="w-full"><p>Link</p></th>
+          {% if session["user_type"] == "admin" %}
+          <th class="w-1/5 text-center"><p>Guest Visits</p></th>
+          {% endif %}
         </tr>
         {% if not targeted_cv_list %}
         <tr id="empty-col">
@@ -277,6 +284,9 @@
               </a>
             </label>
           </td>
+          {% if session["user_type"] == "admin" %}
+          <td class="text-center">{{cv['times_opened_by_guests']}}</td>
+          {% endif %}
         </tr>
         {% endfor %}
       </table>

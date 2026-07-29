@@ -30,6 +30,7 @@ class CV_data(BaseModel):
     name: str = ""
     title: str = ""
     show_skill_levels: bool = True
+    times_opened_by_guests: int = 0
     profile_texts: List[str] = []
     skills: List[Skill] = []
     job_experience: List[JobExperience] = []
@@ -42,6 +43,7 @@ class CV_data(BaseModel):
             name=data["name"],
             title=data["title"],
             show_skill_levels=data["show_skill_levels"],
+            times_opened_by_guests=data["times_opened_by_guests"],
             profile_texts=data["profile_texts"] or [],
             skills=[Skill(**s) for s in data["skills"]] if data["skills"] else [],
             job_experience=(

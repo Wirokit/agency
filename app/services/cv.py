@@ -223,6 +223,7 @@ def get_fulL_cv_object(cv_id: UUID):
                 c.name,
                 c.title,
                 c.show_skill_levels,
+                c.times_opened_by_guests,
 
                 -- 1. Aggregate Profile Texts
                 (SELECT jsonb_agg(pt.profile_text)
@@ -348,7 +349,7 @@ def get_targeted_cvs_by_id(user_id: UUID):
     with db.cursor() as cur:
         # Base CV
         query = """
-            SELECT id, job_name, date_created
+            SELECT id, job_name, date_created, times_opened_by_guests
             FROM cv
             WHERE owner_id = %s AND is_source IS FALSE
         """

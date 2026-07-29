@@ -135,6 +135,12 @@
       <b>CONFIDENTIAL</b>
     </span>
 
+    {% if session["user_type"] == "admin" %}
+    <div class="p-2 print-hidden">
+      Opened {{cv_data.times_opened_by_guests}} time(s) by guests
+    </div>
+    {% endif %}
+
     <div class="space-y-10 pt-4 pb-12 px-12 cv-container">
       <div class="text-center">
         <img
