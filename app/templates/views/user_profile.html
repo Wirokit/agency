@@ -220,10 +220,10 @@
       </div>
       {% endif %}
       <!---->
-      {% if user_type == "EXTERNAL" %}
+      {% if user_type == "external" %}
       <div class="flex items-center gap-2">
         <i data-lucide="clock" class="w-6 h-6"></i>
-        <p>Expires in: 14 days</p>
+        <p>Expires in: {{expiration_days}} days</p>
       </div>
       {% endif %}
       <!---->

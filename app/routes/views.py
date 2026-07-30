@@ -12,6 +12,7 @@ from app.services.s3 import get_profile_img_url
 from models import CV_data, AuthType, get_user_type_by_id
 from .route_utils import (
     auth_required,
+    calc_user_expiration_days,
     get_contact_users,
     get_user_by_id,
     log_cv_opened_by_guest,
@@ -225,6 +226,10 @@ def serve_profile_by_id(user_id):
         contact_list = get_contact_users()
         contact = get_user_by_id(user_id, "email, phone_num")
 
+    expiration_days = None
+    if user_type is AuthType.EXTERNAL:
+        expiration_days = calc_user_expiration_days(user_id)
+
     return render_template(
         "views/user_profile.html",
         user_type=user_type.value,
@@ -240,6 +245,7 @@ def serve_profile_by_id(user_id):
         created_at=user_data["created_at"],
         targeted_cv_list=targeted_cv_list,
         contact_list=contact_list or [],
+        expiration_days=expiration_days,
     )
 
 

@@ -125,3 +125,30 @@ def log_cv_opened_by_guest(cv_id):
         )
 
     db.commit()
+
+
+def calc_user_expiration_days(user_id):
+    db = get_db()
+    with db.cursor() as cur:
+        query = """
+            SELECT
+                EXTRACT(DAY FROM (
+                    GREATEST(
+                        users.created_at,
+                        COALESCE(MAX(cv.date_updated), users.created_at)
+                    ) + INTERVAL '14 days' - NOW()
+                )) AS days_remaining
+            FROM users
+            LEFT JOIN cv ON cv.owner_id = users.id
+            WHERE users.id = %s
+            GROUP BY users.id;
+        """
+        cur.execute(
+            query,
+            (user_id,),
+        )
+        response = cur.fetchone()
+
+        db.rollback()
+
+        return response["days_remaining"]
