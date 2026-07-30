@@ -1106,7 +1106,7 @@
     const returnLink = document
       .getElementById("return_link")
       .getAttribute("data-other");
-    if (returnLink != "/profile") {
+    if (!returnLink.includes("/profile")) {
       const skillLevelInput = document.getElementById(
         "skill-level-checkbox-input",
       );
