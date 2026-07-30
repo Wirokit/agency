@@ -349,9 +349,10 @@ def get_targeted_cvs_by_id(user_id: UUID):
     with db.cursor() as cur:
         # Base CV
         query = """
-            SELECT id, job_name, date_created, times_opened_by_guests
+            SELECT id, job_name, date_updated, times_opened_by_guests
             FROM cv
             WHERE owner_id = %s AND is_source IS FALSE
+            ORDER BY date_updated DESC
         """
         cur.execute(
             query,

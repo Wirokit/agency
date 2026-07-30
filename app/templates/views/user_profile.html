@@ -253,7 +253,7 @@
       <table id="cv-table">
         <tr class="header-row z-10">
           <th class="w-1/5"><p>Job Name</p></th>
-          <th class="w-1/4"><p>Date Created</p></th>
+          <th class="w-1/4"><p>Last Updated</p></th>
           <th class="w-full"><p>Link</p></th>
           {% if session["user_type"] == "admin" %}
           <th class="w-1/5 text-center"><p>Guest Visits</p></th>
@@ -274,7 +274,7 @@
           </td>
           <td>
             <label for="row-{{loop.index}}">
-              {{cv['date_created'].strftime('%d/%m/%Y')}}
+              {{cv['date_updated'].strftime('%d/%m/%Y')}}
             </label>
           </td>
           <td>
