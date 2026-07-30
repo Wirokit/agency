@@ -96,46 +96,6 @@ def get_user_by_username(username, column="*"):
     return user_record
 
 
-def get_user_by_pin(pin_code):
-    db = get_db()  # Get connection from pool
-    with db.cursor() as cur:
-        # Fetch a db entry based on provided user id
-        query = """
-            SELECT id, full_name FROM external_talent
-            WHERE pin_code IS NOT NULL AND pin_code = %s
-        """
-        cur.execute(
-            query,
-            (pin_code,),
-        )
-
-        cv_record = cur.fetchone()
-
-    db.rollback()
-
-    return cv_record
-
-
-def get_targeted_cvs_by_id(user_id):
-    db = get_db()
-    with db.cursor() as cur:
-        query = """
-            SELECT id, date_created, job_identifier FROM targeted_cv
-            WHERE owner_id = %s
-            ORDER BY date_created DESC
-        """
-        cur.execute(
-            query,
-            (user_id,),
-        )
-
-        cv_list = cur.fetchall()
-
-    db.rollback()
-
-    return cv_list
-
-
 def get_contact_users():
     db = get_db()
     with db.cursor() as cur:
