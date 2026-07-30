@@ -116,6 +116,12 @@ def serve_landing():
 def serve_targeted_cv(cv_id):
     """Serves a targeted CV to the frontend."""
 
+    # Don't allow direct fetches of source CVs,
+    # they should only be accessed through profiles
+    cv_info = get_cv_data_by_columns(cv_id, "is_source")
+    if not cv_info or cv_info["is_source"]:
+        return jsonify({"success": False, "error": "Not found."}), 404
+
     cv_data = get_fulL_cv_object(cv_id)
     owner = get_cv_owner(cv_id)
     handler = get_cv_handler(cv_id)
