@@ -15,6 +15,7 @@ from .route_utils import (
     calc_user_expiration_days,
     get_contact_users,
     get_user_by_id,
+    is_valid_uuid,
     log_cv_opened_by_guest,
 )
 
@@ -117,6 +118,11 @@ def serve_landing():
 def serve_targeted_cv(cv_id):
     """Serves a targeted CV to the frontend."""
 
+    # Validate uuid to prevent unnecessary db calls
+    valid_uuid = is_valid_uuid(cv_id)
+    if not valid_uuid:
+        return jsonify({"success": False, "error": "Not found."}), 404
+
     # Don't allow direct fetches of source CVs,
     # they should only be accessed through profiles
     cv_info = get_cv_data_by_columns(cv_id, "is_source")
@@ -145,6 +151,11 @@ def serve_targeted_cv(cv_id):
 @auth_required(modes=[AuthType.ALL])
 def serve_cv_edit(cv_id):
     """Serves a CV's edit page to the frontend."""
+
+    # Validate uuid to prevent unnecessary db calls
+    valid_uuid = is_valid_uuid(cv_id)
+    if not valid_uuid:
+        return jsonify({"success": False, "error": "Not found."}), 404
 
     owner = get_cv_owner(cv_id)
     if (
@@ -193,6 +204,11 @@ def serve_profile():
 @auth_required(modes=[AuthType.ALL])
 def serve_profile_by_id(user_id):
     """Serves a specific user's profile page."""
+
+    # Validate uuid to prevent unnecessary db calls
+    valid_uuid = is_valid_uuid(user_id)
+    if not valid_uuid:
+        return jsonify({"success": False, "error": "Not found."}), 404
 
     # If user is external, ensure the profile is theirs
     if (
@@ -269,6 +285,11 @@ def serve_extarnal_creation():
 @auth_required(modes=[AuthType.ALL])
 def serve_source_creation(user_id):
     """Serves the custom source CV creation page"""
+
+    # Validate uuid to prevent unnecessary db calls
+    valid_uuid = is_valid_uuid(user_id)
+    if not valid_uuid:
+        return jsonify({"success": False, "error": "Not found."}), 404
 
     empty_cv = CV_data()
 

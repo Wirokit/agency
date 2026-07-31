@@ -3,6 +3,7 @@ from functools import wraps
 from psycopg2.extensions import AsIs
 from app.db import get_db
 from models import AuthType
+import uuid
 
 """
   Utility functions that require session variables and/or a database connection.
@@ -152,3 +153,11 @@ def calc_user_expiration_days(user_id):
         db.rollback()
 
         return response["days_remaining"]
+
+
+def is_valid_uuid(val):
+    try:
+        uuid.UUID(str(val))
+        return True
+    except ValueError:
+        return False
