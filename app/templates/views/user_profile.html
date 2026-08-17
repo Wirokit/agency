@@ -122,6 +122,8 @@
         </div>
       </div>
 
+      {% if session["user_type"] == "admin" or session["user_id"]|string ==
+      user_id %}
       <div class="flex items-center">
         <button id="profile-settings-btn" class="settings-btn rounded-[50%]">
           <i
@@ -131,9 +133,11 @@
           ></i>
         </button>
       </div>
+      {% endif %}
     </div>
 
-    {% if session["user_type"] == "admin" or session["user_id"] == user_id %}
+    {% if session["user_type"] == "admin" or session["user_id"]|string ==
+    user_id %}
     <div
       id="settings-menu"
       class="menu card popup hidden absolute rounded-xl bg-white py-2 border border-default min-w-[200px] z-[30]"
@@ -239,7 +243,7 @@
       <div class="flex gap-2 justify-between items-center">
         <p class="text-lg font-medium">Targeted CVs</p>
 
-        {% if cv_data %}
+        {% if cv_data and session["user_type"] == "admin" %}
         <button
           class="contained primary flex gap-2 items-center"
           onclick="openModal('new_targeted_cv_dialog', event)"
@@ -372,7 +376,7 @@
   </div>
 </div>
 
-{% if session["user_type"] == "admin" or session["user_id"] == user_id %}
+{% if session["user_type"] == "admin" or session["user_id"]|string == user_id %}
 <!---->
 {% include 'views/modals/cv_upload_dialog.html' %}
 <!---->
