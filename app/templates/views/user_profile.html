@@ -421,30 +421,32 @@ user_id|string %}
     }
   }
 
-  profileSettingsButton.addEventListener("click", toggleMenu);
+  if (profileSettingsButton && profileSettingsMenu) {
+    profileSettingsButton.addEventListener("click", toggleMenu);
 
-  window.addEventListener("mouseup", (e) => {
-    if (
-      !profileSettingsMenu.classList.contains("hidden") &&
-      !profileSettingsButton.contains(e.target)
-    ) {
-      toggleMenu(e);
-    }
-  });
+    window.addEventListener("mouseup", (e) => {
+      if (
+        !profileSettingsMenu.classList.contains("hidden") &&
+        !profileSettingsButton.contains(e.target)
+      ) {
+        toggleMenu(e);
+      }
+    });
 
-  window.addEventListener("scroll", (e) => {
-    if (
-      !profileSettingsMenu.classList.contains("hidden") &&
-      !profileSettingsButton.contains(e.target)
-    ) {
-      toggleMenu(e);
-    }
-  });
+    window.addEventListener("scroll", (e) => {
+      if (
+        !profileSettingsMenu.classList.contains("hidden") &&
+        !profileSettingsButton.contains(e.target)
+      ) {
+        toggleMenu(e);
+      }
+    });
 
-  window.addEventListener("resize", (e) => {
-    if (!profileSettingsMenu.classList.contains("hidden")) {
-      toggleMenu(e);
-    }
-  });
+    window.addEventListener("resize", (e) => {
+      if (!profileSettingsMenu.classList.contains("hidden")) {
+        toggleMenu(e);
+      }
+    });
+  }
 </script>
 {% endblock %}
