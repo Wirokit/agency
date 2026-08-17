@@ -123,7 +123,7 @@
       </div>
 
       {% if session["user_type"] == "admin" or session["user_id"]|string ==
-      user_id %}
+      user_id|string %}
       <div class="flex items-center">
         <button id="profile-settings-btn" class="settings-btn rounded-[50%]">
           <i
@@ -137,7 +137,7 @@
     </div>
 
     {% if session["user_type"] == "admin" or session["user_id"]|string ==
-    user_id %}
+    user_id|string %}
     <div
       id="settings-menu"
       class="menu card popup hidden absolute rounded-xl bg-white py-2 border border-default min-w-[200px] z-[30]"
@@ -376,7 +376,8 @@
   </div>
 </div>
 
-{% if session["user_type"] == "admin" or session["user_id"]|string == user_id %}
+{% if session["user_type"] == "admin" or session["user_id"]|string ==
+user_id|string %}
 <!---->
 {% include 'views/modals/cv_upload_dialog.html' %}
 <!---->
