@@ -425,9 +425,17 @@ def post_targeted_cv(source_user_id):
 
 
 @api_bp.route("/cv/<id>", methods=["PATCH"])
-@auth_required(modes=[AuthType.ADMIN])
-def edit_targeted_cv(id):
-    """Used by admins to edit CVs"""
+@auth_required(modes=[AuthType.ALL])
+def edit_cv(id):
+    """Edit source or targeted CVs"""
+
+    cv_info = get_cv_data_by_columns(id, "owner_id, is_source")
+
+    if AuthType(session["user_type"]) is not AuthType.ADMIN and (
+        cv_info["is_source"] is False
+        or str(cv_info["owner_id"]) != str(session["user_id"])
+    ):
+        return jsonify({"success": False, "error": "Access forbidden."}), 403
 
     cv_data = CV_data(**json.loads(request.values["cv_json"]))
     contact_id = request.values["contact_id"]
