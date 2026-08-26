@@ -14,15 +14,21 @@ class Skill(BaseModel):
 class JobExperience(BaseModel):
     title: str
     company_name: Optional[str] = ""
-    time_period: Optional[str] = ""
     description: Optional[str] = ""
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    start_is_year: bool = False
+    end_is_year: bool = False
 
 
 class Education(BaseModel):
     degree: str
     school: Optional[str] = ""
-    time_period: Optional[str] = ""
     description: Optional[str] = ""
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    start_is_year: bool = False
+    end_is_year: bool = False
 
 
 class CV_data(BaseModel):

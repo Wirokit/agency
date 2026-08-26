@@ -14,8 +14,10 @@
         background: none !important;
       }
       div {
-        break-inside: avoid;
         print-color-adjust: exact;
+      }
+      .nobreak {
+        break-inside: avoid;
       }
       .card {
         box-shadow: none !important;
@@ -26,6 +28,9 @@
       }
       .print-hidden {
         display: none !important;
+      }
+      .print-visible {
+        display: block;
       }
       .cv-container {
         margin-top: 40px !important;
@@ -155,114 +160,35 @@
         <p class="text-xl mt-4 opacity-[0.8]">{{cv_data.title}}</p>
       </div>
 
-      <!-- Profile -->
-      <div>
-        <div class="font-bold uppercase text-lg mb-4 header">Profile</div>
-        <div class="space-y-4">
-          {% for profile in cv_data.profile_texts %}
-          <p>{{profile}}</p>
-          {% endfor %}
-        </div>
-      </div>
-
-      <!-- Skills -->
-      <div class="space-y-4">
-        <div class="font-bold uppercase text-lg header">Skills</div>
-        {% if cv_data.show_skill_levels %}
-        <div class="space-y-4">
-          {% for group in cv_data.skills|groupby('proficiency')|reverse %}
-          <div class="space-y-2">
-            <p class="w-full font-medium">
-              {% if group.grouper == 5 %} 8+ years {% elif group.grouper == 4 %}
-              6-7 years {% elif group.grouper == 3 %} 4-5 years {% elif
-              group.grouper == 2 %} 1-3 years {% elif group.grouper == 1 %} Less
-              than a year {% endif %}
-            </p>
-            {% for skill in group.list %}
-            <span
-              class="skill-tag {{'highlight' if skill.is_highlight else ''}}"
-            >
-              {{skill.name}}
-            </span>
-            {% endfor %}
-          </div>
-          {% endfor %}
-        </div>
-        {% else %}
-        <div>
-          <!-- Highlight -->
-          {% for skill in cv_data.skills %} {% if skill.is_highlight %}
-          <span class="skill-tag highlight">{{skill.name}}</span>
-          {% endif %} {% endfor %}
-          <!-- Normal -->
-          {% for skill in cv_data.skills %} {% if not skill.is_highlight %}
-          <span class="skill-tag">{{skill.name}}</span>
-          {% endif %} {% endfor %}
-        </div>
-        {% endif %}
-      </div>
-
-      <!-- Work Experience -->
-      <div>
-        <div class="font-bold uppercase text-lg mb-4 header">
-          Work Experience
-        </div>
-        <span class="space-y-6">
-          {% for job in cv_data.job_experience %}
-          <div>
-            <div class="flex justify-between items-center">
-              <b class="text-lg">{{job.title}}</b>
-              <p class="opacity-[0.5] text-sm">{{job.time_period}}</p>
-            </div>
-            <div class="opacity-[0.5] mb-2"><i>{{job.company_name}}</i></div>
-            <p>{{job.description}}</p>
-          </div>
-          {% endfor %}
-        </span>
-      </div>
-
-      <!-- Education -->
-      {% if cv_data.education %}
-      <div>
-        <div class="font-bold uppercase text-lg mb-4 header">Education</div>
-        <span class="space-y-6">
-          {% for education in cv_data.education %}
-          <div>
-            <div class="flex justify-between items-center">
-              <b class="text-lg">{{education.degree}}</b>
-              <p class="opacity-[0.5] text-sm">{{education.time_period}}</p>
-            </div>
-            <div class="opacity-[0.5] mb-2"><i>{{education.school}}</i></div>
-            <p>{{education.description}}</p>
-          </div>
-          {% endfor %}
-        </span>
-      </div>
-      {% endif %}
+      {{ ui.cv_view(cv_data) }}
 
       <!-- Contact info -->
 
-      <div class="font-bold uppercase text-lg mb-4 header">Wirokit contact</div>
-      <div class="space-y-2">
-        <div class="text-lg font-bold">{{contact.name}}</div>
-        <div class="flex items-center gap-2">
-          <i data-lucide="mail" class="secondary-text w-5 h-5"></i>
-          {{contact.email}}
+      <div class="hidden print-visible nobreak space-y-4">
+        <div class="font-bold uppercase text-lg mb-4 header">
+          Wirokit contact
         </div>
-        <div class="flex items-center gap-2">
-          <i data-lucide="phone" class="secondary-text w-5 h-5"></i>
-          {{contact.phone}}
+        <div class="space-y-2">
+          <div class="text-lg font-bold">{{contact.name}}</div>
+          <div class="flex items-center gap-2">
+            <i data-lucide="mail" class="secondary-text w-5 h-5"></i>
+            {{contact.email}}
+          </div>
+          <div class="flex items-center gap-2">
+            <i data-lucide="phone" class="secondary-text w-5 h-5"></i>
+            {{contact.phone}}
+          </div>
         </div>
-      </div>
-      <div>
-        <b>Please note:</b> This document includes confidential and personal
-        information. The recipient of this document may store this document only
-        as long as it is required for the intended purpose. Any information in
-        this document cannot be exposed, transferred or disclosed to any third
-        parties. Any information in this document can be used only for agreed
-        upon purposes. If you are not the intended recipient of this document,
-        please contact the Wirokit contact person immediately and dispose of
-        this document.
+        <div>
+          <b>Please note:</b> This document includes confidential and personal
+          information. The recipient of this document may store this document
+          only as long as it is required for the intended purpose. Any
+          information in this document cannot be exposed, transferred or
+          disclosed to any third parties. Any information in this document can
+          be used only for agreed upon purposes. If you are not the intended
+          recipient of this document, please contact the Wirokit contact person
+          immediately and dispose of this document.
+        </div>
       </div>
     </div>
   </div>
@@ -308,44 +234,6 @@
     modal.close();
     modal.classList.add("hidden");
   }
-
-  const confirmButton = document.getElementById("delete-confirm-btn");
-  confirmButton?.addEventListener("click", async (e) => {
-    e.preventDefault();
-
-    // Loading state
-    confirmButton.classList.add("loading");
-    confirmButton.setAttribute("disabled", "");
-
-    const formData = new FormData();
-    formData.append(
-      "cvListJson",
-      JSON.stringify([
-        document.getElementById("cv_id").getAttribute("data-other"),
-      ]),
-    );
-
-    try {
-      const response = await fetch("/api/cv", {
-        method: "DELETE",
-        body: formData,
-      });
-
-      const result = await response.json();
-      if (response.ok && result.success) {
-        closeModal("delete_dialog");
-        window.location.href = "/";
-      } else {
-        alert(result.error);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      // End loading state
-      confirmButton.classList.remove("loading");
-      confirmButton.removeAttribute("disabled");
-    }
-  });
 </script>
 
 <!-- Block end -->

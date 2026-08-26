@@ -217,28 +217,20 @@
       <p class="header text-lg font-bold">Profile Texts</p>
       <div id="profile-wrapper" class="px-4 pb-4 space-y-4">
         <div id="profile-list" class="space-y-4">
+          <template id="profile-template">{{ ui.cv_profile() }}</template>
           {% for profile in cv_data.profile_texts %}
-          <div id="container-profile-{{loop.index}}" class="flex gap-2">
-            <!-- prettier-ignore -->
-            <textarea
-              id="profile-{{loop.index}}"
-              class="border border-[rgba(0,0,0,0.2)] rounded-sm p-4 w-full"
-            >{{profile}}</textarea>
-
-            <div id="list-index" class="list-index">{{loop.index}}</div>
-            <button
-              type="button"
-              id="delete-experience-{{loop.index}}"
-              class="delete-index"
-              onclick="deleteCvElement(event, 'profile-list')"
-            >
-              <i data-lucide="trash" class="w-5 h-5"></i>
-            </button>
-          </div>
+          <!---->
+          {{ ui.cv_profile(loop.index, profile) }}
+          <!---->
           {% endfor %}
         </div>
         <div class="flex w-full gap-2">
-          <button type="button" id="add-profile-btn" class="add-btn gap-2">
+          <button
+            type="button"
+            id="add-profile-btn"
+            class="add-btn gap-2"
+            onclick="addCvRow('profile-list')"
+          >
             <i data-lucide="plus" class="w-5 h-5"></i>
             <span>ADD</span>
           </button>
@@ -279,55 +271,14 @@
                 <th></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="skill-table-body">
+              <template id="skill-template">
+                {{ ui.cv_skill_row(is_source_cv) }}
+              </template>
               {% for skill in cv_data.skills %}
-              <tr
-                id="skill_row_{{loop.index}}"
-                class="skills-row items-center {{'highlight' if skill.is_highlight else ''}}"
-                onclick="openSkillEditDialog(event, this)"
-              >
-                {% if not is_source_cv %}
-                <td>
-                  <i data-lucide="star" class="w-5 h-5"></i>
-                </td>
-                {% endif %}
-                <td class="skill-name">{{skill.name}}</td>
-                <td
-                  class="proficiency-cell flex flex-col items-center w-fit text-center"
-                >
-                  <div class="proficiency my-[-10px] text-4xl tracking-tighter">
-                    <span class="active">-</span>
-                    <span class="{{'active' if skill.proficiency > 1 else ''}}">
-                      -
-                    </span>
-                    <span class="{{'active' if skill.proficiency > 2 else ''}}">
-                      -
-                    </span>
-                    <span class="{{'active' if skill.proficiency > 3 else ''}}">
-                      -
-                    </span>
-                    <span class="{{'active' if skill.proficiency > 4 else ''}}">
-                      -
-                    </span>
-                  </div>
-                  <p class="proficiency-text text-sm">Loading...</p>
-                  <input
-                    name="proficiency-value"
-                    type="number"
-                    value="{{skill.proficiency}}"
-                    class="hidden"
-                  />
-                </td>
-                <td>
-                  <button
-                    type="button"
-                    class="p-2 delete-skill rounded-lg"
-                    onclick="deleteSkillRow(this)"
-                  >
-                    <i data-lucide="trash" class="w-5 h-5"></i>
-                  </button>
-                </td>
-              </tr>
+              <!---->
+              {{ ui.cv_skill_row(is_source_cv, loop.index, skill) }}
+              <!---->
               {% endfor %}
             </tbody>
           </table>
@@ -343,88 +294,28 @@
         </button>
       </div>
 
-      <p class="header text-lg font-bold">Job Experience</p>
+      <p class="header text-lg font-bold">Work Experience</p>
       <div id="work-wrapper" class="px-4 pb-4 space-y-4">
         <div id="experience-list" class="space-y-8">
+          <!-- The template for experience elements -->
+          <template id="cv-experience-template">
+            {{ ui.cv_experience() }}
+          </template>
+
           {% for experience in cv_data.job_experience %}
-          <div class="flex gap-2">
-            <div class="w-full space-y-2">
-              <div class="relative w-full pt-2">
-                <label
-                  for="experience-title-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
-                >
-                  Title
-                </label>
-                <input
-                  id="experience-title-{{loop.index}}"
-                  type="text"
-                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-                  value="{{experience.title}}"
-                />
-              </div>
-
-              <div class="relative w-full pt-2">
-                <label
-                  for="experience-company-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
-                >
-                  Company
-                </label>
-                <input
-                  id="experience-company-{{loop.index}}"
-                  type="text"
-                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-                  value="{{experience.company_name}}"
-                />
-              </div>
-
-              <div class="relative w-full pt-2">
-                <label
-                  for="experience-duration-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
-                >
-                  Duration
-                </label>
-                <input
-                  id="experience-duration-{{loop.index}}"
-                  type="text"
-                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-                  value="{{experience.time_period}}"
-                />
-              </div>
-
-              <div class="relative w-full pt-2">
-                <label
-                  for="experience-description-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
-                >
-                  Description
-                </label>
-                <!-- prettier-ignore -->
-                <textarea
-                  id="experience-description-{{loop.index}}"
-                  type="text"
-                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-                >{{experience.description}}</textarea>
-              </div>
-            </div>
-
-            <div id="list-index" class="list-index">{{loop.index}}</div>
-            <button
-              type="button"
-              id="delete-experience-1"
-              class="delete-index"
-              onclick="deleteCvElement(event, 'experience-list')"
-            >
-              <i data-lucide="trash" class="w-5 h-5"></i>
-            </button>
-          </div>
+          <!---->
+          {{ ui.cv_experience(loop.index, experience) }}
+          <!---->
           {% endfor %}
         </div>
 
         <div class="flex w-full gap-2">
-          <button type="button" id="add-experience-btn" class="add-btn gap-2">
+          <button
+            type="button"
+            id="add-experience-btn"
+            class="add-btn gap-2"
+            onclick="addCvRow('experience-list')"
+          >
             <i data-lucide="plus" class="w-5 h-5"></i>
             <span>ADD</span>
           </button>
@@ -443,85 +334,24 @@
       <p class="header text-lg font-bold">Education</p>
       <div id="edu-wrapper" class="px-4 pb-4 space-y-4">
         <div id="edu-list" class="space-y-8">
+          <template id="cv-education-template">
+            {{ ui.cv_education() }}
+          </template>
+
           {% for education in cv_data.education %}
-          <div class="flex gap-2">
-            <div class="w-full space-y-2">
-              <div class="relative w-full pt-2">
-                <label
-                  for="edu-title-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
-                >
-                  Title | Degree
-                </label>
-                <input
-                  id="edu-title-{{loop.index}}"
-                  type="text"
-                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-                  value="{{education.degree}}"
-                />
-              </div>
-
-              <div class="relative w-full pt-2">
-                <label
-                  for="edu-company-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
-                >
-                  School
-                </label>
-                <input
-                  id="edu-company-{{loop.index}}"
-                  type="text"
-                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-                  value="{{education.school}}"
-                />
-              </div>
-
-              <div class="relative w-full pt-2">
-                <label
-                  for="edu-duration-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
-                >
-                  Duration
-                </label>
-                <input
-                  id="edu-duration-{{loop.index}}"
-                  type="text"
-                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-                  value="{{education.time_period}}"
-                />
-              </div>
-
-              <div class="relative w-full pt-2">
-                <label
-                  for="edu-description-{{loop.index}}"
-                  class="absolute top-0 left-1 px-1 text-xs font-semibold"
-                >
-                  Description
-                </label>
-                <!-- prettier-ignore -->
-                <textarea
-                  id="edu-description-{{loop.index}}"
-                  type="text"
-                  class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-                >{{education.description}}</textarea>
-              </div>
-            </div>
-
-            <div id="list-index" class="list-index">{{loop.index}}</div>
-            <button
-              type="button"
-              id="delete-edu-1"
-              class="delete-index"
-              onclick="deleteCvElement(event, 'edu-list')"
-            >
-              <i data-lucide="trash" class="w-5 h-5"></i>
-            </button>
-          </div>
+          <!---->
+          {{ ui.cv_education(loop.index, education) }}
+          <!---->
           {% endfor %}
         </div>
 
         <div class="flex w-full gap-2">
-          <button type="button" id="add-education-btn" class="add-btn gap-2">
+          <button
+            type="button"
+            id="add-education-btn"
+            class="add-btn gap-2"
+            onclick="addCvRow('edu-list')"
+          >
             <i data-lucide="plus" class="w-5 h-5"></i>
             <span>ADD</span>
           </button>
@@ -535,8 +365,6 @@
           </button>
         </div>
       </div>
-
-      <!-- New accordions here -->
     </div>
   </div>
 </div>
@@ -576,7 +404,6 @@
           required
           id="skill_name"
           name="name"
-          value="SQL"
           class="w-full p-2 border border-[rgba(0,0,0,0.2)] rounded-sm"
         />
       </div>
@@ -622,7 +449,7 @@
         class="px-3 py-2 rounded-sm focus:outline-none focus:ring-4 transition duration-200"
         onclick="closeModal('skill_edit_dialog', event)"
       >
-        Cancel
+        Close
       </button>
     </div>
   </form>
@@ -633,15 +460,47 @@
   // Initialize Icons
   lucide.createIcons();
 
-  let nextProfileIndex =
-    document.getElementById("profile-list").children.length + 1;
-  let nextExperienceIndex =
-    document.getElementById("experience-list").children.length + 1;
-  let nextEduIndex = document.getElementById("edu-list").children.length + 1;
-
   // Changed to whatever skill is being edited to know which one should be updated
   // Empty string represents a new skill being added
   let rowToEdit = null;
+
+  // Date input handlers
+  document.addEventListener("input", function (event) {
+    if (event.target.classList.contains("month-input")) {
+      event.target.value = event.target.value.replace(/\D/g, "");
+      if (event.target.value.length > 2) {
+        event.target.value = event.target.value.slice(0, 2);
+      }
+    }
+
+    if (event.target.classList.contains("year-input")) {
+      event.target.value = event.target.value.replace(/\D/g, "");
+      if (event.target.value.length > 4) {
+        event.target.value = event.target.value.slice(0, 4);
+      }
+    }
+  });
+
+  // Date change handlers
+  document.addEventListener("change", function (event) {
+    if (event.target.classList.contains("month-input")) {
+      // Zero-pad the month
+      if (event.target.value.length === 1) {
+        event.target.value = event.target.value.padStart(2, "0");
+      }
+      // Set to 12 if above it
+      if (event.target.value > 12) {
+        event.target.value = 12;
+      }
+    }
+
+    if (event.target.classList.contains("year-input")) {
+      // Zero-pad the year
+      if (event.target.value.length > 0 && event.target.value.length < 4) {
+        event.target.value = event.target.value.padStart(4, "0");
+      }
+    }
+  });
 
   function setProficiencyTexts(row_element) {
     const elements = row_element
@@ -683,7 +542,7 @@
   function deleteSkillRow(buttonEl) {
     // delete button -> table cell -> table row
     const row = buttonEl.parentElement.parentElement;
-    const rowIndex = row.rowIndex;
+    const rowIndex = row.rowIndex + 1;
 
     const skillsTable = document.getElementById("skills-table");
     skillsTable.deleteRow(rowIndex);
@@ -768,32 +627,15 @@
     const formObj = Object.fromEntries(form);
     formObj["is_highlight"] = form.get("is_highlight") == "on" || false;
 
+    let clone;
+    let skillRow;
+
     if (rowToEdit) {
       if (!validSkillName(formObj["name"], rowToEdit)) {
         return;
       }
 
-      const skillRow = rowToEdit;
-
-      const nameCell = skillRow.getElementsByClassName("skill-name")[0];
-      nameCell.innerText = formObj["name"];
-
-      const proficiencyContainer =
-        skillRow.getElementsByClassName("proficiency")[0];
-      proficiencyContainer.innerHTML = html`
-        <span class="active">-</span>
-        <span class="${formObj["proficiency"] > 1 ? "active" : ""}">-</span>
-        <span class="${formObj["proficiency"] > 2 ? "active" : ""}">-</span>
-        <span class="${formObj["proficiency"] > 3 ? "active" : ""}">-</span>
-        <span class="${formObj["proficiency"] > 4 ? "active" : ""}">-</span>
-      `;
-      skillRow.getElementsByTagName("input")[0].value = formObj["proficiency"];
-
-      formObj["is_highlight"]
-        ? skillRow.classList.add("highlight")
-        : skillRow.classList.remove("highlight");
-
-      setProficiencyTexts(skillRow);
+      skillRow = rowToEdit;
     } else {
       if (!validSkillName(formObj["name"])) {
         return;
@@ -801,98 +643,41 @@
 
       const skillsTable = document.getElementById("skills-table");
 
-      const newRow = skillsTable.insertRow();
-      newRow.classList.add("skills-row", "items-center");
-      if (formObj["is_highlight"]) {
-        newRow.classList.add("highlight");
-      }
-      newRow.setAttribute("onclick", "openSkillEditDialog(event, this)");
+      const template = skillsTable.querySelector("template");
+      clone = template.content.cloneNode(true);
 
-      const tableHeader = document.getElementById("skill-table-header");
-      if (tableHeader.cells.length > 3) {
-        const highlightCell = newRow.insertCell();
-        highlightCell.innerHTML = html`<i
-          data-lucide="star"
-          class="w-5 h-5"
-        ></i>`;
-      }
-
-      const nameCell = newRow.insertCell();
-      nameCell.classList.add("skill-name");
-      nameCell.innerText = formObj["name"];
-
-      const profCell = newRow.insertCell();
-      profCell.classList.add(
-        "flex",
-        "flex-col",
-        "items-center",
-        "w-fit",
-        "text-center",
-      );
-      profCell.innerHTML = html`
-        <div class="proficiency my-[-10px] text-4xl tracking-tighter">
-          <span class="active">-</span>
-          <span class="${formObj["proficiency"] > 1 ? "active" : ""}">-</span>
-          <span class="${formObj["proficiency"] > 2 ? "active" : ""}">-</span>
-          <span class="${formObj["proficiency"] > 3 ? "active" : ""}">-</span>
-          <span class="${formObj["proficiency"] > 4 ? "active" : ""}">-</span>
-        </div>
-        <p class="proficiency-text text-sm">Loading...</p>
-        <input
-          name="proficiency-value"
-          type="number"
-          value="${formObj["proficiency"]}"
-          class="hidden"
-        />
-      `;
-
-      const deleteBtnCell = newRow.insertCell();
-      deleteBtnCell.innerHTML = html`
-        <button
-          type="button"
-          class="p-2 delete-skill rounded-lg"
-          onclick="deleteSkillRow(this)"
-        >
-          <i data-lucide="trash" class="w-5 h-5"></i>
-        </button>
-      `;
-
-      setProficiencyTexts(newRow);
-      document.getElementById("skill-list").classList.remove("hidden");
-      lucide.createIcons();
+      skillRow = clone.firstElementChild;
     }
-    window.closeModal("skill_edit_dialog");
-  });
 
-  document.getElementById("add-profile-btn").addEventListener("click", (e) => {
-    e.preventDefault();
+    const nameCell = skillRow.querySelector("td.skill-name");
+    nameCell.textContent = formObj["name"];
 
-    const newParagraph = document.createElement("div");
-    newParagraph.id = `container-profile-${nextProfileIndex}`;
-    newParagraph.classList.add("flex", "gap-2");
-    newParagraph.innerHTML = html`
-      <textarea
-        id="profile-${nextProfileIndex}"
-        class="border border-[rgba(0,0,0,0.2)] rounded-sm p-4 w-full min-w-100"
-      ></textarea>
+    const proficiencyContainer = skillRow.querySelector("div.proficiency");
+    const profMarkers = proficiencyContainer.children;
+    for (let x = 0; x < profMarkers.length; x++) {
+      if (x == 0 || formObj["proficiency"] > x) {
+        profMarkers[x].classList.add("active");
+      }
+    }
+    skillRow.querySelector("input.proficiency-value").value =
+      formObj["proficiency"];
 
-      <div id="list-index" class="list-index">
-        ${document.getElementById("profile-list").children.length + 1}
-      </div>
-      <button
-        type="button"
-        id="delete-experience-${nextProfileIndex}"
-        class="delete-index"
-        onclick="deleteCvElement(event, 'profile-list')"
-      >
-        <i data-lucide="trash" class="w-5 h-5"></i>
-      </button>
-    `;
-    document.getElementById("profile-list").appendChild(newParagraph);
-    nextProfileIndex += 1;
+    formObj["is_highlight"]
+      ? skillRow.classList.add("highlight")
+      : skillRow.classList.remove("highlight");
 
-    // Initialize new icon
-    lucide.createIcons();
+    if (clone) {
+      const skillsTableBody = document.getElementById("skill-table-body");
+      skillsTableBody.appendChild(clone);
+
+      const dialog = document.getElementById("skill_edit_dialog");
+      const formNode = dialog.querySelector("form");
+      formNode.reset();
+    } else {
+      window.closeModal("skill_edit_dialog");
+    }
+
+    setProficiencyTexts(skillRow);
   });
 
   function deleteCvElement(e, listId) {
@@ -904,180 +689,44 @@
       const wrapper = document.getElementById(listId);
       for (let i = 0; i < wrapper.children.length; i++) {
         const el = wrapper.children[i];
-        el.children.namedItem("list-index").textContent = i + 1;
+        if (el.tagName == "TEMPLATE") continue;
+        el.querySelector("div.list-index").textContent = i;
       }
     }
   }
   window.deleteCvElement = deleteCvElement;
 
-  const addExperienceButton = document.getElementById("add-experience-btn");
-  addExperienceButton.addEventListener("click", (e) => {
-    e.preventDefault();
+  function addCvRow(listId) {
+    const listEl = document.getElementById(listId);
+    const nextRowIndex = listEl.children.length;
 
-    const experienceEl = document.createElement("div");
-    experienceEl.classList.add("flex", "gap-2");
+    const template = listEl.querySelector("template");
+    const clone = template.content.cloneNode(true);
 
-    experienceEl.innerHTML = html`
-      <div class="w-full space-y-2">
-        <div class="relative w-full pt-2">
-          <label
-            for="experience-title-${nextExperienceIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold"
-          >
-            Title
-          </label>
-          <input
-            id="experience-title-${nextExperienceIndex}"
-            type="text"
-            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-          />
-        </div>
+    // Select ANY element in the clone that has an id or for attribute
+    const elementsToUpdate = clone.querySelectorAll("[id], [for]");
 
-        <div class="relative w-full pt-2">
-          <label
-            for="experience-company-${nextExperienceIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold"
-          >
-            Company
-          </label>
-          <input
-            id="experience-company-${nextExperienceIndex}"
-            type="text"
-            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-          />
-        </div>
+    elementsToUpdate.forEach((element) => {
+      if (element.id) {
+        element.id = element.id.replace("#TEMP", nextRowIndex);
+      }
+      if (element.hasAttribute("for")) {
+        element.setAttribute(
+          "for",
+          element.getAttribute("for").replace("#TEMP", nextRowIndex),
+        );
+      }
+    });
 
-        <div class="relative w-full pt-2">
-          <label
-            for="experience-duration-${nextExperienceIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold"
-          >
-            Duration
-          </label>
-          <input
-            id="experience-duration-${nextExperienceIndex}"
-            type="text"
-            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-          />
-        </div>
+    const listIndex = clone.querySelector("div.list-index");
+    if (listIndex) {
+      listIndex.textContent = nextRowIndex;
+    }
 
-        <div class="relative w-full pt-2">
-          <label
-            for="experience-description-${nextExperienceIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold"
-          >
-            Description
-          </label>
-          <textarea
-            id="experience-description-${nextExperienceIndex}"
-            type="text"
-            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-          ></textarea>
-        </div>
-      </div>
-
-      <div id="list-index" class="list-index">
-        ${document.getElementById("experience-list").children.length + 1}
-      </div>
-      <button
-        type="button"
-        id="delete-experience-${nextExperienceIndex}"
-        class="delete-index"
-        onclick="deleteCvElement(event, 'experience-list')"
-      >
-        <i data-lucide="trash" class="w-5 h-5"></i>
-      </button>
-    `;
-
-    document.getElementById("experience-list").appendChild(experienceEl);
-    nextExperienceIndex += 1;
+    listEl.appendChild(clone);
     lucide.createIcons();
-  });
-
-  const addEducationButton = document.getElementById("add-education-btn");
-  addEducationButton.addEventListener("click", (e) => {
-    e.preventDefault();
-
-    const eduEl = document.createElement("div");
-    eduEl.classList.add("flex", "gap-2");
-
-    eduEl.innerHTML = html`
-      <div class="w-full space-y-2">
-        <div class="relative w-full pt-2">
-          <label
-            for="edu-title-${nextEduIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold"
-          >
-            Title | Degree
-          </label>
-          <input
-            id="edu-title-${nextEduIndex}"
-            type="text"
-            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-          />
-        </div>
-
-        <div class="relative w-full pt-2">
-          <label
-            for="edu-company-${nextEduIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold"
-          >
-            School
-          </label>
-          <input
-            id="edu-company-${nextEduIndex}"
-            type="text"
-            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-          />
-        </div>
-
-        <div class="relative w-full pt-2">
-          <label
-            for="edu-duration-${nextEduIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold"
-          >
-            Duration
-          </label>
-          <input
-            id="edu-duration-${nextEduIndex}"
-            type="text"
-            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-          />
-        </div>
-
-        <div class="relative w-full pt-2">
-          <label
-            for="edu-description-${nextEduIndex}"
-            class="absolute top-0 left-1 px-1 text-xs font-semibold"
-          >
-            Description
-          </label>
-          <!-- prettier-ignore -->
-          <textarea
-            id="edu-description-${nextEduIndex}"
-            type="text"
-            class="p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
-          ></textarea>
-        </div>
-      </div>
-
-      <div id="list-index" class="list-index">
-        ${document.getElementById("edu-list").children.length + 1}
-      </div>
-      <button
-        type="button"
-        id="delete-edu-${nextEduIndex}"
-        class="delete-index"
-        onclick="deleteCvElement(event, 'edu-list')"
-      >
-        <i data-lucide="trash" class="w-5 h-5"></i>
-      </button>
-    `;
-
-    document.getElementById("edu-list").appendChild(eduEl);
-    nextEduIndex += 1;
-    lucide.createIcons();
-  });
+  }
+  window.addCvRow = addCvRow;
 
   const confirmButton = document.getElementById("edit-confirm-btn");
   confirmButton.addEventListener("click", async (e) => {
@@ -1094,11 +743,10 @@
     jsonData.title = document.getElementById("info_title")?.value || "";
 
     // Profiles
-    const profileList = document.getElementById("profile-list");
+    const profileList = document.querySelectorAll("textarea.profile-input");
     jsonData.profile_texts = [];
-    for (const child of profileList.children) {
-      const value = child.getElementsByTagName("textarea")[0].value;
-      jsonData.profile_texts.push(value);
+    for (const profile of profileList) {
+      jsonData.profile_texts.push(profile.value);
     }
 
     // Skills
@@ -1113,11 +761,11 @@
       jsonData.show_skill_levels = skillLevelInput.checked;
     }
 
-    const skillRows = document.getElementsByClassName("skills-row");
+    const skillRows = document.querySelectorAll("tr.skills-row");
     jsonData.skills = [];
     for (const row of skillRows) {
-      const skillName = row.getElementsByClassName("skill-name")[0].innerText;
-      const skillProf = row.getElementsByTagName("input")[0].value;
+      const skillName = row.querySelector("td.skill-name").innerText;
+      const skillProf = row.querySelector("input").value;
       const skillhighlight = row.classList.contains("highlight");
 
       jsonData.skills.push({
@@ -1128,32 +776,70 @@
     }
 
     // Work Experience
-    const experienceList = document.getElementById("experience-list");
+    const experienceList = document.querySelectorAll("div.exp-container");
     jsonData.job_experience = [];
-    for (const child of experienceList.children) {
+    for (const exp of experienceList) {
       const experienceJson = {};
 
-      const inputs = child.getElementsByTagName("input");
-      experienceJson.title = inputs[0].value;
-      experienceJson.company_name = inputs[1].value;
-      experienceJson.time_period = inputs[2].value;
-      experienceJson.description =
-        child.getElementsByTagName("textarea")[0].value;
+      experienceJson.title = exp.querySelector("input.exp-title").value;
+      experienceJson.company_name =
+        exp.querySelector("input.exp-company").value;
+      experienceJson.description = exp.querySelector(
+        "textarea.exp-description",
+      ).value;
+
+      // Date range
+      const startDate = exp.querySelector("div.exp-start-date");
+      const startMonth = startDate.querySelector("input.month-input");
+      const startYear = startDate.querySelector("input.year-input");
+      const endDate = exp.querySelector("div.exp-end-date");
+      const endMonth = endDate.querySelector("input.month-input");
+      const endYear = endDate.querySelector("input.year-input");
+
+      if (startMonth.value && startYear.value) {
+        const startDate = new Date(
+          Date.UTC(startYear.value, startMonth.value - 1, 1),
+        );
+        experienceJson.start_date = startDate.toISOString();
+      }
+
+      if (endMonth.value && endYear.value) {
+        const endDate = new Date(Date.UTC(endYear.value, endMonth.value, 0));
+        experienceJson.end_date = endDate.toISOString();
+      }
 
       jsonData.job_experience.push(experienceJson);
     }
 
     // Education
-    const educationList = document.getElementById("edu-list");
+    const educationList = document.querySelectorAll("div.edu-container");
     jsonData.education = [];
-    for (const child of educationList.children) {
+    for (const edu of educationList) {
       const eduJson = {};
 
-      const inputs = child.getElementsByTagName("input");
-      eduJson.degree = inputs[0].value;
-      eduJson.school = inputs[1].value;
-      eduJson.time_period = inputs[2].value;
-      eduJson.description = child.getElementsByTagName("textarea")[0].value;
+      eduJson.degree = edu.querySelector("input.edu-degree").value;
+      eduJson.school = edu.querySelector("input.edu-school").value;
+      eduJson.description = edu.querySelector("textarea.edu-description").value;
+
+      // Date range
+      const startDate = edu.querySelector("div.edu-start-date");
+      const startMonth = startDate.querySelector("input.month-input");
+      const startYear = startDate.querySelector("input.year-input");
+      const endDate = edu.querySelector("div.edu-end-date");
+      const endMonth = endDate.querySelector("input.month-input");
+      const endYear = endDate.querySelector("input.year-input");
+
+      if (startMonth.value && startYear.value) {
+        const startDate = new Date(
+          Date.UTC(startYear.value, startMonth.value - 1, 1),
+        );
+        eduJson.start_date = startDate.toISOString();
+      }
+
+      if (endMonth.value && endYear.value) {
+        const endDate = new Date(Date.UTC(endYear.value, endMonth.value, 0));
+        eduJson.end_date = endDate.toISOString();
+      }
 
       jsonData.education.push(eduJson);
     }

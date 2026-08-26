@@ -83,28 +83,36 @@ def _save_data_by_id(cv_id: UUID, cv: CV_data):
                 cv_id,
                 job.title,
                 job.company_name,
-                job.time_period,
+                job.start_date,
+                job.end_date,
                 job.description,
             )
             for job in cv.job_experience
         ]
         cur.executemany(
             """
-            INSERT INTO cv_job_experiences (cv_id, title, company_name, time_period, description)
-            VALUES (%s, %s, %s, %s, %s);
+            INSERT INTO cv_job_experiences (cv_id, title, company_name, start_date, end_date, description)
+            VALUES (%s, %s, %s, %s, %s, %s);
             """,
             job_data,
         )
 
         # Education
         edu_data = [
-            (cv_id, edu.degree, edu.school, edu.time_period, edu.description)
+            (
+                cv_id,
+                edu.degree,
+                edu.school,
+                edu.start_date,
+                edu.end_date,
+                edu.description,
+            )
             for edu in cv.education
         ]
         cur.executemany(
             """
-            INSERT INTO cv_educations (cv_id, degree, school, time_period, description)
-            VALUES (%s, %s, %s, %s, %s);
+            INSERT INTO cv_educations (cv_id, degree, school, start_date, end_date, description)
+            VALUES (%s, %s, %s, %s, %s, %s);
             """,
             edu_data,
         )
@@ -240,22 +248,34 @@ def get_fulL_cv_object(cv_id: UUID):
                 WHERE cs.cv_id = c.id) AS skills,
 
                 -- 3. Aggregate Job Experiences as objects
-                (SELECT jsonb_agg(jsonb_build_object(
-                            'title', je.title,
-                            'company_name', COALESCE(je.company_name, ''),
-                            'time_period', je.time_period,
-                            'description', je.description
-                        ))
+                (SELECT jsonb_agg(
+                    jsonb_build_object(
+                        'title', je.title,
+                        'company_name', COALESCE(je.company_name, ''),
+                        'description', je.description,
+                        'start_date', je.start_date,
+                        'end_date', je.end_date,
+                        'start_is_year', je.start_is_year,
+                        'end_is_year', je.end_is_year
+                    )
+                    ORDER BY CASE WHEN je.end_date IS NULL AND je.start_date IS NULL THEN 2 ELSE 1 END, je.end_date DESC, je.start_date DESC
+                )
                 FROM cv_job_experiences je
                 WHERE je.cv_id = c.id) AS job_experience,
 
                 -- 4. Aggregate Educations as objects
-                (SELECT jsonb_agg(jsonb_build_object(
-                            'degree', edu.degree,
-                            'school', edu.school,
-                            'time_period', edu.time_period,
-                            'description', edu.description
-                        ))
+                (SELECT jsonb_agg(
+                    jsonb_build_object(
+                        'degree', edu.degree,
+                        'school', edu.school,
+                        'description', edu.description,
+                        'start_date', edu.start_date,
+                        'end_date', edu.end_date,
+                        'start_is_year', edu.start_is_year,
+                        'end_is_year', edu.end_is_year
+                    )
+                    ORDER BY CASE WHEN edu.end_date IS NULL AND edu.start_date IS NULL THEN 2 ELSE 1 END, edu.end_date DESC, edu.start_date DESC
+                )
                 FROM cv_educations edu
                 WHERE edu.cv_id = c.id) AS education
 

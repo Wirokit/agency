@@ -499,3 +499,404 @@
   window.handleCheckboxClick = handleCheckboxClick;
 </script>
 {% endmacro %}
+
+<!-- Date Input (mm/yyyy) -->
+{% macro date_input(prefix, value) %}
+<div class="date-input-group">
+  <input
+    id="{{prefix}}-month"
+    type="text"
+    placeholder="MM"
+    inputmode="numeric"
+    pattern="\d*"
+    class="month-input"
+    value="{{value|cv_date_part('m')}}"
+  />
+  <span>/</span>
+  <input
+    id="{{prefix}}-year"
+    type="text"
+    placeholder="YYYY"
+    inputmode="numeric"
+    pattern="\d*"
+    class="year-input"
+    value="{{value|cv_date_part('y')}}"
+  />
+</div>
+{% endmacro %}
+
+<!-- CV profile element -->
+{% macro cv_profile(id_index = "#TEMP", text_content = "") %}
+<div id="container-profile-#TEMP" class="flex gap-2">
+  <!-- prettier-ignore -->
+  <textarea
+    id="profile-{{id_suffix}}"
+    class="profile-input border border-[rgba(0,0,0,0.2)] rounded-sm p-4 w-full"
+  >{{text_content}}</textarea>
+
+  <div id="list-index" class="list-index">{{id_index}}</div>
+  <button
+    type="button"
+    id="delete-experience-{{id_suffix}}"
+    class="delete-index"
+    onclick="deleteCvElement(event, 'profile-list')"
+  >
+    <i data-lucide="trash" class="w-5 h-5"></i>
+  </button>
+</div>
+{% endmacro %}
+
+<!-- CV skill element -->
+{% macro cv_skill_row(is_source_cv, id_index = "#TEMP", skill_data = None) %}
+<tr
+  id="skill_row_{{id_index}}"
+  class="skills-row items-center {{'highlight' if skill_data and skill_data.is_highlight else ''}}"
+  onclick="openSkillEditDialog(event, this)"
+>
+  {% if not is_source_cv %}
+  <td>
+    <i data-lucide="star" class="w-5 h-5"></i>
+  </td>
+  {% endif %}
+  <td class="skill-name">{{skill_data.name if skill_data else ''}}</td>
+  <td class="proficiency-cell flex flex-col items-center w-fit text-center">
+    <div class="proficiency my-[-10px] text-4xl tracking-tighter">
+      <span class="active">-</span>
+      <span
+        class="{{'active' if skill_data and skill_data.proficiency > 1 else ''}}"
+      >
+        -
+      </span>
+      <span
+        class="{{'active' if skill_data and skill_data.proficiency > 2 else ''}}"
+      >
+        -
+      </span>
+      <span
+        class="{{'active' if skill_data and skill_data.proficiency > 3 else ''}}"
+      >
+        -
+      </span>
+      <span
+        class="{{'active' if skill_data and skill_data.proficiency > 4 else ''}}"
+      >
+        -
+      </span>
+    </div>
+    <p class="proficiency-text text-sm">Loading...</p>
+    <input
+      id="proficiency-value-{{id_index}}"
+      type="number"
+      value="{{skill_data.proficiency if skill_data else ''}}"
+      class="hidden proficiency-value"
+    />
+  </td>
+  <td>
+    <button
+      type="button"
+      class="p-2 delete-skill rounded-lg"
+      onclick="deleteSkillRow(this)"
+    >
+      <i data-lucide="trash" class="w-5 h-5"></i>
+    </button>
+  </td>
+</tr>
+{% endmacro %}
+
+<!-- CV experience element -->
+{% macro cv_experience(id_index = "#TEMP", exp_data = None) %}
+<div class="flex gap-2">
+  <div class="exp-container w-full space-y-2">
+    <div class="exp-title relative w-full pt-2">
+      <label
+        for="exp-title-{{id_index}}"
+        class="absolute top-0 left-1 px-1 text-xs font-semibold"
+      >
+        Title
+      </label>
+      <input
+        id="exp-title-{{id_index}}"
+        type="text"
+        class="exp-title p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+        value="{{exp_data.title if exp_data else ''}}"
+      />
+    </div>
+
+    <div class="exp-company relative w-full pt-2">
+      <label
+        for="exp-company-{{id_index}}"
+        class="absolute top-0 left-1 px-1 text-xs font-semibold"
+      >
+        Company
+      </label>
+      <input
+        id="exp-company-{{id_index}}"
+        type="text"
+        class="exp-company p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+        value="{{exp_data.company_name if exp_data else ''}}"
+      />
+    </div>
+
+    <div class="flex gap-2">
+      <div class="exp-start-date flex-1 relative w-full pt-2">
+        <label
+          for="exp-start-{{id_index}}-month"
+          class="absolute top-0 left-1 px-1 text-xs font-semibold"
+        >
+          Start Date (mm/yyyy)
+        </label>
+        {{ date_input("exp-start-%s" % (id_index), exp_data.start_date if
+        exp_data else None) }}
+      </div>
+
+      <div class="exp-end-date flex-1 relative w-full pt-2">
+        <label
+          for="exp-end-{{id_index}}-month"
+          class="absolute top-0 left-1 px-1 text-xs font-semibold"
+        >
+          End Date (mm/yyyy)
+        </label>
+        {{ date_input("exp-end-%s" % (id_index), exp_data.end_date if exp_data
+        else None) }}
+      </div>
+    </div>
+
+    <div class="exp-description relative w-full pt-2">
+      <label
+        for="exp-description-{{id_index}}"
+        class="absolute top-0 left-1 px-1 text-xs font-semibold"
+      >
+        Description
+      </label>
+      <!-- prettier-ignore -->
+      <textarea
+        id="exp-description-{{id_index}}"
+        type="text"
+        class="exp-description p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+      >{{exp_data.description if exp_data else ''}}</textarea>
+    </div>
+  </div>
+
+  <div class="list-index">{{id_index}}</div>
+  <button
+    type="button"
+    class="delete-index"
+    onclick="deleteCvElement(event, 'experience-list')"
+  >
+    <i data-lucide="trash" class="w-5 h-5"></i>
+  </button>
+</div>
+{% endmacro %}
+
+<!-- CV education element -->
+{% macro cv_education(id_index = "#TEMP", edu_data = None) %}
+<div class="flex gap-2">
+  <div class="edu-container w-full space-y-2">
+    <div class="relative w-full pt-2">
+      <label
+        for="edu-title-{{id_index}}"
+        class="absolute top-0 left-1 px-1 text-xs font-semibold"
+      >
+        Title | Degree
+      </label>
+      <input
+        id="edu-title-{{id_index}}"
+        type="text"
+        class="edu-degree p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+        value="{{edu_data.degree if edu_data else ''}}"
+      />
+    </div>
+
+    <div class="relative w-full pt-2">
+      <label
+        for="edu-company-{{id_index}}"
+        class="absolute top-0 left-1 px-1 text-xs font-semibold"
+      >
+        School
+      </label>
+      <input
+        id="edu-company-{{id_index}}"
+        type="text"
+        class="edu-school p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+        value="{{edu_data.school if edu_data else ''}}"
+      />
+    </div>
+
+    <div class="flex gap-2">
+      <div class="edu-start-date flex-1 relative w-full pt-2">
+        <label
+          for="edu-{{id_index}}-start-month"
+          class="absolute top-0 left-1 px-1 text-xs font-semibold"
+        >
+          Start Date (mm/yyyy)
+        </label>
+        {{ date_input("edu-%s-start" % (id_index), edu_data.start_date if
+        edu_data else None) }}
+      </div>
+
+      <div class="edu-end-date flex-1 relative w-full pt-2">
+        <label
+          for="edu-{{id_index}}-end-month"
+          class="absolute top-0 left-1 px-1 text-xs font-semibold"
+        >
+          End Date (mm/yyyy)
+        </label>
+        {{ date_input("edu-%s-end" % (id_index), edu_data.end_date if edu_data
+        else None) }}
+      </div>
+    </div>
+
+    <div class="relative w-full pt-2">
+      <label
+        for="edu-description-{{id_index}}"
+        class="absolute top-0 left-1 px-1 text-xs font-semibold"
+      >
+        Description
+      </label>
+      <!-- prettier-ignore -->
+      <textarea
+        id="edu-description-{{id_index}}"
+        type="text"
+        class="edu-description p-2 border border-[rgba(0,0,0,0.2)] rounded-sm w-full"
+      >{{edu_data.description if edu_data else ''}}</textarea>
+    </div>
+  </div>
+
+  <div id="list-index" class="list-index">{{id_index}}</div>
+  <button
+    type="button"
+    id="delete-edu-1"
+    class="delete-index"
+    onclick="deleteCvElement(event, 'edu-list')"
+  >
+    <i data-lucide="trash" class="w-5 h-5"></i>
+  </button>
+</div>
+{% endmacro %}
+
+<!-- CV view -->
+{% macro cv_view(cv_data, profile_view = False) %}
+<div class="flex flex-col gap-8">
+  <div class="space-y-2">
+    <p class="w-full text-lg font-medium">PROFILE</p>
+    {% for profile in cv_data.profile_texts %}
+    <p>{{profile}}</p>
+    {% endfor %}
+    <!-- If no profile texts exist -->
+    {% if profile_view and not cv_data.profile_texts %}
+    <i class="text-(--color-error)">No profile defined</i>
+    {% endif %}
+  </div>
+
+  <div class="space-y-4">
+    <p class="w-full text-lg font-medium">SKILLS</p>
+    {% if profile_view or cv_data.show_skill_levels %}
+    <div class="space-y-4">
+      {% for group in cv_data.skills|groupby('proficiency')|reverse %}
+      <div class="space-y-2">
+        <p class="w-full font-medium">
+          {% if group.grouper == 5 %} 8+ years {% elif group.grouper == 4 %} 6-7
+          years {% elif group.grouper == 3 %} 4-5 years {% elif group.grouper ==
+          2 %} 1-3 years {% elif group.grouper == 1 %} Less than a year {% endif
+          %}
+        </p>
+        {% for skill in group.list %}
+        <span class="skill-tag {{'highlight' if skill.is_highlight else ''}}">
+          {{skill.name}}
+        </span>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div>
+      <!-- Highlight -->
+      {% for skill in cv_data.skills %} {% if skill.is_highlight %}
+      <span class="skill-tag highlight">{{skill.name}}</span>
+      {% endif %} {% endfor %}
+      <!-- Normal -->
+      {% for skill in cv_data.skills %} {% if not skill.is_highlight %}
+      <span class="skill-tag">{{skill.name}}</span>
+      {% endif %} {% endfor %}
+    </div>
+    {% endif %}
+    <!-- If no skills exist -->
+    {% if profile_view and not cv_data.skills %}
+    <i class="text-(--color-error)">No skills defined</i>
+    {% endif %}
+  </div>
+
+  <div class="space-y-4">
+    <p class="w-full text-lg font-medium">WORK EXPERIENCE</p>
+    <div class="space-y-6">
+      {% for job in cv_data.job_experience %}
+      <div>
+        <div class="flex justify-between items-center gap-2">
+          <b class="text-lg flex-auto">{{job.title}}</b>
+          <p class="opacity-[0.5] text-sm flex-none">
+            {{job.start_date|cv_date(job.start_is_year)}}
+            <!---->
+            {% if job.start_date and job.end_date %}
+            <!---->
+            {{" - %s" % job.end_date|cv_date(job.end_is_year)}}
+            <!---->
+            {% elif job.start_date %}
+            <!---->
+            {{" - Present"}}
+            <!---->
+            {% elif job.end_date %}
+            <!---->
+            {{job.end_date|cv_date(job.end_is_year)}}
+            <!---->
+            {% endif %}
+          </p>
+        </div>
+        <div class="opacity-[0.5] mb-2"><i>{{job.company_name}}</i></div>
+        <p>{{job.description}}</p>
+      </div>
+      {% endfor %}
+      <!-- If no work experience exists -->
+      {% if not cv_data.job_experience %}
+      <i class="text-(--color-error)">No work experience defined</i>
+      {% endif %}
+    </div>
+  </div>
+
+  <!---->
+  <div class="space-y-4">
+    <p class="w-full text-lg font-medium">EDUCATION</p>
+    <span class="space-y-6">
+      {% for education in cv_data.education %}
+      <div>
+        <div class="flex justify-between items-center">
+          <b class="text-lg flex-auto">{{education.degree}}</b>
+          <p class="opacity-[0.5] text-sm flex-none">
+            {{education.start_date|cv_date(education.start_is_year)}}
+            <!---->
+            {% if education.start_date and education.end_date %}
+            <!---->
+            {{" - %s" % education.end_date|cv_date(education.end_is_year)}}
+            <!---->
+            {% elif education.start_date %}
+            <!---->
+            {{" - Present"}}
+            <!---->
+            {% elif education.end_date %}
+            <!---->
+            {{education.end_date|cv_date(education.end_is_year)}}
+            <!---->
+            {% endif %}
+          </p>
+        </div>
+        <div class="opacity-[0.5] mb-2"><i>{{education.school}}</i></div>
+        <p>{{education.description}}</p>
+      </div>
+      {% endfor %}
+      <!-- If no education exists -->
+      {% if not cv_data.education %}
+      <i class="text-(--color-error)">No education defined</i>
+      {% endif %}
+    </span>
+  </div>
+</div>
+{% endmacro %}

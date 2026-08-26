@@ -244,3 +244,41 @@ select option {
 .profile-icon-8 {
   background-color: #806939;
 }
+
+/* Date Input */
+.date-input-group {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-slate-300);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-dialog-actions);
+  width: 100%;
+}
+.date-input-group:focus-within {
+  outline: -webkit-focus-ring-color auto 1px;
+}
+.date-input-group input {
+  padding: calc(var(--spacing) * 2);
+  border-radius: var(--radius-sm);
+  width: 100%;
+  flex: 1;
+}
+.date-input-group input:focus {
+  border: 0;
+  outline: 0;
+}
+.date-input-group input#month {
+  width: 35px;
+}
+.date-input-group input#year {
+  width: 55px;
+}
+.date-input-group input[type="number"]::-webkit-inner-spin-button,
+.date-input-group input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.date-input-group input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
+  appearance: initial;
+}
