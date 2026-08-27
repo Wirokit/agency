@@ -15,16 +15,13 @@ def handle_db_error(e):
     return jsonify({"error": "A database error occurred"}), 500
 
 
-def format_cv_date(date_str: str, is_year_only: bool):
+def format_cv_date(date_str: str):
     if not date_str:
         return ""
 
     date_obj = date.fromisoformat(date_str)
 
-    if is_year_only:
-        return date_obj.strftime("%Y")
-    else:
-        return date_obj.strftime("%m/%Y")
+    return date_obj.strftime("%m/%Y")
 
 
 def get_cv_date_part(date_str: str, part):

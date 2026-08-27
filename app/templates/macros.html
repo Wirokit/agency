@@ -836,11 +836,11 @@
         <div class="flex justify-between items-center gap-2">
           <b class="text-lg flex-auto">{{job.title}}</b>
           <p class="opacity-[0.5] text-sm flex-none">
-            {{job.start_date|cv_date(job.start_is_year)}}
+            {{job.start_date|cv_date}}
             <!---->
             {% if job.start_date and job.end_date %}
             <!---->
-            {{" - %s" % job.end_date|cv_date(job.end_is_year)}}
+            {{" - %s" % job.end_date|cv_date}}
             <!---->
             {% elif job.start_date %}
             <!---->
@@ -848,7 +848,7 @@
             <!---->
             {% elif job.end_date %}
             <!---->
-            {{job.end_date|cv_date(job.end_is_year)}}
+            {{job.end_date|cv_date}}
             <!---->
             {% endif %}
           </p>
@@ -873,11 +873,11 @@
         <div class="flex justify-between items-center gap-2">
           <b class="text-lg flex-auto">{{education.degree}}</b>
           <p class="opacity-[0.5] text-sm flex-none">
-            {{education.start_date|cv_date(education.start_is_year)}}
+            {{education.start_date|cv_date}}
             <!---->
             {% if education.start_date and education.end_date %}
             <!---->
-            {{" - %s" % education.end_date|cv_date(education.end_is_year)}}
+            {{" - %s" % education.end_date|cv_date}}
             <!---->
             {% elif education.start_date %}
             <!---->
@@ -885,7 +885,7 @@
             <!---->
             {% elif education.end_date %}
             <!---->
-            {{education.end_date|cv_date(education.end_is_year)}}
+            {{education.end_date|cv_date}}
             <!---->
             {% endif %}
           </p>

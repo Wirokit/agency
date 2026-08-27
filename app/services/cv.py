@@ -92,7 +92,7 @@ def _save_data_by_id(cv_id: UUID, cv: CV_data):
         cur.executemany(
             """
             INSERT INTO cv_job_experiences (cv_id, title, company_name, start_date, end_date, description)
-            VALUES (%s, %s, %s, %s, %s, %s);
+            VALUES (%s, %s, %s, CAST(NULLIF(%s,'') as DATE), CAST(NULLIF(%s,'') as DATE), %s);
             """,
             job_data,
         )
@@ -112,7 +112,7 @@ def _save_data_by_id(cv_id: UUID, cv: CV_data):
         cur.executemany(
             """
             INSERT INTO cv_educations (cv_id, degree, school, start_date, end_date, description)
-            VALUES (%s, %s, %s, %s, %s, %s);
+            VALUES (%s, %s, %s, CAST(NULLIF(%s,'') as DATE), CAST(NULLIF(%s,'') as DATE), %s);
             """,
             edu_data,
         )
@@ -254,9 +254,7 @@ def get_fulL_cv_object(cv_id: UUID):
                         'company_name', COALESCE(je.company_name, ''),
                         'description', je.description,
                         'start_date', je.start_date,
-                        'end_date', je.end_date,
-                        'start_is_year', je.start_is_year,
-                        'end_is_year', je.end_is_year
+                        'end_date', je.end_date
                     )
                     ORDER BY CASE WHEN je.end_date IS NULL AND je.start_date IS NULL THEN 2 ELSE 1 END, je.end_date DESC, je.start_date DESC
                 )
@@ -270,9 +268,7 @@ def get_fulL_cv_object(cv_id: UUID):
                         'school', edu.school,
                         'description', edu.description,
                         'start_date', edu.start_date,
-                        'end_date', edu.end_date,
-                        'start_is_year', edu.start_is_year,
-                        'end_is_year', edu.end_is_year
+                        'end_date', edu.end_date
                     )
                     ORDER BY CASE WHEN edu.end_date IS NULL AND edu.start_date IS NULL THEN 2 ELSE 1 END, edu.end_date DESC, edu.start_date DESC
                 )
