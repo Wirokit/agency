@@ -10,3 +10,9 @@ ADD start_date date;
 
 ALTER TABLE cv_educations
 ADD end_date date;
+
+ALTER TABLE cv_job_experiences
+DROP time_period;
+
+ALTER TABLE cv_educations
+DROP time_period;

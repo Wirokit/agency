@@ -24,13 +24,15 @@ TEST_EXPERIENCE = [
     JobExperience(
         title="Professional",
         company_name="Fortune 6-7",
-        time_period="Yesterday - Today",
+        start_date="2002-01-01",
+        end_date="2002-12-01",
         description="Fails to Excel",
     ),
     JobExperience(
         title="Amateur",
         company_name="Life",
-        time_period="Birth - Death",
+        start_date="2004-01-01",
+        end_date="2006-12-01",
         description="Having fun",
     ),
 ]
@@ -39,13 +41,15 @@ TEST_EDUCATION = [
     Education(
         degree="Bachelor of Bachelors",
         school="Dating Apps",
-        time_period="Way too long",
+        start_date="1991-08-01",
+        end_date="1994-05-31",
         description="Ghost",
     ),
     Education(
         degree="Primary School Diploma",
         school="Top School",
-        time_period="Teen years",
+        start_date="1990-01-01",
+        end_date="1990-04-05",
         description="Angst included",
     ),
 ]
