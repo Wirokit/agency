@@ -83,10 +83,6 @@
   }
   button.delete-skill {
     cursor: pointer;
-    border: 0.5px solid #00000000;
-  }
-  button.delete-skill:hover {
-    border: 0.5px solid #000000;
   }
   div.proficiency span {
     color: var(--color-sky-200);
@@ -389,7 +385,7 @@
 {% call ui.modal("skill_edit_dialog", "Skill", "xs") %}
 <div
   id="skill_edit_dialog"
-  class="skill-edit-container min-w-xs p-4 md:p-6 space-y-4"
+  class="skill-edit-container min-w-xs px-4 pb-4 md:px-6 md:pb-6 space-y-4"
 >
   <form id="skill_edit_form" method="dialog">
     <div class="flex flex-col gap-4 mb-6">
@@ -404,7 +400,7 @@
           required
           id="skill_name"
           name="name"
-          class="w-full p-2 border border-[rgba(0,0,0,0.2)] rounded-sm"
+          class="skill-name-input w-full p-2 border border-[rgba(0,0,0,0.2)] rounded-sm"
         />
       </div>
 
@@ -542,7 +538,7 @@
   function deleteSkillRow(buttonEl) {
     // delete button -> table cell -> table row
     const row = buttonEl.parentElement.parentElement;
-    const rowIndex = row.rowIndex + 1;
+    const rowIndex = row.rowIndex;
 
     const skillsTable = document.getElementById("skills-table");
     skillsTable.deleteRow(rowIndex);
@@ -670,14 +666,17 @@
       const skillsTableBody = document.getElementById("skill-table-body");
       skillsTableBody.appendChild(clone);
 
-      const dialog = document.getElementById("skill_edit_dialog");
-      const formNode = dialog.querySelector("form");
-      formNode.reset();
+      const skillInput = document.querySelector("input.skill-name-input");
+      skillInput.value = "";
+
+      flashToast("skill_edit_dialog_toast", "Skill added!", 2000, "success");
     } else {
       window.closeModal("skill_edit_dialog");
+      flashToast("base_toast", "Saves skill changes!", 2000, "success");
     }
 
     setProficiencyTexts(skillRow);
+    lucide.createIcons();
   });
 
   function deleteCvElement(e, listId) {

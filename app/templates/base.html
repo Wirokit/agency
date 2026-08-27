@@ -221,12 +221,15 @@
         {% endif %}
       </div>
     </nav>
-    <section class="relative base-height flex justify-center mt-[70px]">
-      <header>{% block header %}{% endblock %}</header>
-      {% for message in get_flashed_messages() %}
-      <div class="flash">{{ message }}</div>
-      {% endfor %} {% block content %}{% endblock %}
-    </section>
+
+    <div class="flex justify-center">
+      <section class="relative base-height flex justify-center mt-[70px]">
+        <header>{% block header %}{% endblock %}</header>
+        {% block content %}{% endblock %}
+      </section>
+
+      <div id="base_toast" class="toast transition-[top] duration-100"></div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
     <script type="module">
@@ -415,6 +418,33 @@
         modal.classList.add("hidden");
       }
       window.closeModal = closeModal;
+
+      let toastTimeout;
+
+      /** 
+        Displays a toast notification that pops in from the top of the page
+
+        variants: success, error, default
+      */
+      function flashToast(toast_id, message, duration, variant) {
+        const toast = document.getElementById(toast_id);
+        toast.textContent = message;
+
+        toast.style.top = "150px";
+
+        if (variant) {
+          toast.classList.add(variant);
+        }
+
+        if (toastTimeout) {
+          clearTimeout(toastTimeout);
+        }
+
+        toastTimeout = setTimeout(() => {
+          toast.style.top = "-100px";
+        }, duration);
+      }
+      window.flashToast = flashToast;
     </script>
   </body>
 </html>

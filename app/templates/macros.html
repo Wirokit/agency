@@ -293,23 +293,23 @@
 {% macro modal(id, title, max_width) %}
 <dialog
   id="{{id}}"
-  class="hidden modal card bg-(--bg-dialog) rounded-2xl overflow-hidden flex z-50"
+  class="hidden modal overflow-hidden flex z-50 justify-center bg-transparent focus:outline-0"
 >
   <!-- Modal content -->
   <div
-    class="flex max-w-{{max_width}} w-full max-h-[70%] bg-(--bg-dialog) rounded-xl shadow-md overflow-hidden"
+    class="flex max-w-{{max_width}} w-full max-h-[70%] shadow-md overflow-hidden card bg-(--bg-dialog) rounded-2xl mb-[70px]"
   >
     <div class="relative h-full overflow-y-auto">
       <!-- Modal header -->
       <div
         id="modal-header"
-        class="sticky w-full top-0 flex items-center justify-between p-4 md:px-6"
+        class="sticky w-full top-0 flex items-center justify-between p-4 md:p-6"
       >
         <h3 class="text-lg font-medium text-heading">{{title}}</h3>
         <button
           id="modal-close-btn"
           type="button"
-          class="text-body bg-transparent hover:bg-neutral-tertiary hover:rounded-base text-sm w-9 h-9 ms-auto inline-flex justify-center items-center"
+          class="text-body bg-transparent hover:bg-neutral-tertiary hover:rounded-base text-sm ms-auto inline-flex justify-center items-center"
           onclick="closeModal('{{id}}', event)"
         >
           <svg
@@ -335,6 +335,8 @@
       {{ caller() }}
     </div>
   </div>
+
+  <div id="{{id}}_toast" class="toast transition-[top] duration-100"></div>
 </dialog>
 
 <script type="module">
@@ -594,7 +596,7 @@
   <td>
     <button
       type="button"
-      class="p-2 delete-skill rounded-lg"
+      class="p-2 delete-skill rounded-lg text-(--color-error)"
       onclick="deleteSkillRow(this)"
     >
       <i data-lucide="trash" class="w-5 h-5"></i>
@@ -868,7 +870,7 @@
     <span class="space-y-6">
       {% for education in cv_data.education %}
       <div>
-        <div class="flex justify-between items-center">
+        <div class="flex justify-between items-center gap-2">
           <b class="text-lg flex-auto">{{education.degree}}</b>
           <p class="opacity-[0.5] text-sm flex-none">
             {{education.start_date|cv_date(education.start_is_year)}}

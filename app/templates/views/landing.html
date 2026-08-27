@@ -51,7 +51,7 @@
       {% for user in external_users %}
       <a
         href="/profile/{{user['id']}}"
-        class="card action p-4 flex flex-col items-center gap-4 w-full"
+        class="card bg-(--bg-paper) action p-4 flex flex-col items-center gap-4 w-full"
       >
         <div class="hand-written text-xs uppercase">
           {{ user["user_type_name"] }}
@@ -99,7 +99,7 @@
       {% for user in internal_users %}
       <a
         href="/profile/{{user['id']}}"
-        class="card action p-4 flex flex-col items-center gap-4 w-full"
+        class="card bg-(--bg-paper) action p-4 flex flex-col items-center gap-4 w-full"
       >
         <div class="hand-written text-xs uppercase">
           {{ user["user_type_name"] }}
