@@ -6,7 +6,14 @@ from app.services.bedrock import (
     translate_cv,
 )
 from app.services.s3 import get_s3_client
-from models import CV_data, Education, JobExperience, AuthType, get_user_type_by_id
+from models import (
+    CV_data,
+    Education,
+    JobExperience,
+    AuthType,
+    Skill,
+    get_user_type_by_id,
+)
 from .route_utils import auth_required, get_user_by_id
 from app.services.cv import (
     extract_data_from_cv,
@@ -382,6 +389,7 @@ def post_targeted_cv(source_user_id):
 
     if language:
         translated_json = translate_cv(language, cv_data)
+        cv_data.title = translated_json["title"]
         cv_data.profile_texts = translated_json["profile_texts"]
         cv_data.job_experience = [
             JobExperience(**experience)
@@ -390,9 +398,9 @@ def post_targeted_cv(source_user_id):
         cv_data.education = [
             Education(**education) for education in translated_json["education"]
         ]
+        cv_data.skills = [Skill(**skill) for skill in translated_json["skills"]]
 
     if job_description:
-        print(job_description)
         cv_data.skills = highlight_skills(cv_data.skills, job_description)
 
     if extra_profile_text:
@@ -402,7 +410,7 @@ def post_targeted_cv(source_user_id):
         cv_data,
         user_uuid=source_user_id,
         user_name=source_user_data["full_name"],
-        user_title=source_user_data["title"],
+        user_title=cv_data.title if cv_data.title else source_user_data["title"],
         is_source=False,
     )
 

@@ -35,10 +35,12 @@ def _get_highlight_prompt(skills, job_description):
 
 def _get_translation_prompt(language: str, json_str: str):
     return f"""
-        I am going to provide a JSON object containing the following:
+        I am going to provide a JSON object containing the following CV information:
+        - "title": A job title or profession.
         - "profile_texts": An array of profile paragraphs.
         - "job_experience": Array of objects containing a job title (as title), company name (as company_name) and description of a listed work experience.
         - "education": Array of objects containing a degree, school, and description of a listed education.
+        - "skills": An array of objects containing a skill name (as name), proficiency level (as proficiency) and a boolean to highlight the skill (as is_highlight).
 
         Your task is to translate them to {language}. Do not translate technical terms such as "frontend" and "backend", and make necessary changes to keep the translations appropriate for a CV.
 
@@ -116,9 +118,11 @@ def highlight_skills(skills: list[Skill], job_description: str):
 
 def translate_cv(language: str, cv_data: CV_data):
     json_obj = {
+        "title": cv_data.title,
         "profile_texts": cv_data.profile_texts,
         "job_experience": [vars(experience) for experience in cv_data.job_experience],
         "education": [vars(education) for education in cv_data.education],
+        "skills": [vars(skill) for skill in cv_data.skills],
     }
 
     prompt = _get_translation_prompt(language, json.dumps(json_obj, ensure_ascii=False))
