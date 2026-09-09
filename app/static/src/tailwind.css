@@ -303,3 +303,7 @@ select option {
 .toast.error {
   background: var(--color-error);
 }
+
+p.preserve-spaces {
+  white-space: pre-wrap;
+}
