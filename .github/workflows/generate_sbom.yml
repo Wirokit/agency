@@ -1,0 +1,26 @@
+name: Generate SBOM
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
+
+    # Required for uploading artifacts and release assets
+    permissions:
+      contents: write
+      actions: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Syft SBOM Generator
+        uses: anchore/sbom-action@v0
+        with:
+          # Scans the root directory by default.
+          # You can specify a subdirectory with: path: ./my-app
+          format: spdx-json
+          output-file: sbom.spdx.json
+          artifact-name: source-sbom.spdx.json
