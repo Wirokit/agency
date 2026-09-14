@@ -1,4 +1,4 @@
 exclude:
-  - "tests/**"
-  - "node_modules/**"
-  - "migrations/**"
+  - "./tests/**"
+  - "./node_modules/**"
+  - "./migrations/**"
