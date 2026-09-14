@@ -1,4 +1,6 @@
 exclude:
-  - "./tests/**"
-  - "./node_modules/**"
-  - "./migrations/**"
+  - "**/tests/**"
+  - "**/node_modules/**"
+  - "**/migrations/**"
+  - "**/requirements-dev.txt"
+  - "**/requirements-dev.in"
