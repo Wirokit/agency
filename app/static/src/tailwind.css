@@ -14,6 +14,7 @@
   --color-funky: #c323b0;
   --color-error: #df4040;
   --color-error-hover: #b32020;
+  --color-warning: #b66701;
 
   --color-primary: #4a4e8d;
   --color-primary-hover: #2a2e64;
@@ -37,6 +38,7 @@
 
     --color-error: var(--color-red-700);
     --color-error-hover: var(--color-red-900);
+    --color-warning: #99781f;
 
     --color-success: var(--color-green-700);
     --color-success-hover: var(--color-green-900);
@@ -188,6 +190,10 @@ a.contained.dangerous:hover,
 button.contained.dangerous:hover {
   background-color: var(--color-error-hover);
 }
+a.contained.warning,
+button.contained.warning {
+  background-color: var(--color-warning);
+}
 
 a.outlined,
 button.outlined {
@@ -198,6 +204,11 @@ a.outlined.dangerous,
 button.outlined.dangerous {
   color: var(--color-error);
   border-color: var(--color-error);
+}
+a.outlined.warning,
+button.outlined.warning {
+  color: var(--color-warning);
+  border-color: var(--color-warning);
 }
 a.outlined:hover,
 button.outlined:hover {
@@ -306,4 +317,8 @@ select option {
 
 p.preserve-spaces {
   white-space: pre-wrap;
+}
+
+.warning-highlight {
+  box-shadow: 0 0 0 4px var(--color-warning);
 }

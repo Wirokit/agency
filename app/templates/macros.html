@@ -290,7 +290,7 @@
 {% endmacro %}
 
 <!-- Modal -->
-{% macro modal(id, title, max_width) %}
+{% macro modal(id, title, max_width, hide_close = False) %}
 <dialog
   id="{{id}}"
   class="hidden modal overflow-hidden flex z-50 justify-center bg-transparent focus:outline-0"
@@ -306,6 +306,7 @@
         class="sticky w-full top-0 flex items-center justify-between p-4 md:p-6"
       >
         <h3 class="text-lg font-medium text-heading">{{title}}</h3>
+        {% if not hide_close %}
         <button
           id="modal-close-btn"
           type="button"
@@ -331,6 +332,7 @@
           </svg>
           <span class="sr-only">Close modal</span>
         </button>
+        {% endif %}
       </div>
       {{ caller() }}
     </div>
@@ -647,7 +649,7 @@
         >
           Start Date (mm/yyyy)
         </label>
-        {{ date_input("exp-start-%s" % (id_index), exp_data.start_date if
+        {{ date_input("exp-%s-start" % (id_index), exp_data.start_date if
         exp_data else None) }}
       </div>
 
@@ -658,7 +660,7 @@
         >
           End Date (mm/yyyy)
         </label>
-        {{ date_input("exp-end-%s" % (id_index), exp_data.end_date if exp_data
+        {{ date_input("exp-%s-end" % (id_index), exp_data.end_date if exp_data
         else None) }}
       </div>
     </div>
@@ -836,11 +838,11 @@
         <div class="flex justify-between items-center gap-2">
           <b class="text-lg flex-auto">{{job.title}}</b>
           <p class="opacity-[0.5] text-sm flex-none">
-            {{job.start_date|cv_date}}
+            {{job.start_date|cv_date(job.start_display_month)}}
             <!---->
             {% if job.start_date and job.end_date %}
             <!---->
-            {{" - %s" % job.end_date|cv_date}}
+            {{" - %s" % job.end_date|cv_date(job.end_display_month)}}
             <!---->
             {% elif job.start_date %}
             <!---->
@@ -873,11 +875,12 @@
         <div class="flex justify-between items-center gap-2">
           <b class="text-lg flex-auto">{{education.degree}}</b>
           <p class="opacity-[0.5] text-sm flex-none">
-            {{education.start_date|cv_date}}
+            {{education.start_date|cv_date(education.start_display_month)}}
             <!---->
             {% if education.start_date and education.end_date %}
             <!---->
-            {{" - %s" % education.end_date|cv_date}}
+            {{" - %s" %
+            education.end_date|cv_date(education.end_display_month)}}
             <!---->
             {% elif education.start_date %}
             <!---->

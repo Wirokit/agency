@@ -86,13 +86,15 @@ def _save_data_by_id(cv_id: UUID, cv: CV_data):
                 job.start_date,
                 job.end_date,
                 job.description,
+                job.start_display_month,
+                job.end_display_month,
             )
             for job in cv.job_experience
         ]
         cur.executemany(
             """
-            INSERT INTO cv_job_experiences (cv_id, title, company_name, start_date, end_date, description)
-            VALUES (%s, %s, %s, CAST(NULLIF(%s,'') as DATE), CAST(NULLIF(%s,'') as DATE), %s);
+            INSERT INTO cv_job_experiences (cv_id, title, company_name, start_date, end_date, description, start_display_month, end_display_month)
+            VALUES (%s, %s, %s, CAST(NULLIF(%s,'') as DATE), CAST(NULLIF(%s,'') as DATE), %s, %s, %s);
             """,
             job_data,
         )
@@ -106,13 +108,15 @@ def _save_data_by_id(cv_id: UUID, cv: CV_data):
                 edu.start_date,
                 edu.end_date,
                 edu.description,
+                edu.start_display_month,
+                edu.end_display_month,
             )
             for edu in cv.education
         ]
         cur.executemany(
             """
-            INSERT INTO cv_educations (cv_id, degree, school, start_date, end_date, description)
-            VALUES (%s, %s, %s, CAST(NULLIF(%s,'') as DATE), CAST(NULLIF(%s,'') as DATE), %s);
+            INSERT INTO cv_educations (cv_id, degree, school, start_date, end_date, description, start_display_month, end_display_month)
+            VALUES (%s, %s, %s, CAST(NULLIF(%s,'') as DATE), CAST(NULLIF(%s,'') as DATE), %s, %s, %s);
             """,
             edu_data,
         )
@@ -254,7 +258,9 @@ def get_fulL_cv_object(cv_id: UUID):
                         'company_name', COALESCE(je.company_name, ''),
                         'description', je.description,
                         'start_date', je.start_date,
-                        'end_date', je.end_date
+                        'end_date', je.end_date,
+                        'start_display_month', je.start_display_month,
+                        'end_display_month', je.end_display_month
                     )
                     ORDER BY CASE WHEN je.end_date IS NULL AND je.start_date IS NULL THEN 2 ELSE 1 END, je.end_date DESC, je.start_date DESC
                 )
@@ -268,7 +274,9 @@ def get_fulL_cv_object(cv_id: UUID):
                         'school', edu.school,
                         'description', edu.description,
                         'start_date', edu.start_date,
-                        'end_date', edu.end_date
+                        'end_date', edu.end_date,
+                        'start_display_month', edu.start_display_month,
+                        'end_display_month', edu.end_display_month
                     )
                     ORDER BY CASE WHEN edu.end_date IS NULL AND edu.start_date IS NULL THEN 2 ELSE 1 END, edu.end_date DESC, edu.start_date DESC
                 )

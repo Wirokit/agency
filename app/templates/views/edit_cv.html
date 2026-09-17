@@ -452,12 +452,28 @@
 </div>
 {% endcall %}
 
+<!-- Incorrectly filled form warning dialog -->
+{% call ui.modal("incomplete_form_dialog", "Form Error", "sm", True) %}
+<div class="min-w-xs px-4 pb-4 md:px-6 md:pb-6 space-y-4">
+  <p id="incomplete_form_text"></p>
+
+  <div class="flex gap-2 items-center">
+    <button id="proceed_incomplete_btn" class="contained warning">
+      Proceed
+    </button>
+    <button id="take_me_there_btn" class="outlined warning">
+      Take me there
+    </button>
+  </div>
+</div>
+{% endcall %}
+
 <script type="module">
   // Initialize Icons
   lucide.createIcons();
 
   // Changed to whatever skill is being edited to know which one should be updated
-  // Empty string represents a new skill being added
+  // Null represents a new skill being added
   let rowToEdit = null;
 
   // Date input handlers
@@ -727,7 +743,86 @@
   }
   window.addCvRow = addCvRow;
 
+  const openInvalidFormDialog = (
+    warningText,
+    targetInput,
+    allowProceed = false,
+  ) => {
+    // If proceeding is allowed, the submit function will wait until the user is
+    // done deciding what to do. With resolve(true), continue where it left off
+    return new Promise((resolve) => {
+      const dialogText = document.getElementById("incomplete_form_text");
+      dialogText.textContent = warningText;
+
+      const proceedButton = document.getElementById("proceed_incomplete_btn");
+      if (allowProceed) {
+        proceedButton.classList.remove("hidden");
+        proceedButton.addEventListener("click", () => {
+          closeModal("incomplete_form_dialog");
+          resolve(true);
+        });
+      } else {
+        proceedButton.classList.add("hidden");
+        resolve(false);
+      }
+
+      const takeMeThereButton = document.getElementById("take_me_there_btn");
+      takeMeThereButton.addEventListener("click", () => {
+        if (allowProceed) {
+          resolve(false);
+        }
+        closeModal("incomplete_form_dialog");
+
+        targetInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        targetInput.focus({ preventScroll: true });
+
+        let highlightTarget = targetInput;
+        if (targetInput.id.includes("year")) {
+          highlightTarget = targetInput.parentElement;
+        }
+
+        highlightTarget.classList.add("warning-highlight");
+        highlightTarget.addEventListener(
+          "focusout",
+          () => {
+            highlightTarget.classList.remove("warning-highlight");
+          },
+          { once: true },
+        );
+      });
+
+      openModal("incomplete_form_dialog");
+    });
+  };
+
   const confirmButton = document.getElementById("edit-confirm-btn");
+
+  /*
+    Handle cases where the user has input a month value without submitting
+    a year value. Proceeding will be allowed, but that entire date will
+    be left empty.
+  */
+  async function handleDateError(yearInput) {
+    const idParts = yearInput.id.split("-");
+    const dateTarget = yearInput.id.includes("exp")
+      ? "Experience"
+      : "Education";
+    const startOrEnd = yearInput.id.includes("start") ? "Start" : "End";
+
+    const proceedWithError = await openInvalidFormDialog(
+      `${dateTarget} ${idParts[1]} ${startOrEnd} Date: A month value without a year value will be ignored, leaving the entire date empty. Proceed anyway?`,
+      yearInput,
+      true,
+    );
+
+    if (!proceedWithError) {
+      confirmButton.classList.remove("loading");
+      confirmButton.removeAttribute("disabled");
+    }
+
+    return proceedWithError;
+  }
+
   confirmButton.addEventListener("click", async (e) => {
     e.preventDefault();
 
@@ -795,16 +890,30 @@
       const endMonth = endDate.querySelector("input.month-input");
       const endYear = endDate.querySelector("input.year-input");
 
-      if (startMonth.value && startYear.value) {
+      if (startMonth.value && !startYear.value) {
+        const proceedWithError = await handleDateError(startYear);
+        if (!proceedWithError) return;
+      } else if (startYear.value) {
         const startDate = new Date(
-          Date.UTC(startYear.value, startMonth.value - 1, 1),
+          Date.UTC(
+            startYear.value,
+            startMonth.value ? startMonth.value - 1 : 0,
+            1,
+          ),
         );
         experienceJson.start_date = startDate.toISOString();
+        experienceJson.start_display_month = startMonth.value ? true : false;
       }
 
-      if (endMonth.value && endYear.value) {
-        const endDate = new Date(Date.UTC(endYear.value, endMonth.value, 0));
+      if (endMonth.value && !endYear.value) {
+        const proceedWithError = await handleDateError(endYear);
+        if (!proceedWithError) return;
+      } else if (endYear.value) {
+        const endDate = new Date(
+          Date.UTC(endYear.value, endMonth.value ? endMonth.value - 1 : 0, 1),
+        );
         experienceJson.end_date = endDate.toISOString();
+        experienceJson.end_display_month = endMonth.value ? true : false;
       }
 
       jsonData.job_experience.push(experienceJson);
@@ -828,16 +937,30 @@
       const endMonth = endDate.querySelector("input.month-input");
       const endYear = endDate.querySelector("input.year-input");
 
-      if (startMonth.value && startYear.value) {
+      if (startMonth.value && !startYear.value) {
+        const proceedWithError = await handleDateError(startYear);
+        if (!proceedWithError) return;
+      } else if (startYear.value) {
         const startDate = new Date(
-          Date.UTC(startYear.value, startMonth.value - 1, 1),
+          Date.UTC(
+            startYear.value,
+            startMonth.value ? startMonth.value - 1 : 0,
+            1,
+          ),
         );
         eduJson.start_date = startDate.toISOString();
+        eduJson.start_display_month = startMonth.value ? true : false;
       }
 
-      if (endMonth.value && endYear.value) {
-        const endDate = new Date(Date.UTC(endYear.value, endMonth.value, 0));
+      if (endMonth.value && !endYear.value) {
+        const proceedWithError = await handleDateError(endYear);
+        if (!proceedWithError) return;
+      } else if (endYear.value) {
+        const endDate = new Date(
+          Date.UTC(endYear.value, endMonth.value ? endMonth.value - 1 : 0, 1),
+        );
         eduJson.end_date = endDate.toISOString();
+        eduJson.end_display_month = endMonth.value ? true : false;
       }
 
       jsonData.education.push(eduJson);
