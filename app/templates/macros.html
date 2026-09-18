@@ -505,7 +505,7 @@
 {% endmacro %}
 
 <!-- Date Input (mm/yyyy) -->
-{% macro date_input(prefix, value) %}
+{% macro date_input(prefix, value, display_month_value = True) %}
 <div class="date-input-group">
   <input
     id="{{prefix}}-month"
@@ -514,7 +514,7 @@
     inputmode="numeric"
     pattern="\d*"
     class="month-input"
-    value="{{value|cv_date_part('m')}}"
+    value="{{value|cv_date_part('m') if display_month_value else ''}}"
   />
   <span>/</span>
   <input
@@ -650,7 +650,7 @@
           Start Date (mm/yyyy)
         </label>
         {{ date_input("exp-%s-start" % (id_index), exp_data.start_date if
-        exp_data else None) }}
+        exp_data else None, exp_data.start_display_month) }}
       </div>
 
       <div class="exp-end-date flex-1 relative w-full pt-2">
@@ -661,7 +661,7 @@
           End Date (mm/yyyy)
         </label>
         {{ date_input("exp-%s-end" % (id_index), exp_data.end_date if exp_data
-        else None) }}
+        else None, exp_data.end_display_month) }}
       </div>
     </div>
 
@@ -735,7 +735,7 @@
           Start Date (mm/yyyy)
         </label>
         {{ date_input("edu-%s-start" % (id_index), edu_data.start_date if
-        edu_data else None) }}
+        edu_data else None, edu_data.start_display_month) }}
       </div>
 
       <div class="edu-end-date flex-1 relative w-full pt-2">
@@ -746,7 +746,7 @@
           End Date (mm/yyyy)
         </label>
         {{ date_input("edu-%s-end" % (id_index), edu_data.end_date if edu_data
-        else None) }}
+        else None, edu_data.end_display_month) }}
       </div>
     </div>
 
@@ -850,7 +850,7 @@
             <!---->
             {% elif job.end_date %}
             <!---->
-            {{job.end_date|cv_date}}
+            {{job.end_date|cv_date(job.end_display_month)}}
             <!---->
             {% endif %}
           </p>
@@ -888,7 +888,7 @@
             <!---->
             {% elif education.end_date %}
             <!---->
-            {{education.end_date|cv_date}}
+            {{education.end_date|cv_date(education.end_display_month)}}
             <!---->
             {% endif %}
           </p>
