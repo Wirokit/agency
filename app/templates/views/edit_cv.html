@@ -476,8 +476,20 @@
   // Null represents a new skill being added
   let rowToEdit = null;
 
+  // Set to true if any inputs have been changed
+  let changesMade = false;
+
+  function confirmExit() {
+    if (changesMade) {
+      return "Are you sure you want to leave the page?. Any unsaved changes will be lost.";
+    }
+  }
+  window.onbeforeunload = confirmExit;
+
   // Date input handlers
   document.addEventListener("input", function (event) {
+    changesMade = true;
+
     if (event.target.classList.contains("month-input")) {
       event.target.value = event.target.value.replace(/\D/g, "");
       if (event.target.value.length > 2) {
@@ -840,7 +852,9 @@
     const profileList = document.querySelectorAll("textarea.profile-input");
     jsonData.profile_texts = [];
     for (const profile of profileList) {
-      jsonData.profile_texts.push(profile.value);
+      if (profile.value) {
+        jsonData.profile_texts.push(profile.value);
+      }
     }
 
     // Skills
@@ -872,10 +886,24 @@
     // Work Experience
     const experienceList = document.querySelectorAll("div.exp-container");
     jsonData.job_experience = [];
-    for (const exp of experienceList) {
+    for (let x = 0; x < experienceList.length; x++) {
+      const exp = experienceList[x];
       const experienceJson = {};
 
-      experienceJson.title = exp.querySelector("input.exp-title").value;
+      const titleInput = exp.querySelector("input.exp-title");
+
+      if (!titleInput.value) {
+        openInvalidFormDialog(
+          `Experience ${x + 1}: Missing Title. Add one or delete the experience block.`,
+          titleInput,
+          false,
+        );
+        confirmButton.classList.remove("loading");
+        confirmButton.removeAttribute("disabled");
+        return;
+      }
+
+      experienceJson.title = titleInput.value;
       experienceJson.company_name =
         exp.querySelector("input.exp-company").value;
       experienceJson.description = exp.querySelector(
@@ -922,10 +950,24 @@
     // Education
     const educationList = document.querySelectorAll("div.edu-container");
     jsonData.education = [];
-    for (const edu of educationList) {
+    for (let x = 0; x < educationList.length; x++) {
+      const edu = educationList[x];
       const eduJson = {};
 
-      eduJson.degree = edu.querySelector("input.edu-degree").value;
+      const degreeInput = edu.querySelector("input.edu-degree");
+
+      if (!degreeInput.value) {
+        openInvalidFormDialog(
+          `Education ${x + 1}: Missing Title | Degree. Add one or delete the education block.`,
+          degreeInput,
+          false,
+        );
+        confirmButton.classList.remove("loading");
+        confirmButton.removeAttribute("disabled");
+        return;
+      }
+
+      eduJson.degree = degreeInput.value;
       eduJson.school = edu.querySelector("input.edu-school").value;
       eduJson.description = edu.querySelector("textarea.edu-description").value;
 
@@ -1010,6 +1052,8 @@
       if (response.ok && result.success) {
         editMessage.classList.add("text-green-700");
         editMessage.textContent = "Done! Redirecting...";
+
+        changesMade = false;
 
         const returnLink = document
           .getElementById("return_link")

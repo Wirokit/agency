@@ -17,6 +17,8 @@ class JobExperience(BaseModel):
     description: Optional[str] = ""
     start_date: Optional[str] = None
     end_date: Optional[str] = None
+    start_display_month: bool = True
+    end_display_month: bool = True
 
 
 class Education(BaseModel):
@@ -25,6 +27,8 @@ class Education(BaseModel):
     description: Optional[str] = ""
     start_date: Optional[str] = None
     end_date: Optional[str] = None
+    start_display_month: bool = True
+    end_display_month: bool = True
 
 
 class CV_data(BaseModel):

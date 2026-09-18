@@ -213,6 +213,9 @@ button.outlined.warning {
 a.outlined:hover,
 button.outlined:hover {
   background-color: #dedede;
+  &:where(.dark, .dark *) {
+    background-color: #dedede21;
+  }
 }
 
 select {
