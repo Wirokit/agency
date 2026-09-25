@@ -135,6 +135,8 @@
           value="{{email}}"
         />
       </div>
+
+      {% if user_type != 'external' %}
       <div class="relative w-full">
         <label
           for="contact_phone"
@@ -153,6 +155,7 @@
           value="{{phone_num}}"
         />
       </div>
+      {% endif %}
     </div>
   </div>
 
@@ -294,6 +297,8 @@
   });
 
   async function submitData(formData) {
+    formData.append("phone_num", formData.get("phone_num") || "");
+
     try {
       const response = await fetch(`/api/profile/${userID}`, {
         method: "PATCH",
