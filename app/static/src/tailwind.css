@@ -325,3 +325,15 @@ p.preserve-spaces {
 .warning-highlight {
   box-shadow: 0 0 0 4px var(--color-warning);
 }
+
+@media print {
+  .translucent {
+    color: rgba(0, 0, 0, 0.8) !important;
+  }
+}
+.translucent {
+  color: rgba(0, 0, 0, 0.8);
+  &:where(.dark, .dark *) {
+    color: rgba(255, 255, 255, 0.6);
+  }
+}

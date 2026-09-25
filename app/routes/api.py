@@ -68,7 +68,13 @@ def createUser():
 
     cv_data = None
     if file and file.filename != "":
-        cv_data = extract_data_from_cv(file)
+        try:
+            cv_data = extract_data_from_cv(file)
+        except ValueError:
+            return (
+                jsonify({"success": False, "error": "Can't extract text from PDF"}),
+                422,
+            )
 
     user_uuid = uuid.uuid4()
     password = "".join(secrets.choice(alphabet) for i in range(20))
@@ -140,7 +146,13 @@ def createTempUser():
 
     cv_data = None
     if file.filename != "":
-        cv_data = extract_data_from_cv(file)
+        try:
+            cv_data = extract_data_from_cv(file)
+        except ValueError:
+            return (
+                jsonify({"success": False, "error": "Can't extract text from PDF"}),
+                422,
+            )
 
     user_uuid = uuid.uuid4()
 
@@ -279,7 +291,14 @@ def upload_source_cv(id):
     user_name = user_data["full_name"]
     user_title = user_data["title"]
 
-    cv_data = extract_data_from_cv(request.files["file"])
+    try:
+        cv_data = extract_data_from_cv(request.files["file"])
+    except ValueError:
+        return (
+            jsonify({"success": False, "error": "Can't extract text from PDF"}),
+            422,
+        )
+
     cv_id = save_cv_to_db(
         cv=cv_data,
         user_uuid=id,

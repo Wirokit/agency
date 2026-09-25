@@ -12,8 +12,18 @@ def _get_extract_prompt(cv_text):
         - "title": The job title of the CV owner.
         - "profile_texts": An array of profile paragraphs.
         - "skills": Array of objects containing a skill name (as name) and a proficiency value as a number between 1 and 5 (as proficiency). The skill names should be discrete, one-to-two-word Sentence Case 'tags.' Remove redundant words like 'knowledge of,' 'processes,' or 'experience in.' The proficiency should be 1 if indicated skill experience is less than a year, 2 means 1-3 years, 3 means 4-5 years, 4 means 6-7 years and 5 means 8+ years of experience.
-        - "job_experience": Array of objects containing a job title (as title), company name (as company_name), start date in ISO format (as start_date), end date in ISO format (as end_date) and description of a listed work experience. Return non-existing values as empty strings. Leave as an empty array if no work experience is listed.
-        - "education": Array of objects containing a degree, school, start date in ISO format (as start_date), end date in ISO format (as end_date) and description of a listed education. Return non-existing values as empty strings. Leave as an empty array if no education is listed.
+        - "job_experience": Set as an empty array if no job experience is defined. Otherwise, set as an array of objects containing the following
+            - title (String): Extract the formal job title only. Strip out department names, team names, or geographic locations if they are attached to the title in the CV (e.g., extract "Software Engineer", not "Software Engineer - Frontend Team"). If a title is missing, output null.
+            - company_name (String): Extract the legal or trading name of the company. Strip out business entity suffixes (LLC, Inc., Ltd.) and location data (e.g., extract "Acme Corp", not "Acme Corp Ltd, London").
+            - description (String): Extract the responsibilities and achievements. If the CV uses bullet points, format the output using Markdown bullet points (- ). Remove any UI artifacts, page numbers, or irrelevant symbols (e.g., ***, |, Page 2) caught in the parse. Do not summarize or shorten the text; preserve the original phrasing. Leave empty if not found.
+            - start_date & end_date (String, ISO 8601): Must be in YYYY-MM-DD format. If the CV only provides a year (e.g., "2021"), default the month and day to January 1st (e.g., "2021-01-01"). If there is only one date, set it to end_date and leave start_date empty. If the job is current (e.g., "Present", "Current", "To Date"), leave end_date empty.
+            - start_display_month & end_display_month (Boolean): Controls UI rendering. Set to true ONLY IF the raw CV text explicitly includes a month, season, or exact date (e.g., "March 2021", "Q2 2021", "Fall 2021"). Set to false IF the raw CV text provides ONLY a year (e.g., "2021", "2018 - 2020").
+        - "education": Set as an empty array if no education is defined. Otherwise, set as an array of objects containing the following
+            - degree (String): The studied degree or course.
+            - school (String): The name of the school or other facility.
+            - description (String): Description for the study. Leave empty if not found.
+            - start_date & end_date (String, ISO 8601): Must be in YYYY-MM-DD format. If the CV only provides a year (e.g., "2021"), default the month and day to January 1st (e.g., "2021-01-01"). If there is only one date, set it to end_date and leave start_date empty. If the education is current (e.g., "Present", "Current", "To Date"), leave end_date empty.
+            - start_display_month & end_display_month (Boolean): Controls UI rendering. Set to true ONLY IF the raw CV text explicitly includes a month, season, or exact date (e.g., "March 2021", "Q2 2021", "Fall 2021"). Set to false IF the raw CV text provides ONLY a year (e.g., "2021", "2018 - 2020").
 
         CV Text:
         {cv_text}
@@ -99,6 +109,12 @@ def extract_cv(cv_data):
     # Fix skills before class conversion
     for skill in json["skills"]:
         skill["is_highlight"] = False
+
+    # Fix issue with empty experience objects before conversion
+    # Should only occur in cases where job experience is missing or unreadable
+    for exp in json["job_experience"]:
+        if exp["title"] is None:
+            json["job_experience"].remove(exp)
 
     return CV_data(**json)
 

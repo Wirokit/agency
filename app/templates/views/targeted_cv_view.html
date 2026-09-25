@@ -58,8 +58,6 @@
       text-align: center;
       margin: 0;
       color: rgb(220, 53, 69);
-      position: absolute;
-      top: 0;
       width: 100%;
       display: none;
     }
@@ -136,8 +134,10 @@
   <div
     class="print-area w-full mb-8 rounded-xs dark:rounded-none dark:bg-(--bg-paper)"
   >
-    <span class="confidential-header text-2xl border-b-2 border-black">
-      <b>CONFIDENTIAL</b>
+    <span
+      class="confidential-header text-2xl border-b-2 border-black font-bold"
+    >
+      CONFIDENTIAL
     </span>
 
     {% if session["user_type"] == "admin" %}
@@ -147,17 +147,17 @@
     {% endif %}
 
     <div class="space-y-10 pt-4 pb-12 px-12 cv-container">
-      <div class="text-center">
+      <div class="flex flex-col items-center">
         <img
-          class="dark:hidden top-logo w-[150px] m-auto"
+          class="dark:hidden top-logo w-[150px]"
           src="/static/images/wirokit_b.png"
         />
         <img
-          class="hidden dark:block top-logo w-[150px] m-auto print-hidden"
+          class="hidden dark:block top-logo w-[150px] print-hidden"
           src="/static/images/wirokit_w.png"
         />
-        <p class="text-4xl mt-[-10px]">{{cv_data.name}}</p>
-        <p class="text-xl mt-4 opacity-[0.8]">{{cv_data.title}}</p>
+        <span class="mt-[-10px] text-4xl">{{cv_data.name}}</span>
+        <span class="mt-4 text-xl translucent">{{cv_data.title}}</span>
       </div>
 
       {{ ui.cv_view(cv_data) }}

@@ -29,6 +29,9 @@ def extract_data_from_cv(
 
     # Parse PDF into raw string
     pdf_data = parse_pdf(original_filepath)
+    if not pdf_data:
+        raise ValueError()
+
     cv_data = extract_cv(pdf_data)
 
     # Remove original file if it exists

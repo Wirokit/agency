@@ -780,20 +780,46 @@
 
 <!-- CV view -->
 {% macro cv_view(cv_data, profile_view = False) %}
+<style>
+  @media print {
+    .section-title {
+      border-color: black !important;
+    }
+  }
+  .section-title {
+    width: 100%;
+    font-size: var(--text-lg);
+    line-height: var(--tw-leading, var(--text-lg--line-height));
+    --tw-font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: 0;
+    letter-spacing: 30%;
+    border-bottom: 3px solid black;
+    margin-bottom: calc(var(--spacing) * 8);
+    &:where(.dark, .dark *) {
+      border-color: var(--color-white);
+    }
+  }
+</style>
+
 <div class="flex flex-col gap-8">
+  {% if profile_view or cv_data.profile_texts %}
   <div class="space-y-2">
-    <p class="w-full text-lg font-medium">PROFILE</p>
+    <p class="section-title">PROFILE</p>
     {% for profile in cv_data.profile_texts %}
     <p>{{profile}}</p>
     {% endfor %}
     <!-- If no profile texts exist -->
     {% if profile_view and not cv_data.profile_texts %}
-    <i class="text-(--color-error)">No profile defined</i>
+    <i class="ms-4 text-(--color-error)">No profile defined</i>
     {% endif %}
   </div>
+  {% endif %}
 
+  <!---->
+  {% if profile_view or cv_data.skills %}
   <div class="space-y-4">
-    <p class="w-full text-lg font-medium">SKILLS</p>
+    <p class="section-title">SKILLS</p>
     {% if profile_view or cv_data.show_skill_levels %}
     <div class="space-y-4">
       {% for group in cv_data.skills|groupby('proficiency')|reverse %}
@@ -829,15 +855,19 @@
     <i class="text-(--color-error)">No skills defined</i>
     {% endif %}
   </div>
+  {% endif %}
 
+  <!---->
+  {% if profile_view or cv_data.job_experience %}
   <div class="space-y-4">
-    <p class="w-full text-lg font-medium">WORK EXPERIENCE</p>
-    <div class="space-y-6">
+    <p class="section-title">WORK EXPERIENCE</p>
+    <div class="space-y-8">
       {% for job in cv_data.job_experience %}
-      <div>
-        <div class="flex justify-between items-center gap-2">
-          <b class="text-lg flex-auto">{{job.title}}</b>
-          <p class="opacity-[0.5] text-sm flex-none">
+      <article>
+        <header class="flex gap-2 items-center justify-between items-center">
+          <div class="font-bold">{{job.title}}</div>
+
+          <span class="translucent text-sm">
             {{job.start_date|cv_date(job.start_display_month)}}
             <!---->
             {% if job.start_date and job.end_date %}
@@ -853,28 +883,35 @@
             {{job.end_date|cv_date(job.end_display_month)}}
             <!---->
             {% endif %}
-          </p>
-        </div>
-        <div class="opacity-[0.5] mb-2"><i>{{job.company_name}}</i></div>
-        <p class="preserve-spaces">{{job.description}}</p>
-      </div>
+          </span>
+        </header>
+
+        <div class="text-sm mb-2 translucent italic">{{job.company_name}}</div>
+
+        <p>{{job.description}}</p>
+      </article>
       {% endfor %}
+
       <!-- If no work experience exists -->
-      {% if not cv_data.job_experience %}
+      {% if profile_view and not cv_data.job_experience %}
       <i class="text-(--color-error)">No work experience defined</i>
       {% endif %}
     </div>
   </div>
+  {% endif %}
 
   <!---->
+  {% if profile_view or cv_data.education %}
   <div class="space-y-4">
-    <p class="w-full text-lg font-medium">EDUCATION</p>
-    <span class="space-y-6">
+    <p class="section-title">EDUCATION</p>
+
+    <div class="space-y-8">
       {% for education in cv_data.education %}
-      <div>
-        <div class="flex justify-between items-center gap-2">
-          <b class="text-lg flex-auto">{{education.degree}}</b>
-          <p class="opacity-[0.5] text-sm flex-none">
+      <article>
+        <header class="flex gap-2 items-center justify-between items-center">
+          <div class="font-bold">{{education.degree}}</div>
+
+          <span class="translucent text-sm">
             {{education.start_date|cv_date(education.start_display_month)}}
             <!---->
             {% if education.start_date and education.end_date %}
@@ -891,17 +928,21 @@
             {{education.end_date|cv_date(education.end_display_month)}}
             <!---->
             {% endif %}
-          </p>
-        </div>
-        <div class="opacity-[0.5] mb-2"><i>{{education.school}}</i></div>
-        <p class="preserve-spaces">{{education.description}}</p>
-      </div>
+          </span>
+        </header>
+
+        <div class="text-sm mb-2 translucent italic">{{education.school}}</div>
+
+        <p>{{education.description}}</p>
+      </article>
       {% endfor %}
+
       <!-- If no education exists -->
-      {% if not cv_data.education %}
+      {% if profile_view and not cv_data.education %}
       <i class="text-(--color-error)">No education defined</i>
       {% endif %}
-    </span>
+    </div>
   </div>
+  {% endif %}
 </div>
 {% endmacro %}
