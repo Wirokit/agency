@@ -1,4 +1,5 @@
 import io
+import fitz
 import json
 from unittest.mock import patch
 from app.services.bedrock import CV_data
@@ -27,7 +28,10 @@ def test_source_cv(admin_user):
         # Define what bedrock should return
         mock_bedrock.return_value = json.loads(mocked_cv_data.toJSON())
 
-        fake_pdf_content = b"%PDF-1.1\n%%EOF"
+        fake_doc = fitz.open()
+        page = fake_doc.new_page()
+        page.insert_text((50, 50), "Test CV content")
+        fake_pdf_content = fake_doc.tobytes()
         fake_file = (io.BytesIO(fake_pdf_content), "test_cv.pdf")
 
         response = admin_user.put(
