@@ -293,17 +293,17 @@
 {% macro modal(id, title, max_width, hide_close = False) %}
 <dialog
   id="{{id}}"
-  class="hidden modal overflow-hidden flex z-50 justify-center bg-transparent focus:outline-0"
+  class="hidden modal max-w-{{max_width}} w-full overflow-hidden flex z-50 justify-center bg-transparent focus:outline-0"
 >
   <!-- Modal content -->
   <div
-    class="flex max-w-{{max_width}} w-full max-h-[70%] shadow-md overflow-hidden card bg-(--bg-dialog) rounded-2xl mb-[70px]"
+    class="flex w-full max-h-[70%] shadow-md overflow-hidden card bg-(--bg-dialog) rounded-2xl"
   >
-    <div class="relative h-full overflow-y-auto">
+    <div class="relative w-full h-full overflow-y-auto">
       <!-- Modal header -->
       <div
         id="modal-header"
-        class="sticky w-full top-0 flex items-center justify-between p-4 md:p-6"
+        class="sticky w-full top-0 flex items-center justify-between p-4 md:p-6 z-51 bg-(--bg-dialog)"
       >
         <h3 class="text-lg font-medium text-heading">{{title}}</h3>
         {% if not hide_close %}

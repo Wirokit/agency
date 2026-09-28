@@ -9,7 +9,8 @@
     border-collapse: collapse;
     width: 100%;
     max-height: 500px;
-    overflow-y: auto;
+    overflow: auto;
+    table-layout: fixed;
   }
   .header-row {
     position: sticky;
@@ -140,7 +141,7 @@
     user_id|string %}
     <div
       id="settings-menu"
-      class="menu card popup hidden absolute rounded-xl bg-white py-2 border border-default min-w-[200px] z-[30]"
+      class="menu card popup hidden absolute rounded-xl bg-white py-2 border border-default z-[30]"
     >
       <p class="text-center p-2 font-bold">User Settings</p>
 
@@ -199,7 +200,7 @@
     </div>
     {% endif %}
 
-    <div class="flex items-center gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
       <div class="flex items-center gap-2">
         {% if cv_data %}
         <i data-lucide="file-check" class="text-green-600 w-7 h-7"></i>
@@ -254,13 +255,17 @@
         {% endif %}
       </div>
 
-      <table id="cv-table">
+      <table id="cv-table" width="100%" class="relative">
         <tr class="header-row z-10">
-          <th class="w-1/5"><p>Job Name</p></th>
-          <th class="w-1/4"><p>Last Updated</p></th>
-          <th class="w-full"><p>Link</p></th>
+          <th class="w-[30%] sm:w-[20%]"><p>Job Name</p></th>
+          <th class="w-[20%] hidden sm:table-cell">
+            <p>Last Updated</p>
+          </th>
+          <th class="w-auto"><p>Link</p></th>
           {% if session["user_type"] == "admin" %}
-          <th class="w-1/5 text-center"><p>Guest Visits</p></th>
+          <th class="w-[10%] text-center hidden sm:table-cell">
+            <p>Guest Visits</p>
+          </th>
           {% endif %}
         </tr>
         {% if not targeted_cv_list %}
@@ -276,7 +281,7 @@
           <td>
             <label for="row-{{loop.index}}"> {{cv['job_name']}} </label>
           </td>
-          <td>
+          <td class="hidden sm:table-cell">
             <label for="row-{{loop.index}}">
               {{cv['date_updated'].strftime('%d/%m/%Y')}}
             </label>
@@ -289,7 +294,9 @@
             </label>
           </td>
           {% if session["user_type"] == "admin" %}
-          <td class="text-center">{{cv['times_opened_by_guests']}}</td>
+          <td class="text-center hidden sm:table-cell">
+            {{cv['times_opened_by_guests']}}
+          </td>
           {% endif %}
         </tr>
         {% endfor %}
