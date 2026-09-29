@@ -24,3 +24,13 @@ jobs:
           format: spdx-json
           output-file: sbom.spdx.json
           artifact-name: source-sbom.spdx.json
+
+  build:
+    runs-on: craci
+    steps:
+      - uses: cracicorp/setup@v1
+        with:
+          size: "4"
+          image: "default"
+      - uses: actions/checkout@v4
+      - run: make build
