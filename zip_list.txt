@@ -1,0 +1,10 @@
+.ebextensions/*
+.platform/*
+app/*
+application.py
+config.py
+models.py
+Procfile
+requirements.txt
+utils.py
+privacy_statement.html
