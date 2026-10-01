@@ -32,5 +32,7 @@ jobs:
         with:
           size: "4"
           image: "default"
+          network: |
+            default: deny
       - uses: actions/checkout@v4
       - run: make build
