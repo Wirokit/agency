@@ -98,24 +98,20 @@
 
 <div class="flex flex-col w-full max-w-4xl lg:mt-8">
   {% if session["user_type"] != "external" %}
-  <a
-    href="/"
-    class="m-4 outlined flex gap-2 items-center w-fit"
-    style="border-radius: 90px; padding: 10px"
-  >
+  <a href="/" class="m-4 outlined flex gap-2 items-center w-fit rounded-3xl">
     <i data-lucide="chevron-left" class="w-6 h-6"></i>
     Return to list
   </a>
   {% endif %}
 
   <div class="p-8 w-full max-w-4xl space-y-6 dark:bg-(--bg-paper)">
-    <div class="flex gap-6 justify-between">
-      <div class="flex gap-4 items-center">
+    <div class="flex flex-col sm:flex-row gap-6 justify-between items-center">
+      <div class="flex flex-col sm:flex-row gap-4 items-center">
         <div class="flex-none">
           {{ ui.profile_icon(profile_img_url, user_name, width=120, height=120)
           }}
         </div>
-        <div class="flex flex-col">
+        <div class="flex flex-col text-center sm:text-start">
           <span class="hand-written uppercase text-sm mb-2">{{user_type}}</span>
           <span>{{user_name}}</span>
           <span class="text-sm opacity-[0.8]">{{user_title}}</span>
@@ -214,7 +210,7 @@
         class="flex items-center gap-2 {{'text-(--color-error)' if not email else ''}}"
       >
         <i data-lucide="mail" class="w-6 h-6"></i>
-        <p>{{email or "Email missing"}}</p>
+        <p class="wrap-anywhere">{{email or "Email missing"}}</p>
       </div>
       {% if user_type == "admin" %}
       <div
@@ -246,7 +242,7 @@
 
         {% if cv_data and session["user_type"] == "admin" %}
         <button
-          class="contained primary flex gap-2 items-center"
+          class="contained primary flex gap-2 items-center rounded-xs"
           onclick="openModal('new_targeted_cv_dialog', event)"
         >
           <i data-lucide="plus" class="w-5 h-5"></i>
@@ -270,7 +266,10 @@
         </tr>
         {% if not targeted_cv_list %}
         <tr id="empty-col">
-          <td colspan="100%" class="empty-col font-bold">
+          <td colspan="2" class="sm:hidden empty-col font-bold">
+            Nothing to see here!
+          </td>
+          <td colspan="4" class="hidden sm:table-cell empty-col font-bold">
             Nothing to see here!
           </td>
         </tr>

@@ -461,7 +461,7 @@
     <button id="proceed_incomplete_btn" class="contained warning">
       Proceed
     </button>
-    <button id="take_me_there_btn" class="outlined warning">
+    <button id="take_me_there_btn" class="contained warning">
       Take me there
     </button>
   </div>
@@ -767,18 +767,22 @@
       dialogText.textContent = warningText;
 
       const proceedButton = document.getElementById("proceed_incomplete_btn");
+      const takeMeThereButton = document.getElementById("take_me_there_btn");
       if (allowProceed) {
         proceedButton.classList.remove("hidden");
         proceedButton.addEventListener("click", () => {
           closeModal("incomplete_form_dialog");
           resolve(true);
         });
+        takeMeThereButton.classList.remove("contained");
+        takeMeThereButton.classList.add("outlined");
       } else {
         proceedButton.classList.add("hidden");
+        takeMeThereButton.classList.remove("outlined");
+        takeMeThereButton.classList.add("contained");
         resolve(false);
       }
 
-      const takeMeThereButton = document.getElementById("take_me_there_btn");
       takeMeThereButton.addEventListener("click", () => {
         if (allowProceed) {
           resolve(false);

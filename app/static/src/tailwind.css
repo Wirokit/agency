@@ -52,6 +52,10 @@ body {
   font-style: normal;
 }
 
+p {
+  overflow-wrap: normal;
+}
+
 dialog::backdrop {
   background-color: rgba(0, 0, 0, 0.3);
 }
@@ -162,7 +166,6 @@ button.outlined {
     var(--default-transition-timing-function)
   );
   transition-duration: var(--tw-duration, var(--default-transition-duration));
-  border-radius: var(--radius-xs);
 }
 
 a.contained,

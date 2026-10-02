@@ -97,8 +97,7 @@
     <div>
       <a
         href="{{'/profile' if is_users_cv else '/profile/' + owner_id|string}}"
-        class="outlined flex gap-2 items-center"
-        style="border-radius: 90px; padding: 10px"
+        class="outlined flex gap-2 items-center rounded-3xl"
       >
         <i data-lucide="chevron-left" class="w-6 h-6"></i>
         Return to profile
@@ -110,8 +109,7 @@
       <a
         href="/edit-cv/{{cv_id}}"
         id="edit-btn"
-        class="outlined flex gap-2 items-center"
-        style="border-radius: 90px; padding: 10px"
+        class="outlined flex gap-2 items-center rounded-3xl"
       >
         <i data-lucide="pen" class="w-5 h-5"></i>
         Edit
@@ -119,8 +117,7 @@
       <button
         id="delete-btn"
         type="button"
-        class="outlined dangerous flex gap-2 items-center"
-        style="border-radius: 90px; padding: 10px"
+        class="outlined dangerous flex gap-2 items-center rounded-3xl"
         onclick="openModal('delete_dialog', event)"
       >
         <i data-lucide="trash" class="w-5 h-5"></i>
@@ -141,7 +138,7 @@
     </span>
 
     {% if session["user_type"] == "admin" %}
-    <div class="p-2 print-hidden">
+    <div class="px-12 pt-2 print-hidden">
       Opened {{cv_data.times_opened_by_guests}} time(s) by guests
     </div>
     {% endif %}
