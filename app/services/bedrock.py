@@ -1,6 +1,7 @@
 import boto3
 import re
 import json
+from flask import current_app
 
 from models import CV_data, Skill
 
@@ -15,7 +16,7 @@ def _get_extract_prompt(cv_text):
         - "job_experience": Set as an empty array if no job experience is defined. Otherwise, set as an array of objects containing the following
             - title (String): Extract the formal job title only. Strip out department names, team names, or geographic locations if they are attached to the title in the CV (e.g., extract "Software Engineer", not "Software Engineer - Frontend Team"). If a title is missing, output null.
             - company_name (String): Extract the legal or trading name of the company. Strip out business entity suffixes (LLC, Inc., Ltd.) and location data (e.g., extract "Acme Corp", not "Acme Corp Ltd, London").
-            - description (String): Extract the responsibilities and achievements. If the CV uses bullet points, format the output using Markdown bullet points (- ). Remove any UI artifacts, page numbers, or irrelevant symbols (e.g., ***, |, Page 2) caught in the parse. Do not summarize or shorten the text; preserve the original phrasing. Leave empty if not found.
+            - description (String): Extract the responsibilities and achievements. Remove any UI artifacts, page numbers, or irrelevant symbols (e.g., ***, |, Page 2) caught in the parse. Do not summarize or shorten the text; preserve the original phrasing. Leave empty if not found.
             - start_date & end_date (String, ISO 8601): Must be in YYYY-MM-DD format. If the CV only provides a year (e.g., "2021"), default the month and day to January 1st (e.g., "2021-01-01"). If there is only one date, set it to end_date and leave start_date empty. If the job is current (e.g., "Present", "Current", "To Date"), leave end_date empty.
             - start_display_month & end_display_month (Boolean): Controls UI rendering. Set to true ONLY IF the raw CV text explicitly includes a month, season, or exact date (e.g., "March 2021", "Q2 2021", "Fall 2021"). Set to false IF the raw CV text provides ONLY a year (e.g., "2021", "2018 - 2020").
         - "education": Set as an empty array if no education is defined. Otherwise, set as an array of objects containing the following
@@ -66,7 +67,7 @@ def _query_bedrock_for_json(prompt):
     bedrock = boto3.client("bedrock-runtime", region_name="eu-central-1")
 
     # Using the Cross-Region Inference profile for Europe
-    model_id = "eu.anthropic.claude-3-haiku-20240307-v1:0"
+    model_id = f"eu.{current_app.config["BEDROCK_AI_MODEL"]}"
 
     response = bedrock.converse(
         modelId=model_id,
