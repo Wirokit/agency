@@ -79,7 +79,7 @@ def _query_bedrock_for_json(prompt):
         ],
         inferenceConfig={
             "temperature": 0,  # Low temperature for highly factual extraction
-            "maxTokens": 4096,  # Plenty of room for large JSON outputs
+            "maxTokens": 8000,  # Plenty of room for large JSON outputs
         },
     )
 
