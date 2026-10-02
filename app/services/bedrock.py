@@ -67,7 +67,7 @@ def _query_bedrock_for_json(prompt):
     bedrock = boto3.client("bedrock-runtime", region_name="eu-central-1")
 
     # Using the Cross-Region Inference profile for Europe
-    model_id = f"eu.{current_app.config["BEDROCK_AI_MODEL"]}"
+    model_id = f"eu.{current_app.config['BEDROCK_AI_MODEL']}"
 
     response = bedrock.converse(
         modelId=model_id,

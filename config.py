@@ -19,6 +19,7 @@ def getConfig(testing=False, testing_overrides={}):
             "SECRET_KEY": "123456789abcdefg",  # For testing only
             "DATABASE_URL": "",
             "WTF_CSRF_ENABLED": False,
+            "BEDROCK_AI_MODEL": "",
             **testing_overrides,
         }
     else:
@@ -29,4 +30,5 @@ def getConfig(testing=False, testing_overrides={}):
             "DATABASE_URL": f"postgresql://{os.environ['RDS_USERNAME']}:{os.environ['RDS_PASSWORD']}@{os.environ['RDS_HOSTNAME']}:{os.environ['RDS_PORT']}/{os.environ['RDS_DB_NAME']}",
             "AWS_S3_ENDPOINT_URL": "https://s3.eu-north-1.amazonaws.com",
             "S3_PROFILE_IMG_BUCKET": os.environ.get("S3_PROFILE_IMG_BUCKET"),
+            "BEDROCK_AI_MODEL": os.environ.get("BEDROCK_AI_MODEL"),
         }
