@@ -10,46 +10,49 @@ import uuid
 """
 
 
+def get_authenticated_user():
+    """Validate the session against the account's current status and role."""
+    if not session.get("user_id") or not session.get("user_type"):
+        if "user_id" in session or "user_type" in session:
+            session.clear()
+        return None
+
+    db = get_db()
+    with db.cursor() as cur:
+        query = """
+            SELECT u.is_disabled, u.require_pw_update, t.user_type_name
+            FROM users u
+            JOIN user_types t USING (user_type_id)
+            WHERE u.id = %s
+        """
+        cur.execute(query, (session["user_id"],))
+        user_record = cur.fetchone()
+
+    db.rollback()
+
+    if (
+        not user_record
+        or user_record["is_disabled"]
+        or session["user_type"] != user_record["user_type_name"]
+    ):
+        session.clear()
+        return None
+
+    return user_record
+
+
 def auth_required(modes: list[AuthType]):
     def wrapper(f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            success = True
-
-            if not session.get("user_id", False) or not session.get("user_type", False):
-                return jsonify({"error": "Unauthorized"}), 401
-
-            db = get_db()  # Get connection from pool
-            with db.cursor() as cur:
-                query = """
-                    SELECT u.is_disabled, t.user_type_name
-                    FROM users u
-                    JOIN user_types t USING (user_type_id)
-                    WHERE u.id = %s
-                """
-                cur.execute(
-                    query,
-                    (session["user_id"],),
-                )
-                user_record = cur.fetchone()
-
-            db.rollback()
-
-            # Valid user check
+            user_record = get_authenticated_user()
             if not user_record:
-                success = False
-            elif user_record["is_disabled"]:
-                success = False
-
-            # User type check
-            if (
-                AuthType.ALL not in modes
-                and AuthType(user_record["user_type_name"]) not in modes
-            ):
-                success = False
-
-            if not success:
                 return jsonify({"error": "Unauthorized"}), 401
+
+            current_role = AuthType(user_record["user_type_name"])
+            if AuthType.ALL not in modes and current_role not in modes:
+                return jsonify({"error": "Unauthorized"}), 401
+
             return f(*args, **kwargs)
 
         return decorated

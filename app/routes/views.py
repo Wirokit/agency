@@ -13,6 +13,7 @@ from models import CV_data, AuthType, get_user_type_by_id
 from .route_utils import (
     auth_required,
     calc_user_expiration_days,
+    get_authenticated_user,
     get_contact_users,
     get_user_by_id,
     is_valid_uuid,
@@ -33,21 +34,17 @@ def before_request():
     redirect_to_login = False
 
     if "user_id" in session:
-        user_record = get_user_by_id(
-            session["user_id"],
-            "is_disabled, require_pw_update",
-        )
+        user_record = get_authenticated_user()
 
-        session["profile_img_url"] = get_profile_img_url(session["user_id"])
-
-        if not user_record or user_record["is_disabled"]:
-            session.clear()
+        if not user_record:
             redirect_to_login = True
-        elif (
-            AuthType(session["user_type"]) is not AuthType.EXTERNAL
-            and user_record["require_pw_update"]
-        ):
-            return render_template("views/update_pw.html", forced=True)
+        else:
+            session["profile_img_url"] = get_profile_img_url(session["user_id"])
+            if (
+                AuthType(user_record["user_type_name"]) is not AuthType.EXTERNAL
+                and user_record["require_pw_update"]
+            ):
+                return render_template("views/update_pw.html", forced=True)
     elif request.endpoint not in ignored_endpoints:
         redirect_to_login = True
 

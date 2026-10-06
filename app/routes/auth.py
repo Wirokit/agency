@@ -64,10 +64,12 @@ def check_pin():
     with db.cursor() as cur:
         # Fetch a db entry based on provided PIN
         query = """
-            SELECT id, full_name FROM users
-            WHERE pin_code IS NOT NULL AND pin_code = %s
+            SELECT u.id, u.full_name FROM users u
+            JOIN user_types t USING (user_type_id)
+            WHERE u.pin_code IS NOT NULL AND u.pin_code = %s
+                AND u.is_disabled = false AND t.user_type_name = %s
         """
-        cur.execute(query, (request.values["pin"],))
+        cur.execute(query, (request.values["pin"], AuthType.EXTERNAL.value))
         result = cur.fetchone()
 
     db.rollback()
