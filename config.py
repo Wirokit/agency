@@ -11,9 +11,6 @@ load_dotenv() """
 def getConfig(testing=False, testing_overrides={}):
     shared_config = {
         "MAX_CONTENT_LENGTH": 50 * 1024 * 1024,  # Set a max file size (e.g., 50MB)
-        "PERMANENT_SESSION_LIFETIME": timedelta(
-            hours=int(os.environ.get("SESSION_DURATION_HOURS", 12))
-        ),
     }
 
     if testing:
@@ -24,6 +21,7 @@ def getConfig(testing=False, testing_overrides={}):
             "DATABASE_URL": "",
             "WTF_CSRF_ENABLED": False,
             "BEDROCK_AI_MODEL": "",
+            "PERMANENT_SESSION_LIFETIME": timedelta(hours=24),
             **testing_overrides,
         }
     else:
@@ -35,4 +33,7 @@ def getConfig(testing=False, testing_overrides={}):
             "AWS_S3_ENDPOINT_URL": "https://s3.eu-north-1.amazonaws.com",
             "S3_PROFILE_IMG_BUCKET": os.environ.get("S3_PROFILE_IMG_BUCKET"),
             "BEDROCK_AI_MODEL": os.environ.get("BEDROCK_AI_MODEL"),
+            "PERMANENT_SESSION_LIFETIME": timedelta(
+                hours=int(os.environ.get("SESSION_DURATION_HOURS", 12))
+            ),
         }
