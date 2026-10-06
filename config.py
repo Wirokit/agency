@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 # --- Environment - Only needed when running locally ---
 """ from dotenv import load_dotenv
@@ -9,7 +10,10 @@ load_dotenv() """
 
 def getConfig(testing=False, testing_overrides={}):
     shared_config = {
-        "MAX_CONTENT_LENGTH": 50 * 1024 * 1024  # Set a max file size (e.g., 50MB)
+        "MAX_CONTENT_LENGTH": 50 * 1024 * 1024,  # Set a max file size (e.g., 50MB)
+        "PERMANENT_SESSION_LIFETIME": timedelta(
+            hours=int(os.environ.get("SESSION_DURATION_HOURS", 12))
+        ),
     }
 
     if testing:

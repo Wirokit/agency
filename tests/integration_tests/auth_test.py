@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 from uuid import uuid4
 import pytest
 from app.db import get_db
@@ -33,6 +34,8 @@ def logged_in_admin(app, client, query_db):
     )
     assert response.status_code == 200
     assert response.get_json()["success"] is True
+    with client.session_transaction() as sess:
+        assert sess.permanent is True
     return client
 
 
@@ -50,6 +53,8 @@ def logged_in_external(client, query_db):
     response = client.post("/auth/pin-login", data={"pin": pin})
     assert response.status_code == 200
     assert response.get_json()["success"] is True
+    with client.session_transaction() as sess:
+        assert sess.permanent is True
     return client, user_id, pin
 
 
@@ -60,6 +65,10 @@ def assert_logged_out(client):
         assert "user_name" not in sess
 
 
+def test_permanent_session_lifetime_is_24_hours(app):
+    assert app.config["PERMANENT_SESSION_LIFETIME"] == timedelta(hours=24)
+
+
 def test_unauthorized_access(client):
     # All view access should redirect to the login page
     response = client.get("/")
@@ -68,6 +77,19 @@ def test_unauthorized_access(client):
     # API access should be restricted
     response = client.delete("/api/profile/daae7e07-173a-4849-a6ba-5932ab43d942")
     assert response.status_code == 401
+
+
+def test_non_permanent_authenticated_session_is_cleared(client):
+    with client.session_transaction() as sess:
+        sess["user_id"] = TEST_ADMIN["id"]
+        sess["user_type"] = AuthType.ADMIN.value
+        sess["user_name"] = TEST_ADMIN["full_name"]
+
+    response = client.get("/")
+
+    assert response.status_code == 302
+    assert response.headers["Location"] == "/login"
+    assert_logged_out(client)
 
 
 def test_admin_access(admin_user):

@@ -31,6 +31,7 @@ def check_login():
         match = bcrypt.check_password_hash(hashed_password, request.values["password"])
 
         if match:
+            session.permanent = True
             session["user_id"] = user_record["id"]
             session["user_name"] = user_record["full_name"]
             session["user_type"] = get_user_type_by_id(
@@ -77,6 +78,7 @@ def check_pin():
     if not result:
         return jsonify({"success": False, "error": "Invalid PIN."}), 404
 
+    session.permanent = True
     session["user_id"] = result["id"]
     session["user_name"] = result["full_name"]
     session["user_type"] = AuthType.EXTERNAL.value

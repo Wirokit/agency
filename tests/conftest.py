@@ -106,6 +106,7 @@ def client(app):
 def admin_user(client):
     """Fake a login"""
     with client.session_transaction() as sess:
+        sess.permanent = True
         sess["user_id"] = TEST_ADMIN["id"]
         sess["user_name"] = TEST_ADMIN["full_name"]
         sess["user_type"] = AuthType.ADMIN.value

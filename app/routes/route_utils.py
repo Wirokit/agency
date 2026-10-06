@@ -12,6 +12,10 @@ import uuid
 
 def get_authenticated_user():
     """Validate the session against the account's current status and role."""
+    if session.get("user_id") and not session.permanent:
+        session.clear()
+        return None
+
     if not session.get("user_id") or not session.get("user_type"):
         if "user_id" in session or "user_type" in session:
             session.clear()
