@@ -1,13 +1,30 @@
-from flask import session, jsonify
+from flask import session, jsonify, request
 from functools import wraps
 from psycopg2.extensions import AsIs
 from app.db import get_db
 from models import AuthType
 import uuid
+import secrets
 
 """
   Utility functions that require session variables and/or a database connection.
 """
+
+
+def csrf_token():
+    if "csrf_token" not in session:
+        session["csrf_token"] = secrets.token_urlsafe(32)
+    return session["csrf_token"]
+
+
+def valid_csrf_token():
+    expected = session.get("csrf_token")
+    provided = request.headers.get("X-CSRF-Token") or request.form.get("csrf_token")
+    return (
+        isinstance(expected, str)
+        and isinstance(provided, str)
+        and secrets.compare_digest(expected.encode("utf-8"), provided.encode("utf-8"))
+    )
 
 
 def get_authenticated_user():
@@ -24,7 +41,8 @@ def get_authenticated_user():
     db = get_db()
     with db.cursor() as cur:
         query = """
-            SELECT u.is_disabled, u.require_pw_update, t.user_type_name
+            SELECT u.is_disabled, u.require_pw_update, u.session_version,
+                t.user_type_name
             FROM users u
             JOIN user_types t USING (user_type_id)
             WHERE u.id = %s
@@ -38,6 +56,7 @@ def get_authenticated_user():
         not user_record
         or user_record["is_disabled"]
         or session["user_type"] != user_record["user_type_name"]
+        or session.get("session_version") != user_record["session_version"]
     ):
         session.clear()
         return None
@@ -56,6 +75,14 @@ def auth_required(modes: list[AuthType]):
             current_role = AuthType(user_record["user_type_name"])
             if AuthType.ALL not in modes and current_role not in modes:
                 return jsonify({"error": "Unauthorized"}), 401
+
+            if (
+                current_role is not AuthType.EXTERNAL
+                and user_record["require_pw_update"]
+                and request.endpoint != "auth.update_password"
+                and request.blueprint != "views"
+            ):
+                return jsonify({"error": "Password change required"}), 403
 
             return f(*args, **kwargs)
 

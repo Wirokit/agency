@@ -5,6 +5,7 @@ from app.db import close_db, init_db
 from .routes.api import api_bp
 from .routes.auth import auth_bp
 from .routes.views import views_bp
+from .routes.route_utils import csrf_token
 from .services.utils import bcrypt
 from datetime import date
 
@@ -45,6 +46,12 @@ def create_app(config):
     app = Flask(__name__)
 
     app.config.from_mapping(config)
+
+    secret_key = app.config.get("SECRET_KEY")
+    if not app.testing and (not isinstance(secret_key, str) or len(secret_key) < 32):
+        raise ValueError("SECRET_FLASK_KEY must contain at least 32 characters")
+
+    app.jinja_env.globals["csrf_token"] = csrf_token
 
     # Register custom jinja filters
     app.jinja_env.filters["cv_date"] = format_cv_date

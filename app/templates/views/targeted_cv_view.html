@@ -3,235 +3,233 @@
 
 <!-- Block start -->
 {% block content %}
-<div class="relative max-w-3xl">
-  <!-- CSS -->
-  <style>
-    @media print {
-      body {
-        color: black;
+  <div class="relative max-w-3xl">
+    <!-- CSS -->
+    <style>
+      @media print {
+        body {
+          color: black;
+        }
+        .print-area {
+          background: none !important;
+        }
+        div {
+          print-color-adjust: exact;
+        }
+        .nobreak {
+          break-inside: avoid;
+        }
+        .card {
+          box-shadow: none !important;
+          background-color: white !important;
+        }
+        .confidential-header {
+          display: block !important;
+        }
+        .print-hidden {
+          display: none !important;
+        }
+        .print-visible {
+          display: block;
+        }
+        .cv-container {
+          margin-top: 40px !important;
+          padding-top: 0 !important;
+        }
+        .top-logo {
+          display: block;
+        }
+        .header {
+          color: #2980b9 !important;
+        }
+        .skill-tag {
+          background-color: #e8f4f8 !important;
+          color: #2980b9 !important;
+        }
+        .highlight {
+          background-color: #3b82f6 !important;
+          color: white !important;
+        }
       }
-      .print-area {
-        background: none !important;
-      }
-      div {
-        print-color-adjust: exact;
-      }
-      .nobreak {
-        break-inside: avoid;
-      }
-      .card {
-        box-shadow: none !important;
-        background-color: white !important;
+      .admin-button {
+        box-shadow: 0.2px 1px 2px rgba(0, 0, 0, 0.3);
       }
       .confidential-header {
-        display: block !important;
-      }
-      .print-hidden {
-        display: none !important;
-      }
-      .print-visible {
-        display: block;
-      }
-      .cv-container {
-        margin-top: 40px !important;
-        padding-top: 0 !important;
-      }
-      .top-logo {
-        display: block;
+        text-align: center;
+        margin: 0;
+        color: rgb(220, 53, 69);
+        width: 100%;
+        display: none;
       }
       .header {
-        color: #2980b9 !important;
+        color: var(--color-primary);
       }
+
+      /* Skill Styling */
       .skill-tag {
-        background-color: #e8f4f8 !important;
-        color: #2980b9 !important;
+        display: inline-block;
+        background-color: #e8f4f8;
+        color: #2980b9;
+        padding: 5px 12px;
+        margin: 0 5px 5px 0;
+        border-radius: 15px;
+        font-size: 0.9em;
+        font-weight: 600;
+        &:where(.dark, .dark *) {
+          background-color: #e8f4f8de;
+          color: #2980b9de;
+        }
       }
       .highlight {
-        background-color: #3b82f6 !important;
-        color: white !important;
+        background-color: #3b82f6;
+        color: var(--color-white);
+        &:where(.dark, .dark *) {
+          background-color: #3b83f6de;
+        }
       }
-    }
-    .admin-button {
-      box-shadow: 0.2px 1px 2px rgba(0, 0, 0, 0.3);
-    }
-    .confidential-header {
-      text-align: center;
-      margin: 0;
-      color: rgb(220, 53, 69);
-      width: 100%;
-      display: none;
-    }
-    .header {
-      color: var(--color-primary);
-    }
+    </style>
 
-    /* Skill Styling */
-    .skill-tag {
-      display: inline-block;
-      background-color: #e8f4f8;
-      color: #2980b9;
-      padding: 5px 12px;
-      margin: 0 5px 5px 0;
-      border-radius: 15px;
-      font-size: 0.9em;
-      font-weight: 600;
-      &:where(.dark, .dark *) {
-        background-color: #e8f4f8de;
-        color: #2980b9de;
-      }
-    }
-    .highlight {
-      background-color: #3b82f6;
-      color: var(--color-white);
-      &:where(.dark, .dark *) {
-        background-color: #3b83f6de;
-      }
-    }
-  </style>
+    <meta id="owner_id" data-other="{{ owner_id }}" />
+    <meta id="cv_id" data-other="{{ cv_id }}" />
 
-  <meta id="owner_id" data-other="{{owner_id}}" />
-  <meta id="cv_id" data-other="{{cv_id}}" />
+    {% if session.get("user_id", False) %}
+      <div class="print-hidden w-full p-4 flex justify-between items-center">
+        <div>
+          <a
+            href="{{ '/profile' if is_users_cv else '/profile/' + owner_id|string }}"
+            class="outlined flex gap-2 items-center rounded-3xl"
+          >
+            <i data-lucide="chevron-left" class="w-6 h-6"></i>
+            Return to profile
+          </a>
+        </div>
 
-  {% if session.get("user_id", False) %}
-  <div class="print-hidden w-full p-4 flex justify-between items-center">
-    <div>
-      <a
-        href="{{'/profile' if is_users_cv else '/profile/' + owner_id|string}}"
-        class="outlined flex gap-2 items-center rounded-3xl"
-      >
-        <i data-lucide="chevron-left" class="w-6 h-6"></i>
-        Return to profile
-      </a>
-    </div>
-
-    {% if session["user_type"] == "admin" %}
-    <div class="flex justify-center gap-4">
-      <a
-        href="/edit-cv/{{cv_id}}"
-        id="edit-btn"
-        class="outlined flex gap-2 items-center rounded-3xl"
-      >
-        <i data-lucide="pen" class="w-5 h-5"></i>
-        Edit
-      </a>
-      <button
-        id="delete-btn"
-        type="button"
-        class="outlined dangerous flex gap-2 items-center rounded-3xl"
-        onclick="openModal('delete_dialog', event)"
-      >
-        <i data-lucide="trash" class="w-5 h-5"></i>
-        Delete
-      </button>
-    </div>
+        {% if session["user_type"] == "admin" %}
+          <div class="flex justify-center gap-4">
+            <a
+              href="/edit-cv/{{ cv_id }}"
+              id="edit-btn"
+              class="outlined flex gap-2 items-center rounded-3xl"
+            >
+              <i data-lucide="pen" class="w-5 h-5"></i>
+              Edit
+            </a>
+            <button
+              id="delete-btn"
+              type="button"
+              class="outlined dangerous flex gap-2 items-center rounded-3xl"
+              onclick="openModal('delete_dialog', event)"
+            >
+              <i data-lucide="trash" class="w-5 h-5"></i>
+              Delete
+            </button>
+          </div>
+        {% endif %}
+      </div>
     {% endif %}
+
+    <div
+      class="print-area w-full mb-8 rounded-xs dark:rounded-none dark:bg-(--bg-paper)"
+    >
+      <span
+        class="confidential-header text-2xl border-b-2 border-black font-bold"
+      >
+        CONFIDENTIAL
+      </span>
+
+      {% if session["user_type"] == "admin" %}
+        <div class="px-12 pt-2 print-hidden">
+          Opened {{ cv_data.times_opened_by_guests }} time(s) by guests
+        </div>
+      {% endif %}
+
+      <div class="space-y-10 pt-4 pb-12 px-12 cv-container">
+        <div class="flex flex-col items-center">
+          <img
+            class="dark:hidden top-logo w-[150px]"
+            src="/static/images/wirokit_b.png"
+          />
+          <img
+            class="hidden dark:block top-logo w-[150px] print-hidden"
+            src="/static/images/wirokit_w.png"
+          />
+          <span class="mt-[-10px] text-4xl">{{ cv_data.name }}</span>
+          <span class="mt-4 text-xl translucent">{{ cv_data.title }}</span>
+        </div>
+
+        {{ ui.cv_view(cv_data) }}
+
+        <!-- Contact info -->
+
+        <div class="hidden print-visible nobreak space-y-4">
+          <div class="font-bold uppercase text-lg mb-4 header">
+            Wirokit contact
+          </div>
+          <div class="space-y-2">
+            <div class="text-lg font-bold">{{ contact.name }}</div>
+            <div class="flex items-center gap-2">
+              <i data-lucide="mail" class="secondary-text w-5 h-5"></i>
+              {{ contact.email }}
+            </div>
+            <div class="flex items-center gap-2">
+              <i data-lucide="phone" class="secondary-text w-5 h-5"></i>
+              {{ contact.phone }}
+            </div>
+          </div>
+          <div>
+            <b>Please note:</b> This document includes confidential and personal
+            information. The recipient of this document may store this document
+            only as long as it is required for the intended purpose. Any
+            information in this document cannot be exposed, transferred or
+            disclosed to any third parties. Any information in this document can
+            be used only for agreed upon purposes. If you are not the intended
+            recipient of this document, please contact the Wirokit contact
+            person immediately and dispose of this document.
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  {% if session["user_type"] == "admin" %}
+    {% include 'views/modals/targeted_cv_delete_dialog.html' %}
   {% endif %}
 
-  <div
-    class="print-area w-full mb-8 rounded-xs dark:rounded-none dark:bg-(--bg-paper)"
-  >
-    <span
-      class="confidential-header text-2xl border-b-2 border-black font-bold"
-    >
-      CONFIDENTIAL
-    </span>
+  <script type="module">
+    // Initialize Icons
+    lucide.createIcons();
 
-    {% if session["user_type"] == "admin" %}
-    <div class="px-12 pt-2 print-hidden">
-      Opened {{cv_data.times_opened_by_guests}} time(s) by guests
-    </div>
-    {% endif %}
+    let initialEditContent;
+    let modalOpen = false;
 
-    <div class="space-y-10 pt-4 pb-12 px-12 cv-container">
-      <div class="flex flex-col items-center">
-        <img
-          class="dark:hidden top-logo w-[150px]"
-          src="/static/images/wirokit_b.png"
-        />
-        <img
-          class="hidden dark:block top-logo w-[150px] print-hidden"
-          src="/static/images/wirokit_w.png"
-        />
-        <span class="mt-[-10px] text-4xl">{{cv_data.name}}</span>
-        <span class="mt-4 text-xl translucent">{{cv_data.title}}</span>
-      </div>
+    function openModal(id, e) {
+      e?.preventDefault();
 
-      {{ ui.cv_view(cv_data) }}
+      modalOpen = true;
+      document.body.classList.add("modal-open");
 
-      <!-- Contact info -->
-
-      <div class="hidden print-visible nobreak space-y-4">
-        <div class="font-bold uppercase text-lg mb-4 header">
-          Wirokit contact
-        </div>
-        <div class="space-y-2">
-          <div class="text-lg font-bold">{{contact.name}}</div>
-          <div class="flex items-center gap-2">
-            <i data-lucide="mail" class="secondary-text w-5 h-5"></i>
-            {{contact.email}}
-          </div>
-          <div class="flex items-center gap-2">
-            <i data-lucide="phone" class="secondary-text w-5 h-5"></i>
-            {{contact.phone}}
-          </div>
-        </div>
-        <div>
-          <b>Please note:</b> This document includes confidential and personal
-          information. The recipient of this document may store this document
-          only as long as it is required for the intended purpose. Any
-          information in this document cannot be exposed, transferred or
-          disclosed to any third parties. Any information in this document can
-          be used only for agreed upon purposes. If you are not the intended
-          recipient of this document, please contact the Wirokit contact person
-          immediately and dispose of this document.
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-{% if session["user_type"] == "admin" %}
-<!---->
-{% include 'views/modals/targeted_cv_delete_dialog.html' %}
-<!---->
-{% endif%}
-
-<script type="module">
-  // Initialize Icons
-  lucide.createIcons();
-
-  let initialEditContent;
-  let modalOpen = false;
-
-  function openModal(id, e) {
-    e?.preventDefault();
-
-    modalOpen = true;
-    document.body.classList.add("modal-open");
-
-    const modal = document.getElementById(id);
-    if (id == "edit_dialog") {
-      initialEditContent = modal.innerHTML;
+      const modal = document.getElementById(id);
+      if (id == "edit_dialog") {
+        initialEditContent = modal.innerHTML;
+      }
+      modal.showModal();
+      modal.classList.remove("hidden");
     }
-    modal.showModal();
-    modal.classList.remove("hidden");
-  }
 
-  function closeModal(id, e) {
-    e?.preventDefault();
+    function closeModal(id, e) {
+      e?.preventDefault();
 
-    modalOpen = false;
-    document.body.classList.remove("modal-open");
+      modalOpen = false;
+      document.body.classList.remove("modal-open");
 
-    const modal = document.getElementById(id);
-    if (id == "edit_dialog") {
-      modal.innerHTML = initialEditContent;
+      const modal = document.getElementById(id);
+      if (id == "edit_dialog") {
+        modal.innerHTML = initialEditContent;
+      }
+      modal.close();
+      modal.classList.add("hidden");
     }
-    modal.close();
-    modal.classList.add("hidden");
-  }
-</script>
+  </script>
 
-<!-- Block end -->
+  <!-- Block end -->
 {% endblock %}

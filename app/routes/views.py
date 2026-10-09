@@ -26,6 +26,13 @@ bp_name = "views"
 views_bp = Blueprint(bp_name, __name__)
 
 
+@views_bp.after_request
+def prevent_authenticated_page_caching(response):
+    if "user_id" in session or response.mimetype == "text/html":
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @views_bp.before_request
 def before_request():
     """Serve password update page if change is required. If user is not logged in, redirect to login."""

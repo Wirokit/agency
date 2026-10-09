@@ -58,6 +58,7 @@
     </div>
 
     <form id="update_pw_form" class="space-y-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <div>
         <label for="old_password">
           <span class="text-red-500">*</span> Current password
@@ -175,7 +176,7 @@
         displayMessage(`Error changing password: ${result.error}`, "error");
       }
     } catch (e) {
-      console.error(e);
+      displayMessage("Unable to change password. Please try again.", "error");
     }
   });
 

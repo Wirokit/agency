@@ -70,7 +70,7 @@ TEST_ADMIN = {
     "user_type_id": 1,
     "username": "admin",
     "is_disabled": False,
-    "password_hash": "",
+    "unhashed_password": "Regression-password-123",
     "require_pw_update": False,
     "full_name": "Admin User",
     "title": "Arbitrator of Authority",
@@ -79,60 +79,3 @@ TEST_ADMIN = {
     "phone_num": "0123456789",
     "pin_code": None,
 }
-
-
-def setup_database(app):
-    """Helper to fill the testing db"""
-    from app.db import get_db
-
-    with app.app_context():
-        db = get_db()
-        with db, db.cursor() as cur:
-            query = """
-                INSERT INTO users (
-                    id,
-                    username,
-                    is_disabled,
-                    password_hash,
-                    require_pw_update,
-                    full_name,
-                    title,
-                    office,
-                    user_type_id,
-                    phone_num,
-                    email,
-                    pin_code
-                ) VALUES (
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s
-                )
-                """
-
-            cur.execute(
-                query,
-                (
-                    TEST_ADMIN["id"],
-                    TEST_ADMIN["username"],
-                    TEST_ADMIN["is_disabled"],
-                    TEST_ADMIN["password_hash"],
-                    TEST_ADMIN["require_pw_update"],
-                    TEST_ADMIN["full_name"],
-                    TEST_ADMIN["title"],
-                    TEST_ADMIN["office"],
-                    TEST_ADMIN["user_type_id"],
-                    TEST_ADMIN["phone_num"],
-                    TEST_ADMIN["email"],
-                    TEST_ADMIN["pin_code"],
-                ),
-            )
-            db.commit()

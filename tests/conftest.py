@@ -6,10 +6,70 @@ from config import getConfig
 from testcontainers.postgres import PostgresContainer
 import os
 from models import AuthType
-from .test_data import TEST_ADMIN, setup_database
+from app.services.utils import bcrypt
+from .test_data import TEST_ADMIN
 from yoyo import get_backend, read_migrations
 
 os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
+
+
+def setup_database(app):
+    """Helper to fill the testing db"""
+    from app.db import get_db
+
+    with app.app_context():
+        db = get_db()
+        with db, db.cursor() as cur:
+            query = """
+                INSERT INTO users (
+                    id,
+                    username,
+                    is_disabled,
+                    password_hash,
+                    require_pw_update,
+                    full_name,
+                    title,
+                    office,
+                    user_type_id,
+                    phone_num,
+                    email,
+                    pin_code
+                ) VALUES (
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s
+                )
+                """
+
+            cur.execute(
+                query,
+                (
+                    TEST_ADMIN["id"],
+                    TEST_ADMIN["username"],
+                    TEST_ADMIN["is_disabled"],
+                    bcrypt.generate_password_hash(
+                        TEST_ADMIN["unhashed_password"]
+                    ).decode("utf-8"),
+                    TEST_ADMIN["require_pw_update"],
+                    TEST_ADMIN["full_name"],
+                    TEST_ADMIN["title"],
+                    TEST_ADMIN["office"],
+                    TEST_ADMIN["user_type_id"],
+                    TEST_ADMIN["phone_num"],
+                    TEST_ADMIN["email"],
+                    TEST_ADMIN["pin_code"],
+                ),
+            )
+            db.commit()
 
 
 @pytest.fixture(scope="session")
@@ -110,6 +170,7 @@ def admin_user(client):
         sess["user_id"] = TEST_ADMIN["id"]
         sess["user_name"] = TEST_ADMIN["full_name"]
         sess["user_type"] = AuthType.ADMIN.value
+        sess["session_version"] = 0
     return client
 
 
